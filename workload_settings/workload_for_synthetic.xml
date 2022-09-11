@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="us-ascii"?>
+<MQSim_IO_Scenarios>
+	<IO_Scenario>
+		<IO_Flow_Parameter_Set_Synthetic>
+			<Priority_Class>HIGH</Priority_Class>
+			<Device_Level_Data_Caching_Mode>WRITE_CACHE</Device_Level_Data_Caching_Mode>
+			<Channel_IDs>0,1,2,3</Channel_IDs>
+			<Chip_IDs>0</Chip_IDs>
+			<Die_IDs>0</Die_IDs>
+			<Plane_IDs>0,1,2,3</Plane_IDs>
+			<Initial_Occupancy_Percentage>70</Initial_Occupancy_Percentage>
+			<Working_Set_Percentage>100</Working_Set_Percentage> 
+			<Synthetic_Generator_Type>QUEUE_DEPTH</Synthetic_Generator_Type>
+			<Read_Percentage>50</Read_Percentage>
+			<Address_Distribution>RANDOM_UNIFORM</Address_Distribution> 
+			<Percentage_of_Hot_Region>0</Percentage_of_Hot_Region>
+			<Generated_Aligned_Addresses>true</Generated_Aligned_Addresses>
+			<Address_Alignment_Unit>1</Address_Alignment_Unit> <!-- 8-->
+			<Request_Size_Distribution>FIXED</Request_Size_Distribution>
+			<Average_Request_Size>8</Average_Request_Size> <!--16 -->
+			<Variance_Request_Size>0</Variance_Request_Size>
+			<Seed>798</Seed>
+			<Average_No_of_Reqs_in_Queue>32</Average_No_of_Reqs_in_Queue>
+			<Intensity>4096</Intensity> <!--32768-->
+			<Stop_Time>0</Stop_Time>
+			<Total_Requests_To_Generate>400000000</Total_Requests_To_Generate> 
+		</IO_Flow_Parameter_Set_Synthetic>
+	</IO_Scenario>
+
+</MQSim_IO_Scenarios>
