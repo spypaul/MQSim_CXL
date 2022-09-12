@@ -13,10 +13,10 @@ namespace Host_Components
 		uint16_t nvme_submission_queue_size, uint16_t nvme_completion_queue_size, IO_Flow_Priority_Class priority_class, double initial_occupancy_ratio,
 		std::string trace_file_path, Trace_Time_Unit time_unit, unsigned int total_replay_count, unsigned int percentage_to_be_simulated,
 		HostInterface_Types SSD_device_type, PCIe_Root_Complex* pcie_root_complex, SATA_HBA* sata_hba,
-		bool enabled_logging, sim_time_type logging_period, std::string logging_file_path) :
+		bool enabled_logging, sim_time_type logging_period, std::string logging_file_path, CXL_PCIe* cxl_pcie) :
 		IO_Flow_Base(name, flow_id, start_lsa_on_device, end_lsa_on_device, io_queue_id, nvme_submission_queue_size, nvme_completion_queue_size, priority_class, 0, initial_occupancy_ratio, 0, SSD_device_type, pcie_root_complex, sata_hba, enabled_logging, logging_period, logging_file_path),
 		trace_file_path(trace_file_path), time_unit(time_unit), total_replay_no(total_replay_count), percentage_to_be_simulated(percentage_to_be_simulated),
-		total_requests_in_file(0), time_offset(0)
+		total_requests_in_file(0), time_offset(0), cxl_pcie(cxl_pcie)
 	{
 		if (percentage_to_be_simulated > 100) {
 			percentage_to_be_simulated = 100;
@@ -191,9 +191,9 @@ namespace Host_Components
 	{
 		Host_IO_Request* request = Generate_next_request();
 		if (request != NULL) {
-			Submit_io_request(request);
-			//CXL->requests_queue.push_back(request);
-			//Simulator->Register_sim_event(request->Arrival_time, CXL, 0, 0);
+			//Submit_io_request(request);
+			cxl_pcie->requests_queue.push_back(request);
+			Simulator->Register_sim_event(request->Arrival_time, cxl_pcie, 0, 0);
 		}
 		
 

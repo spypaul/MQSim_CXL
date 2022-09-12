@@ -14,7 +14,7 @@ namespace SSD_Components
 		LHA_type LBA{ (((LHA_type)sqe->Command_specific[1]) << 31 | (LHA_type)sqe->Command_specific[0]) };
 		request_count++;
 		std::cout<< "Request Number: "<< request_count << " Reuqest addr: " << address << " PCIe OPCODE: " << ((sqe->Opcode == NVME_READ_OPCODE) ? "Read" : "Write") << " Start LBA: "
-			<< LBA << std::endl;
+			<< LBA << "Initiation Time: " << Simulator->Time() << std::endl ;
 
 		if (mshr.count(LBA)) {
 			mshr[LBA]->push_back(request_count);
@@ -37,6 +37,8 @@ namespace SSD_Components
 		mshr.erase(mshr.find(LBA));
 
 		cache_state.emplace(LBA);
+
+		std::cout << "Request initiation time: " << request->STAT_InitiationTime << " Request Response Time: " << request->STAT_ResponseTime << "	Simulator Time: " << Simulator->Time() << std::endl;
 
 	}
 
@@ -323,16 +325,26 @@ namespace SSD_Components
 	void Request_Fetch_Unit_CXL::Process_pcie_read_message(uint64_t address, void* payload, unsigned int payload_size)
 	{
 		Host_Interface_CXL* hi = (Host_Interface_CXL *)host_interface;
+
+		if (payload != NULL) {
+			if (!(hi->cxl_man->process_requests(address, payload))) {
+				return;
+			}
+			else {
+				hi->request_fetch_unit->Fetch_next_request(0);
+				if (((Submission_Queue_Entry*)payload)->Opcode == NVME_WRITE_OPCODE) {
+					//fetch_write data along with a simulator event with a new request parameters of write data
+					Simulator->Register_sim_event(Simulator->Time(), hi, 0, 0);
+				}
+			}
+		}
+
 		DMA_Req_Item* dma_req_item = dma_list.front();
 		dma_list.pop_front();
 
 		switch (dma_req_item->Type) {
 		case DMA_Req_Type::REQUEST_INFO:
 		{
-
-			if (!(hi->cxl_man->process_requests(address, payload))) {
-				break;
-			}
 
 			User_Request* new_reqeust = new User_Request;
 			new_reqeust->IO_command_info = payload;
@@ -456,7 +468,10 @@ namespace SSD_Components
 	{
 	}
 
-	void Host_Interface_CXL::Execute_simulator_event(MQSimEngine::Sim_Event* event) {}
+	void Host_Interface_CXL::Execute_simulator_event(MQSimEngine::Sim_Event* event) {
+		this->request_fetch_unit->Process_pcie_read_message(0, NULL, 4096);
+	
+	}
 
 	uint16_t Host_Interface_CXL::Get_submission_queue_depth()
 	{

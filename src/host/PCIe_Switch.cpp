@@ -14,7 +14,7 @@ namespace Host_Components
 
 	void PCIe_Switch::Send_to_host(PCIe_Message* message)
 	{
-		pcie_link->Deliver(message);
+		//pcie_link->Deliver(message);
 	}
 	
 	void PCIe_Switch::Attach_ssd_device(SSD_Components::Host_Interface_Base* host_interface)

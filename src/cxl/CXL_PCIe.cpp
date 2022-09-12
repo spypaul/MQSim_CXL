@@ -40,6 +40,8 @@ namespace Host_Components {
 
 		pcie_switch->Deliver_to_device(message);
 
+		delete io_request;
+
 	}
 
 	void CXL_PCIe::Set_pcie_switch(PCIe_Switch* pcie_switch) {
