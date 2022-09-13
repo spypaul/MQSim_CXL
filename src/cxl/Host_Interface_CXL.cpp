@@ -71,28 +71,28 @@ namespace SSD_Components
 
 	inline void Input_Stream_Manager_CXL::Submission_queue_tail_pointer_update(stream_id_type stream_id, uint16_t tail_pointer_value)
 	{
-		((Input_Stream_CXL*)input_streams[stream_id])->Submission_tail = tail_pointer_value;
+		//((Input_Stream_CXL*)input_streams[stream_id])->Submission_tail = tail_pointer_value;
 
-		if (((Input_Stream_CXL*)input_streams[stream_id])->On_the_fly_requests < Queue_fetch_size) {
-			((Host_Interface_CXL*)host_interface)->request_fetch_unit->Fetch_next_request(stream_id);
-			((Input_Stream_CXL*)input_streams[stream_id])->On_the_fly_requests++;
-			((Input_Stream_CXL*)input_streams[stream_id])->Submission_head++;//Update submission queue head after starting fetch request
-			if (((Input_Stream_CXL*)input_streams[stream_id])->Submission_head == ((Input_Stream_CXL*)input_streams[stream_id])->Submission_queue_size) {//Circular queue implementation
-				((Input_Stream_CXL*)input_streams[stream_id])->Submission_head = 0;
-			}
-		}
+		//if (((Input_Stream_CXL*)input_streams[stream_id])->On_the_fly_requests < Queue_fetch_size) {
+		//	((Host_Interface_CXL*)host_interface)->request_fetch_unit->Fetch_next_request(stream_id);
+		//	((Input_Stream_CXL*)input_streams[stream_id])->On_the_fly_requests++;
+		//	((Input_Stream_CXL*)input_streams[stream_id])->Submission_head++;//Update submission queue head after starting fetch request
+		//	if (((Input_Stream_CXL*)input_streams[stream_id])->Submission_head == ((Input_Stream_CXL*)input_streams[stream_id])->Submission_queue_size) {//Circular queue implementation
+		//		((Input_Stream_CXL*)input_streams[stream_id])->Submission_head = 0;
+		//	}
+		//}
 	}
 
 	inline void Input_Stream_Manager_CXL::Completion_queue_head_pointer_update(stream_id_type stream_id, uint16_t head_pointer_value)
 	{
-		((Input_Stream_CXL*)input_streams[stream_id])->Completion_head = head_pointer_value;
+		//((Input_Stream_CXL*)input_streams[stream_id])->Completion_head = head_pointer_value;
 
-		//If this check is true, then the host interface couldn't send the completion queue entry, since the completion queue was full
-		if (((Input_Stream_CXL*)input_streams[stream_id])->Completed_user_requests.size() > 0) {
-			User_Request* request = ((Input_Stream_CXL*)input_streams[stream_id])->Completed_user_requests.front();
-			((Input_Stream_CXL*)input_streams[stream_id])->Completed_user_requests.pop_front();
-			inform_host_request_completed(stream_id, request);
-		}
+		////If this check is true, then the host interface couldn't send the completion queue entry, since the completion queue was full
+		//if (((Input_Stream_CXL*)input_streams[stream_id])->Completed_user_requests.size() > 0) {
+		//	User_Request* request = ((Input_Stream_CXL*)input_streams[stream_id])->Completed_user_requests.front();
+		//	((Input_Stream_CXL*)input_streams[stream_id])->Completed_user_requests.pop_front();
+		//	inform_host_request_completed(stream_id, request);
+		//}
 	}
 
 	inline void Input_Stream_Manager_CXL::Handle_new_arrived_request(User_Request* request)
@@ -131,38 +131,38 @@ namespace SSD_Components
 		((Host_Interface_CXL*)host_interface)->cxl_man->request_serviced(request);
 
 		DEBUG("** Host Interface: Request #" << request->ID << " from stream #" << request->Stream_id << " is finished")
-			//If this is a read request, then the read data should be written to host memory
-			if (request->Type == UserRequestType::READ) {
-				((Host_Interface_CXL*)host_interface)->request_fetch_unit->Send_read_data(request);
-			}
+			////If this is a read request, then the read data should be written to host memory
+			//if (request->Type == UserRequestType::READ) {
+			//	((Host_Interface_CXL*)host_interface)->request_fetch_unit->Send_read_data(request);
+			//}
 
 
 
-		//there are waiting requests in the submission queue but have not been fetched, due to Queue_fetch_size limit
-		if (((Input_Stream_CXL*)input_streams[stream_id])->Submission_head != ((Input_Stream_CXL*)input_streams[stream_id])->Submission_tail) {
-			((Host_Interface_CXL*)host_interface)->request_fetch_unit->Fetch_next_request(stream_id);
-			((Input_Stream_CXL*)input_streams[stream_id])->On_the_fly_requests++;
-			((Input_Stream_CXL*)input_streams[stream_id])->Submission_head++;//Update submission queue head after starting fetch request
-			if (((Input_Stream_CXL*)input_streams[stream_id])->Submission_head == ((Input_Stream_CXL*)input_streams[stream_id])->Submission_queue_size) {//Circular queue implementation
-				((Input_Stream_CXL*)input_streams[stream_id])->Submission_head = 0;
-			}
-		}
+		////there are waiting requests in the submission queue but have not been fetched, due to Queue_fetch_size limit
+		//if (((Input_Stream_CXL*)input_streams[stream_id])->Submission_head != ((Input_Stream_CXL*)input_streams[stream_id])->Submission_tail) {
+		//	((Host_Interface_CXL*)host_interface)->request_fetch_unit->Fetch_next_request(stream_id);
+		//	((Input_Stream_CXL*)input_streams[stream_id])->On_the_fly_requests++;
+		//	((Input_Stream_CXL*)input_streams[stream_id])->Submission_head++;//Update submission queue head after starting fetch request
+		//	if (((Input_Stream_CXL*)input_streams[stream_id])->Submission_head == ((Input_Stream_CXL*)input_streams[stream_id])->Submission_queue_size) {//Circular queue implementation
+		//		((Input_Stream_CXL*)input_streams[stream_id])->Submission_head = 0;
+		//	}
+		//}
 
-		//Check if completion queue is full
-		if (((Input_Stream_CXL*)input_streams[stream_id])->Completion_head > ((Input_Stream_CXL*)input_streams[stream_id])->Completion_tail) {
-			//completion queue is full
-			if (((Input_Stream_CXL*)input_streams[stream_id])->Completion_tail + 1 == ((Input_Stream_CXL*)input_streams[stream_id])->Completion_head) {
-				((Input_Stream_CXL*)input_streams[stream_id])->Completed_user_requests.push_back(request);//Wait while the completion queue is full
-				return;
-			}
-		}
-		else if (((Input_Stream_CXL*)input_streams[stream_id])->Completion_tail - ((Input_Stream_CXL*)input_streams[stream_id])->Completion_head
-			== ((Input_Stream_CXL*)input_streams[stream_id])->Completion_queue_size - 1) {
-			((Input_Stream_CXL*)input_streams[stream_id])->Completed_user_requests.push_back(request);//Wait while the completion queue is full
-			return;
-		}
+		////Check if completion queue is full
+		//if (((Input_Stream_CXL*)input_streams[stream_id])->Completion_head > ((Input_Stream_CXL*)input_streams[stream_id])->Completion_tail) {
+		//	//completion queue is full
+		//	if (((Input_Stream_CXL*)input_streams[stream_id])->Completion_tail + 1 == ((Input_Stream_CXL*)input_streams[stream_id])->Completion_head) {
+		//		((Input_Stream_CXL*)input_streams[stream_id])->Completed_user_requests.push_back(request);//Wait while the completion queue is full
+		//		return;
+		//	}
+		//}
+		//else if (((Input_Stream_CXL*)input_streams[stream_id])->Completion_tail - ((Input_Stream_CXL*)input_streams[stream_id])->Completion_head
+		//	== ((Input_Stream_CXL*)input_streams[stream_id])->Completion_queue_size - 1) {
+		//	((Input_Stream_CXL*)input_streams[stream_id])->Completed_user_requests.push_back(request);//Wait while the completion queue is full
+		//	return;
+		//}
 
-		inform_host_request_completed(stream_id, request);//Completion queue is not full, so the device can DMA the completion queue entry to the host
+		//inform_host_request_completed(stream_id, request);//Completion queue is not full, so the device can DMA the completion queue entry to the host
 		DELETE_REQUEST_NVME(request);
 	}
 
@@ -183,12 +183,12 @@ namespace SSD_Components
 
 	inline void Input_Stream_Manager_CXL::inform_host_request_completed(stream_id_type stream_id, User_Request* request)
 	{
-		((Request_Fetch_Unit_CXL*)((Host_Interface_CXL*)host_interface)->request_fetch_unit)->Send_completion_queue_element(request, ((Input_Stream_CXL *)input_streams[stream_id])->Submission_head_informed_to_host);
-		((Input_Stream_CXL*)input_streams[stream_id])->Completion_tail++;//Next free slot in the completion queue
-		//Circular queue implementation
-		if (((Input_Stream_CXL*)input_streams[stream_id])->Completion_tail == ((Input_Stream_CXL *)input_streams[stream_id])->Completion_queue_size) {
-			((Input_Stream_CXL*)input_streams[stream_id])->Completion_tail = 0;
-		}
+		//((Request_Fetch_Unit_CXL*)((Host_Interface_CXL*)host_interface)->request_fetch_unit)->Send_completion_queue_element(request, ((Input_Stream_CXL *)input_streams[stream_id])->Submission_head_informed_to_host);
+		//((Input_Stream_CXL*)input_streams[stream_id])->Completion_tail++;//Next free slot in the completion queue
+		////Circular queue implementation
+		//if (((Input_Stream_CXL*)input_streams[stream_id])->Completion_tail == ((Input_Stream_CXL *)input_streams[stream_id])->Completion_queue_size) {
+		//	((Input_Stream_CXL*)input_streams[stream_id])->Completion_tail = 0;
+		//}
 	}
 
 	void Input_Stream_Manager_CXL::segment_user_request(User_Request* user_request)
@@ -265,7 +265,7 @@ namespace SSD_Components
 
 	void Request_Fetch_Unit_CXL::Process_pcie_write_message(uint64_t address, void* payload, unsigned int payload_size)
 	{
-		Host_Interface_CXL* hi = (Host_Interface_CXL*)host_interface;
+		/*Host_Interface_CXL* hi = (Host_Interface_CXL*)host_interface;
 		uint64_t val = (uint64_t)payload;
 		switch (address)
 		{
@@ -319,7 +319,7 @@ namespace SSD_Components
 			break;
 		default:
 			throw std::invalid_argument("Unknown register is written!");
-		}
+		}*/
 	}
 
 	void Request_Fetch_Unit_CXL::Process_pcie_read_message(uint64_t address, void* payload, unsigned int payload_size)
@@ -407,31 +407,31 @@ namespace SSD_Components
 
 	void Request_Fetch_Unit_CXL::Send_completion_queue_element(User_Request* request, uint16_t sq_head_value)
 	{
-		Host_Interface_CXL* hi = (Host_Interface_CXL*)host_interface;
-		Completion_Queue_Entry* cqe = new Completion_Queue_Entry;
-		cqe->SQ_Head = sq_head_value;
-		cqe->SQ_ID = FLOW_ID_TO_Q_ID(request->Stream_id);
-		cqe->SF_P = 0x0001 & current_phase;
-		cqe->Command_Identifier = ((Submission_Queue_Entry*)request->IO_command_info)->Command_Identifier;
-		Input_Stream_CXL* im = ((Input_Stream_CXL*)hi->input_stream_manager->input_streams[request->Stream_id]);
-		host_interface->Send_write_message_to_host(im->Completion_queue_base_address + im->Completion_tail * sizeof(Completion_Queue_Entry), cqe, sizeof(Completion_Queue_Entry));
-		number_of_sent_cqe++;
-		if (number_of_sent_cqe % im->Completion_queue_size == 0)
-		{
-			//According to protocol specification, the value of the Phase Tag is inverted each pass through the Completion Queue
-			if (current_phase == 0xffff) {
-				current_phase = 0xfffe;
-			}
-			else {
-				current_phase = 0xffff;
-			}
-		}
+		//Host_Interface_CXL* hi = (Host_Interface_CXL*)host_interface;
+		//Completion_Queue_Entry* cqe = new Completion_Queue_Entry;
+		//cqe->SQ_Head = sq_head_value;
+		//cqe->SQ_ID = FLOW_ID_TO_Q_ID(request->Stream_id);
+		//cqe->SF_P = 0x0001 & current_phase;
+		//cqe->Command_Identifier = ((Submission_Queue_Entry*)request->IO_command_info)->Command_Identifier;
+		//Input_Stream_CXL* im = ((Input_Stream_CXL*)hi->input_stream_manager->input_streams[request->Stream_id]);
+		//host_interface->Send_write_message_to_host(im->Completion_queue_base_address + im->Completion_tail * sizeof(Completion_Queue_Entry), cqe, sizeof(Completion_Queue_Entry));
+		//number_of_sent_cqe++;
+		//if (number_of_sent_cqe % im->Completion_queue_size == 0)
+		//{
+		//	//According to protocol specification, the value of the Phase Tag is inverted each pass through the Completion Queue
+		//	if (current_phase == 0xffff) {
+		//		current_phase = 0xfffe;
+		//	}
+		//	else {
+		//		current_phase = 0xffff;
+		//	}
+		//}
 	}
 
 	void Request_Fetch_Unit_CXL::Send_read_data(User_Request* request)
 	{
-		Submission_Queue_Entry* sqe = (Submission_Queue_Entry*)request->IO_command_info;
-		host_interface->Send_write_message_to_host(sqe->PRP_entry_1, request->Data, request->Size_in_byte);
+		//Submission_Queue_Entry* sqe = (Submission_Queue_Entry*)request->IO_command_info;
+		//host_interface->Send_write_message_to_host(sqe->PRP_entry_1, request->Data, request->Size_in_byte);
 	}
 
 	Host_Interface_CXL::Host_Interface_CXL(const sim_object_id_type& id,
@@ -469,7 +469,7 @@ namespace SSD_Components
 	}
 
 	void Host_Interface_CXL::Execute_simulator_event(MQSimEngine::Sim_Event* event) {
-		this->request_fetch_unit->Process_pcie_read_message(0, NULL, 4096);
+		this->request_fetch_unit->Process_pcie_read_message(0, NULL, 4096); //initiate when there is a write request
 	
 	}
 
