@@ -52,11 +52,11 @@ namespace Host_Components
 		} 
 		
 		request->Start_LBA = std::strtoull(current_trace_line[ASCIITraceAddressColumn].c_str(), &pEnd, 0);
-		if (request->Start_LBA <= (end_lsa_on_device - start_lsa_on_device)) {
-			request->Start_LBA += start_lsa_on_device;
-		} else {
-			request->Start_LBA = start_lsa_on_device + request->Start_LBA % (end_lsa_on_device - start_lsa_on_device);
-		}
+		//if (request->Start_LBA <= (end_lsa_on_device - start_lsa_on_device)) {
+		//	request->Start_LBA += start_lsa_on_device;
+		//} else {
+		//	request->Start_LBA = start_lsa_on_device + request->Start_LBA % (end_lsa_on_device - start_lsa_on_device);
+		//}
 
 		request->Arrival_time = time_offset + Simulator->Time();
 		STAT_generated_request_count++;

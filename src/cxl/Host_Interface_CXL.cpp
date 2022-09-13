@@ -10,35 +10,61 @@ namespace SSD_Components
 {
 
 	bool CXL_Manager::process_requests(uint64_t address, void* payload) {
-		Submission_Queue_Entry* sqe = (Submission_Queue_Entry*)payload;
-		LHA_type LBA{ (((LHA_type)sqe->Command_specific[1]) << 31 | (LHA_type)sqe->Command_specific[0]) };
-		request_count++;
-		std::cout<< "Request Number: "<< request_count << " Reuqest addr: " << address << " PCIe OPCODE: " << ((sqe->Opcode == NVME_READ_OPCODE) ? "Read" : "Write") << " Start LBA: "
-			<< LBA << "Initiation Time: " << Simulator->Time() << std::endl ;
 
-		if (mshr.count(LBA)) {
-			mshr[LBA]->push_back(request_count);
+		bool cache_miss{ 1 };
+
+		Submission_Queue_Entry* sqe = (Submission_Queue_Entry*)payload;
+		LHA_type memory_addr{ (((LHA_type)sqe->Command_specific[1]) << 31 | (LHA_type)sqe->Command_specific[0]) };
+
+		//translate 
+		// 4096 is the page size
+		LHA_type lba{ memory_addr / 4096 }; //stream alignment will be done when dealing with transaction segmentation
+		LHA_type lsa{ lba * sqe->Command_specific[2]}; // lsa to be used for request
+
+		sqe->Command_specific[0] = (uint32_t)lsa;
+		sqe->Command_specific[1] = (uint32_t)(lsa >> 32);
+
+		if (cache_state.count(lba)) {
+			cache_miss = 0;
 		}
 		else {
-			std::list<LHA_type>* lp{ new std::list<LHA_type> };
-			mshr[LBA] = lp;
+			if (mshr.count(lba)) {
+				mshr[lba]->push_back(request_count);
+				cache_miss = 0;
+			}
+			else {
+				std::list<LHA_type>* lp{ new std::list<LHA_type> };
+				mshr[lba] = lp;
+			}
+		}
+		total_number_of_accesses++;
+		std::cout << "Total number of accesses" << total_number_of_accesses << std::endl;
+
+		if (cache_miss) {
+			request_count++;
+			std::cout << "Request Number: " << request_count << " PCIe OPCODE: " << ((sqe->Opcode == NVME_READ_OPCODE) ? "Read" : "Write") << " Start LBA: "
+				<< lba << "Initiation Time: " << Simulator->Time() << std::endl;
 		}
 
-		return 1;
+
+
+		return cache_miss;
 	}
 
 	void CXL_Manager::request_serviced(User_Request* request) {
 		Submission_Queue_Entry* sqe = (Submission_Queue_Entry*)request->IO_command_info;
 
-		LHA_type LBA{ (((LHA_type)sqe->Command_specific[1]) << 31 | (LHA_type)sqe->Command_specific[0]) };
+		LHA_type lba{ (((LHA_type)sqe->Command_specific[1]) << 31 | (LHA_type)sqe->Command_specific[0]) / sqe->Command_specific[2] };
 
 		
-		delete mshr[LBA];
-		mshr.erase(mshr.find(LBA));
+		delete mshr[lba];
+		mshr.erase(mshr.find(lba));
 
-		cache_state.emplace(LBA);
+		cache_state.emplace(lba);
 
-		std::cout << "Request initiation time: " << request->STAT_InitiationTime << " Request Response Time: " << request->STAT_ResponseTime << "	Simulator Time: " << Simulator->Time() << std::endl;
+		finished_count++;
+
+		std::cout <<"Finished count: "<< finished_count<< " Request initiation time: " << request->STAT_InitiationTime  << "	Simulator Time: " << Simulator->Time() << std::endl;
 
 	}
 

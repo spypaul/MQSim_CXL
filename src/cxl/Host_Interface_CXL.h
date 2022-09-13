@@ -20,7 +20,7 @@ namespace SSD_Components
 		void request_serviced(User_Request* request);
 
 	private:
-		uint64_t request_count{ 0 };
+		uint64_t request_count{ 0 }, finished_count{ 0 }, total_number_of_accesses{0};
 		std::map<LHA_type, std::list<uint64_t>*> mshr;
 
 		std::set<LHA_type> cache_state;
