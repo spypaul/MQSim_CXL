@@ -1,0 +1,6 @@
+DRAM_size 268435456
+Cache_portion_percentage 25
+Cache_policy Random
+LRFU_p_lambda 2 1
+Set_associativity 2
+Prefetcher Tagged

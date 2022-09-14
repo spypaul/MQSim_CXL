@@ -217,6 +217,12 @@
     <ClCompile Include="src\cxl\CXL_PCIe.cpp">
       <Filter>cxl</Filter>
     </ClCompile>
+    <ClCompile Include="src\cxl\CXL_Config.cpp">
+      <Filter>cxl</Filter>
+    </ClCompile>
+    <ClCompile Include="src\cxl\DRAM_Subsystem.cpp">
+      <Filter>cxl</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\exec\Device_Parameter_Set.h">
@@ -481,6 +487,12 @@
       <Filter>cxl</Filter>
     </ClInclude>
     <ClInclude Include="src\cxl\CXL_PCIe.h">
+      <Filter>cxl</Filter>
+    </ClInclude>
+    <ClInclude Include="src\cxl\CXL_Config.h">
+      <Filter>cxl</Filter>
+    </ClInclude>
+    <ClInclude Include="src\cxl\DRAM_Subsystem.h">
       <Filter>cxl</Filter>
     </ClInclude>
   </ItemGroup>

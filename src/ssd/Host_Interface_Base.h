@@ -113,8 +113,8 @@ namespace SSD_Components
 			connected_user_request_arrived_signal_handlers.push_back(function);
 		}
 
-		void Consume_pcie_message(Host_Components::PCIe_Message* message)
-		{
+		virtual void Consume_pcie_message(Host_Components::PCIe_Message* message)
+		{ //virtual is added so Host_interface_cxl can override this method
 			if (message->Type == Host_Components::PCIe_Message_Type::READ_COMP) {
 				request_fetch_unit->Process_pcie_read_message(message->Address, message->Payload, message->Payload_size);
 			} else {

@@ -8,7 +8,9 @@
 
 namespace SSD_Components
 {
-
+	CXL_Manager::CXL_Manager() {
+		cxl_config_para.readConfigFile();
+	}
 	bool CXL_Manager::process_requests(uint64_t address, void* payload) {
 
 		bool cache_miss{ 1 };
@@ -16,13 +18,14 @@ namespace SSD_Components
 		Submission_Queue_Entry* sqe = (Submission_Queue_Entry*)payload;
 		LHA_type memory_addr{ (((LHA_type)sqe->Command_specific[1]) << 31 | (LHA_type)sqe->Command_specific[0]) };
 
+		//No translate
+		LHA_type lba{ memory_addr };
 		//translate 
 		// 4096 is the page size
-		LHA_type lba{ memory_addr / 4096 }; //stream alignment will be done when dealing with transaction segmentation
-		LHA_type lsa{ lba * sqe->Command_specific[2]}; // lsa to be used for request
-
-		sqe->Command_specific[0] = (uint32_t)lsa;
-		sqe->Command_specific[1] = (uint32_t)(lsa >> 32);
+		//LHA_type lba{ memory_addr / 4096 }; //stream alignment will be done when dealing with transaction segmentation
+		//LHA_type lsa{ lba * sqe->Command_specific[2]}; // lsa to be used for request
+		//sqe->Command_specific[0] = (uint32_t)lsa;
+		//sqe->Command_specific[1] = (uint32_t)(lsa >> 32);
 
 		if (cache_state.count(lba)) {
 			cache_miss = 0;
@@ -352,18 +355,6 @@ namespace SSD_Components
 	{
 		Host_Interface_CXL* hi = (Host_Interface_CXL *)host_interface;
 
-		if (payload != NULL) {
-			if (!(hi->cxl_man->process_requests(address, payload))) {
-				return;
-			}
-			else {
-				hi->request_fetch_unit->Fetch_next_request(0);
-				if (((Submission_Queue_Entry*)payload)->Opcode == NVME_WRITE_OPCODE) {
-					//fetch_write data along with a simulator event with a new request parameters of write data
-					Simulator->Register_sim_event(Simulator->Time(), hi, 0, 0);
-				}
-			}
-		}
 
 		DMA_Req_Item* dma_req_item = dma_list.front();
 		dma_list.pop_front();
@@ -417,7 +408,7 @@ namespace SSD_Components
 
 		Host_Interface_CXL *hi = (Host_Interface_CXL*)host_interface;
 		Input_Stream_CXL* im = ((Input_Stream_CXL*)hi->input_stream_manager->input_streams[stream_id]);
-		host_interface->Send_read_message_to_host(im->Submission_queue_base_address + im->Submission_head * sizeof(Submission_Queue_Entry), sizeof(Submission_Queue_Entry));
+		//host_interface->Send_read_message_to_host(im->Submission_queue_base_address + im->Submission_head * sizeof(Submission_Queue_Entry), sizeof(Submission_Queue_Entry));
 	}
 
 	void Request_Fetch_Unit_CXL::Fetch_write_data(User_Request* request)
@@ -428,7 +419,10 @@ namespace SSD_Components
 		dma_list.push_back(dma_req_item);
 
 		Submission_Queue_Entry* sqe = (Submission_Queue_Entry*)request->IO_command_info;
-		host_interface->Send_read_message_to_host((sqe->PRP_entry_2 << 31) | sqe->PRP_entry_1, request->Size_in_byte);
+
+		Process_pcie_read_message(0, NULL, 4096);//immediate send data
+
+		//host_interface->Send_read_message_to_host((sqe->PRP_entry_2 << 31) | sqe->PRP_entry_1, request->Size_in_byte);
 	}
 
 	void Request_Fetch_Unit_CXL::Send_completion_queue_element(User_Request* request, uint16_t sq_head_value)
@@ -470,6 +464,7 @@ namespace SSD_Components
 		this->request_fetch_unit = new Request_Fetch_Unit_CXL(this);
 
 		this->cxl_man = new CXL_Manager();
+
 	}
 
 	stream_id_type Host_Interface_CXL::Create_new_stream(IO_Flow_Priority_Class priority_class, LHA_type start_logical_sector_address, LHA_type end_logical_sector_address,
@@ -495,7 +490,7 @@ namespace SSD_Components
 	}
 
 	void Host_Interface_CXL::Execute_simulator_event(MQSimEngine::Sim_Event* event) {
-		this->request_fetch_unit->Process_pcie_read_message(0, NULL, 4096); //initiate when there is a write request
+		//this->request_fetch_unit->Process_pcie_read_message(0, NULL, 4096); //initiate when there is a write request
 	
 	}
 

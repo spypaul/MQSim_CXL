@@ -65,7 +65,7 @@ namespace SSD_Components
 		pcie_message->Address = addresss;
 		pcie_message->Payload = (void*)(intptr_t)request_read_data_size;
 		pcie_message->Payload_size = sizeof(request_read_data_size);
-		//pcie_switch->Send_to_host(pcie_message);
+		pcie_switch->Send_to_host(pcie_message);
 		delete pcie_message;
 	}
 
@@ -77,7 +77,7 @@ namespace SSD_Components
 		pcie_message->Address = addresss;
 		COPYDATA(pcie_message->Payload, message, pcie_message->Payload_size);
 		pcie_message->Payload_size = message_size;
-		//pcie_switch->Send_to_host(pcie_message);
+		pcie_switch->Send_to_host(pcie_message);
 		delete pcie_message;
 	}
 

@@ -19,7 +19,9 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\cxl\CXL_Config.cpp" />
     <ClCompile Include="src\cxl\CXL_PCIe.cpp" />
+    <ClCompile Include="src\cxl\DRAM_Subsystem.cpp" />
     <ClCompile Include="src\cxl\Host_Interface_CXL.cpp" />
     <ClCompile Include="src\exec\Device_Parameter_Set.cpp" />
     <ClCompile Include="src\exec\Execution_Parameter_Set.cpp" />
@@ -83,7 +85,9 @@
     <ClCompile Include="src\utils\XMLWriter.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\cxl\CXL_Config.h" />
     <ClInclude Include="src\cxl\CXL_PCIe.h" />
+    <ClInclude Include="src\cxl\DRAM_Subsystem.h" />
     <ClInclude Include="src\cxl\Host_Interface_CXL.h" />
     <ClInclude Include="src\exec\Device_Parameter_Set.h" />
     <ClInclude Include="src\exec\Execution_Parameter_Set.h" />

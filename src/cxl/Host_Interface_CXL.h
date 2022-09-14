@@ -9,6 +9,7 @@
 #include "../ssd/Host_Interface_Base.h"
 #include "../ssd/User_Request.h"
 #include "../ssd/Host_Interface_Defs.h"
+#include "CXL_Config.h"
 
 namespace SSD_Components
 {
@@ -16,10 +17,16 @@ namespace SSD_Components
 
 	class CXL_Manager {
 	public:
+		
+		CXL_Manager();
+		
 		bool process_requests(uint64_t address, void* payload);
 		void request_serviced(User_Request* request);
 
 	private:
+
+		cxl_config cxl_config_para;
+
 		uint64_t request_count{ 0 }, finished_count{ 0 }, total_number_of_accesses{0};
 		std::map<LHA_type, std::list<uint64_t>*> mshr;
 
@@ -110,6 +117,27 @@ namespace SSD_Components
 		uint16_t Get_completion_queue_depth();
 		void Report_results_in_XML(std::string name_prefix, Utils::XmlWriter& xmlwriter);
 		CXL_Manager* cxl_man;
+
+		void Consume_pcie_message(Host_Components::PCIe_Message* message)
+		{
+			if (!(cxl_man->process_requests(message->Address, message->Payload))) {
+				delete message;
+				return;
+			}
+			else {
+
+				//((Submission_Queue_Entry*)message->Payload)->Opcode = NVME_READ_OPCODE;
+				request_fetch_unit->Fetch_next_request(0);
+			}
+
+			if (message->Type == Host_Components::PCIe_Message_Type::READ_COMP) {
+				request_fetch_unit->Process_pcie_read_message(message->Address, message->Payload, message->Payload_size);
+			}
+			else {
+				request_fetch_unit->Process_pcie_write_message(message->Address, message->Payload, message->Payload_size);
+			}
+			delete message;
+		}
 	private:
 		uint16_t submission_queue_depth, completion_queue_depth;
 		unsigned int no_of_input_streams;
