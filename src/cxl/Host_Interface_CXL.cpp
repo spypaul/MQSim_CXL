@@ -8,8 +8,13 @@
 
 namespace SSD_Components
 {
+
 	CXL_Manager::CXL_Manager() {
 		cxl_config_para.readConfigFile();
+
+		dram = new dram_subsystem{ cxl_config_para };
+		dram->initDRAM();
+		mshr = new cxl_mshr;
 	}
 	bool CXL_Manager::process_requests(uint64_t address, void* payload) {
 
@@ -19,34 +24,31 @@ namespace SSD_Components
 		LHA_type memory_addr{ (((LHA_type)sqe->Command_specific[1]) << 31 | (LHA_type)sqe->Command_specific[0]) };
 
 		//No translate
-		LHA_type lba{ memory_addr };
+		//LHA_type lba{ memory_addr };
 		//translate 
 		// 4096 is the page size
-		//LHA_type lba{ memory_addr / 4096 }; //stream alignment will be done when dealing with transaction segmentation
-		//LHA_type lsa{ lba * sqe->Command_specific[2]}; // lsa to be used for request
-		//sqe->Command_specific[0] = (uint32_t)lsa;
-		//sqe->Command_specific[1] = (uint32_t)(lsa >> 32);
+		LHA_type lba{ memory_addr / 4096 }; //stream alignment will be done when dealing with transaction segmentation
+		LHA_type lsa{ lba * sqe->Command_specific[2]}; // lsa to be used for request
+		sqe->Command_specific[0] = (uint32_t)lsa;
+		sqe->Command_specific[1] = (uint32_t)(lsa >> 32);
 
-		if (cache_state.count(lba)) {
+		if (dram->isCacheHit(lba)) {
 			cache_miss = 0;
 		}
 		else {
-			if (mshr.count(lba)) {
-				mshr[lba]->push_back(request_count);
+
+			if (mshr->isInProgress(lba)) {
 				cache_miss = 0;
 			}
-			else {
-				std::list<LHA_type>* lp{ new std::list<LHA_type> };
-				mshr[lba] = lp;
-			}
+			Submission_Queue_Entry* nsqe{ new Submission_Queue_Entry{*sqe} };
+			mshr->insertRequest(lba, Simulator->Time(), nsqe);
 		}
 		total_number_of_accesses++;
 		std::cout << "Total number of accesses" << total_number_of_accesses << std::endl;
 
 		if (cache_miss) {
 			request_count++;
-			std::cout << "Request Number: " << request_count << " PCIe OPCODE: " << ((sqe->Opcode == NVME_READ_OPCODE) ? "Read" : "Write") << " Start LBA: "
-				<< lba << "Initiation Time: " << Simulator->Time() << std::endl;
+			std::cout << "Request Number: " << request_count  << " Start LBA: "<< lba << "Initiation Time: " << Simulator->Time() << std::endl;
 		}
 
 
@@ -54,17 +56,17 @@ namespace SSD_Components
 		return cache_miss;
 	}
 
-	void CXL_Manager::request_serviced(User_Request* request) {
+	void CXL_Manager::request_serviced(User_Request* request, list<uint64_t>* flush_lba) {
 		Submission_Queue_Entry* sqe = (Submission_Queue_Entry*)request->IO_command_info;
 
 		LHA_type lba{ (((LHA_type)sqe->Command_specific[1]) << 31 | (LHA_type)sqe->Command_specific[0]) / sqe->Command_specific[2] };
 
+		mshr->removeRequest(lba);
+
+		bool rw{ (sqe->Opcode == NVME_READ_OPCODE) ? true : false };
+
+		dram->process_miss_data_ready(rw, lba, flush_lba);
 		
-		delete mshr[lba];
-		mshr.erase(mshr.find(lba));
-
-		cache_state.emplace(lba);
-
 		finished_count++;
 
 		std::cout <<"Finished count: "<< finished_count<< " Request initiation time: " << request->STAT_InitiationTime  << "	Simulator Time: " << Simulator->Time() << std::endl;
@@ -156,9 +158,29 @@ namespace SSD_Components
 		((Input_Stream_CXL*)input_streams[request->Stream_id])->Waiting_user_requests.remove(request);
 		((Input_Stream_CXL*)input_streams[stream_id])->On_the_fly_requests--;
 
+		list<uint64_t>* flush_lba{ new list<uint64_t> };
+		((Host_Interface_CXL*)host_interface)->cxl_man->request_serviced(request, flush_lba);
 
-		((Host_Interface_CXL*)host_interface)->cxl_man->request_serviced(request);
+		while (!flush_lba->empty()) {
+			uint64_t lba{ flush_lba->front() };
+			uint64_t lsa{ lba * 8 };
+			flush_lba->pop_front();
+			Submission_Queue_Entry* sqe{ new Submission_Queue_Entry };
+			sqe->Command_Identifier = 0;
+			sqe->Opcode = NVME_WRITE_OPCODE;
 
+			sqe->Command_specific[0] = (uint32_t)lsa;
+			sqe->Command_specific[1] = (uint32_t)(lsa >> 32);
+			sqe->Command_specific[2] = ((uint32_t)((uint16_t)8)) & (uint32_t)(0x0000ffff);
+
+			sqe->PRP_entry_1 = (DATA_MEMORY_REGION);//Dummy addresses, just to emulate data read/write access
+			sqe->PRP_entry_2 = (DATA_MEMORY_REGION + 0x1000);//Dummy addresses
+
+			((Request_Fetch_Unit_CXL*)((Host_Interface_CXL*)host_interface)->request_fetch_unit)->Process_pcie_read_message(0, sqe, sizeof(Submission_Queue_Entry));
+
+		}
+
+		delete flush_lba;
 		DEBUG("** Host Interface: Request #" << request->ID << " from stream #" << request->Stream_id << " is finished")
 			////If this is a read request, then the read data should be written to host memory
 			//if (request->Type == UserRequestType::READ) {

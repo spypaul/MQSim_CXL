@@ -5,11 +5,17 @@
 #include <list>
 #include <map>
 #include <set>
+
 #include "../sim/Sim_Event.h"
 #include "../ssd/Host_Interface_Base.h"
 #include "../ssd/User_Request.h"
 #include "../ssd/Host_Interface_Defs.h"
+#include "DRAM_Subsystem.h"
 #include "CXL_Config.h"
+#include "CXL_MSHR.h"
+
+using namespace std;
+
 
 namespace SSD_Components
 {
@@ -17,20 +23,22 @@ namespace SSD_Components
 
 	class CXL_Manager {
 	public:
-		
+
 		CXL_Manager();
 		
 		bool process_requests(uint64_t address, void* payload);
-		void request_serviced(User_Request* request);
+		void request_serviced(User_Request* request, list<uint64_t>* flush_lba);
 
 	private:
 
 		cxl_config cxl_config_para;
 
 		uint64_t request_count{ 0 }, finished_count{ 0 }, total_number_of_accesses{0};
-		std::map<LHA_type, std::list<uint64_t>*> mshr;
 
-		std::set<LHA_type> cache_state;
+		cxl_mshr* mshr;
+
+		dram_subsystem* dram;
+
 	};
 
 

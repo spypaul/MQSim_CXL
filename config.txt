@@ -1,5 +1,5 @@
-DRAM_size 268435456
-Cache_portion_percentage 25
+DRAM_size 65536
+Cache_portion_percentage 100
 Cache_policy Random
 LRFU_p_lambda 2 1
 Set_associativity 2

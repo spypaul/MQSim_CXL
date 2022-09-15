@@ -20,6 +20,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\cxl\CXL_Config.cpp" />
+    <ClCompile Include="src\cxl\CXL_MSHR.cpp" />
     <ClCompile Include="src\cxl\CXL_PCIe.cpp" />
     <ClCompile Include="src\cxl\DRAM_Subsystem.cpp" />
     <ClCompile Include="src\cxl\Host_Interface_CXL.cpp" />
@@ -86,6 +87,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\cxl\CXL_Config.h" />
+    <ClInclude Include="src\cxl\CXL_MSHR.h" />
     <ClInclude Include="src\cxl\CXL_PCIe.h" />
     <ClInclude Include="src\cxl\DRAM_Subsystem.h" />
     <ClInclude Include="src\cxl\Host_Interface_CXL.h" />
