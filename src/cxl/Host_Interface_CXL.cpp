@@ -31,12 +31,17 @@ namespace SSD_Components
 		LHA_type lsa{ lba * sqe->Command_specific[2]}; // lsa to be used for request
 		sqe->Command_specific[0] = (uint32_t)lsa;
 		sqe->Command_specific[1] = (uint32_t)(lsa >> 32);
+		if (lba == 2482) {
+			cout << "check" << endl;
+		}
+
 
 		if (dram->isCacheHit(lba)) {
 			cache_miss = 0;
+			bool rw{ (sqe->Opcode == NVME_READ_OPCODE) ? true : false };
+			dram->process_cache_hit(rw, lba);
 		}
 		else {
-
 			if (mshr->isInProgress(lba)) {
 				cache_miss = 0;
 			}
@@ -45,6 +50,9 @@ namespace SSD_Components
 		}
 		total_number_of_accesses++;
 		std::cout << "Total number of accesses" << total_number_of_accesses << std::endl;
+		//if (total_number_of_accesses == 134107) {
+		//	cout << "check" << endl;
+		//}
 
 		if (cache_miss) {
 			request_count++;
@@ -61,11 +69,28 @@ namespace SSD_Components
 
 		LHA_type lba{ (((LHA_type)sqe->Command_specific[1]) << 31 | (LHA_type)sqe->Command_specific[0]) / sqe->Command_specific[2] };
 
-		mshr->removeRequest(lba);
+		if (sqe->Opcode == NVME_WRITE_OPCODE) {//flush done
+
+			finished_count++;
+
+			std::cout << "Finished count: " << finished_count << " Request initiation time: " << request->STAT_InitiationTime << "	Simulator Time: " << Simulator->Time() << " Flush Done" <<  std::endl;
+			return;
+		}
+
+		uint64_t readcount{ 0 }, writecount{ 0 };
+		mshr->removeRequest(lba, readcount, writecount);
 
 		bool rw{ (sqe->Opcode == NVME_READ_OPCODE) ? true : false };
 
 		dram->process_miss_data_ready(rw, lba, flush_lba);
+
+		for (auto i = 0; i < readcount; i++) {
+			dram->process_cache_hit(1, lba);
+		}
+
+		for (auto i = 0; i < writecount; i++) {
+			dram->process_cache_hit(0, lba);
+		}
 		
 		finished_count++;
 
@@ -164,6 +189,8 @@ namespace SSD_Components
 		while (!flush_lba->empty()) {
 			uint64_t lba{ flush_lba->front() };
 			uint64_t lsa{ lba * 8 };
+
+
 			flush_lba->pop_front();
 			Submission_Queue_Entry* sqe{ new Submission_Queue_Entry };
 			sqe->Command_Identifier = 0;
@@ -175,6 +202,8 @@ namespace SSD_Components
 
 			sqe->PRP_entry_1 = (DATA_MEMORY_REGION);//Dummy addresses, just to emulate data read/write access
 			sqe->PRP_entry_2 = (DATA_MEMORY_REGION + 0x1000);//Dummy addresses
+
+			((Request_Fetch_Unit_CXL*)((Host_Interface_CXL*)host_interface)->request_fetch_unit)->Fetch_next_request(0);
 
 			((Request_Fetch_Unit_CXL*)((Host_Interface_CXL*)host_interface)->request_fetch_unit)->Process_pcie_read_message(0, sqe, sizeof(Submission_Queue_Entry));
 

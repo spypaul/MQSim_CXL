@@ -1,4 +1,4 @@
-DRAM_size 65536
+DRAM_size 32768
 Cache_portion_percentage 100
 Cache_policy Random
 LRFU_p_lambda 2 1

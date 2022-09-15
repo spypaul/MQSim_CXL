@@ -34,7 +34,7 @@ public:
 	bool isInProgress(uint64_t lba);
 
 	void insertRequest(uint64_t lba, uint64_t time, Submission_Queue_Entry* sqe);
-	void removeRequest(uint64_t lba);
+	void removeRequest(uint64_t lba, uint64_t &readcount, uint64_t &writecount);
 
 	
 private:

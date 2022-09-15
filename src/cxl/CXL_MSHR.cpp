@@ -37,9 +37,20 @@ void cxl_mshr::insertRequest(uint64_t lba, uint64_t time, Submission_Queue_Entry
 	
 }
 
-void cxl_mshr::removeRequest(uint64_t lba) {
+void cxl_mshr::removeRequest(uint64_t lba, uint64_t& readcount, uint64_t& writecount) {
 	for (auto i : *(*mshr)[lba]) {
 		//process the data read/write of requests in the mshr
+		if (i == *((*mshr)[lba]->begin())) {
+			continue; // skip the initial miss
+		}
+		Submission_Queue_Entry* s{ i->sqe };
+
+		if (s->Opcode == NVME_READ_OPCODE) {
+			readcount++;
+		}
+		else {
+			writecount++;
+		}
 
 		delete i;
 	}
