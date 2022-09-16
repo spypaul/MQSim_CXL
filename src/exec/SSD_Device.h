@@ -8,6 +8,7 @@
 #include "../ssd/Host_Interface_Base.h"
 #include "../ssd/Host_Interface_SATA.h"
 #include "../ssd/Host_Interface_NVMe.h"
+#include "../cxl/DRAM_Model.h"
 #include "../cxl/Host_Interface_CXL.h"
 #include "../ssd/Data_Cache_Manager_Base.h"
 #include "../ssd/Data_Cache_Flash.h"

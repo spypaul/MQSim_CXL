@@ -13,6 +13,8 @@
 #include "DRAM_Subsystem.h"
 #include "CXL_Config.h"
 #include "CXL_MSHR.h"
+#include "DRAM_Model.h"
+#include "OutputLog.h"
 
 using namespace std;
 
@@ -24,20 +26,24 @@ namespace SSD_Components
 	class CXL_Manager {
 	public:
 
-		CXL_Manager();
+		CXL_Manager(Host_Interface_Base* hosti);
+		~CXL_Manager();
 		
 		bool process_requests(uint64_t address, void* payload);
 		void request_serviced(User_Request* request, list<uint64_t>* flush_lba);
+
+		cxl_mshr* mshr;
+
+		dram_subsystem* dram;
 
 	private:
 
 		cxl_config cxl_config_para;
 
 		uint64_t request_count{ 0 }, finished_count{ 0 }, total_number_of_accesses{0};
+		float perc{ 1 };
 
-		cxl_mshr* mshr;
-
-		dram_subsystem* dram;
+		Host_Interface_Base* hi{NULL};
 
 	};
 
@@ -112,12 +118,14 @@ namespace SSD_Components
 	{
 		friend class Input_Stream_Manager_CXL;
 		friend class Request_Fetch_Unit_CXL;
+		friend class CXL_Manager;
 	public:
 		Host_Interface_CXL(const sim_object_id_type& id, LHA_type max_logical_sector_address,
 			uint16_t submission_queue_depth, uint16_t completion_queue_depth,
-			unsigned int no_of_input_streams, uint16_t queue_fetch_size, unsigned int sectors_per_page, Data_Cache_Manager_Base* cache);
+			unsigned int no_of_input_streams, uint16_t queue_fetch_size, unsigned int sectors_per_page, Data_Cache_Manager_Base* cache, CXL_DRAM_Model* cxl_dram);
 		stream_id_type Create_new_stream(IO_Flow_Priority_Class priority_class, LHA_type start_logical_sector_address, LHA_type end_logical_sector_address,
 			uint64_t submission_queue_base_address, uint64_t completion_queue_base_address);
+		~Host_Interface_CXL();
 		void Start_simulation();
 		void Validate_simulation_config();
 		void Execute_simulator_event(MQSimEngine::Sim_Event*);
@@ -146,9 +154,17 @@ namespace SSD_Components
 			}
 			delete message;
 		}
+
+		void Update_CXL_DRAM_state(bool rw, uint64_t lba){
+			this->cxl_man->dram->process_cache_hit(rw, lba);
+		}
+		void Send_request_to_CXL_DRAM(CXL_DRAM_ACCESS* dram_request) {
+			cxl_dram->service_cxl_dram_access(dram_request);
+		}
 	private:
 		uint16_t submission_queue_depth, completion_queue_depth;
 		unsigned int no_of_input_streams;
+		CXL_DRAM_Model* cxl_dram;
 	};
 }
 

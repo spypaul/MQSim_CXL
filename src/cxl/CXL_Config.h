@@ -31,6 +31,7 @@ public:
 	double lrfu_lambda;
 	uint16_t set_associativity;
 	prefetchertype prefetch_policy;
+	uint64_t total_number_of_requets;
 
 	cxl_config() {
 		dram_size = 0; 
@@ -42,6 +43,7 @@ public:
 		lrfu_lambda = 1;
 		set_associativity = 4;
 		prefetch_policy = prefetchertype::tagged;
+		total_number_of_requets = 0;
 	};
 
 	void readConfigFile();

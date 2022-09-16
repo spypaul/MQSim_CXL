@@ -312,6 +312,11 @@ SSD_Device::SSD_Device(Device_Parameter_Set* parameters, std::vector<IO_Flow_Par
 			ftl->Data_cache_manager = dcm;
 			device->Cache_manager = dcm;
 
+			SSD_Components::CXL_DRAM_Model* cxl_dram{ new SSD_Components::CXL_DRAM_Model{"CXL_DRAM", NULL,
+													parameters->Data_Cache_DRAM_Row_Size, parameters->Data_Cache_DRAM_Data_Rate,
+													parameters->Data_Cache_DRAM_Data_Busrt_Size,parameters->Data_Cache_DRAM_tRCD,
+													parameters->Data_Cache_DRAM_tCL, parameters->Data_Cache_DRAM_tRP } };
+
 			//Step 10: create Host_Interface
 			switch (parameters->HostInterface_Type) {
 				case HostInterface_Types::NVME:
@@ -322,7 +327,7 @@ SSD_Device::SSD_Device(Device_Parameter_Set* parameters, std::vector<IO_Flow_Par
 
 					device->Host_interface = new SSD_Components::Host_Interface_CXL(device->ID() + ".HostInterface",
 						Utils::Logical_Address_Partitioning_Unit::Get_total_device_lha_count(), parameters->IO_Queue_Depth, parameters->IO_Queue_Depth,
-						(unsigned int)io_flows->size(), parameters->Queue_Fetch_Size, parameters->Flash_Parameters.Page_Capacity / SECTOR_SIZE_IN_BYTE, dcm);
+						(unsigned int)io_flows->size(), parameters->Queue_Fetch_Size, parameters->Flash_Parameters.Page_Capacity / SECTOR_SIZE_IN_BYTE, dcm, cxl_dram);
 					
 					break;
 				case HostInterface_Types::SATA:
@@ -336,7 +341,8 @@ SSD_Device::SSD_Device(Device_Parameter_Set* parameters, std::vector<IO_Flow_Par
 			Simulator->AddObject(device->Host_interface);
 			dcm->Set_host_interface(device->Host_interface);
 
-
+			cxl_dram->attachHostInterface(device->Host_interface);
+			Simulator->AddObject(cxl_dram);
 
 			break;
 		}

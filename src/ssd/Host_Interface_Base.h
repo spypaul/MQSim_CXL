@@ -8,6 +8,7 @@
 #include "../host/PCIe_Message.h"
 #include "User_Request.h"
 #include "Data_Cache_Manager_Base.h"
+#include "../cxl/DRAM_Model.h"
 #include <stdint.h>
 #include <cstring>
 
@@ -27,6 +28,7 @@ namespace SSD_Components
 	delete REQ;
 
 	class Data_Cache_Manager_Base;
+	class CXL_DRAM_Model;
 	class Host_Interface_Base;
 
 	class Input_Stream_Base
@@ -48,6 +50,7 @@ namespace SSD_Components
 		friend class Request_Fetch_Unit_NVMe;
 		friend class Request_Fetch_Unit_CXL;
 		friend class Request_Fetch_Unit_SATA;
+		friend class CXL_Manager;
 	public:
 		Input_Stream_Manager_Base(Host_Interface_Base* host_interface);
 		virtual ~Input_Stream_Manager_Base();
@@ -100,6 +103,7 @@ namespace SSD_Components
 		friend class Request_Fetch_Unit_NVMe;
 		friend class Request_Fetch_Unit_CXL;
 		friend class Request_Fetch_Unit_SATA;
+		friend class CXL_Manager;
 	public:
 		Host_Interface_Base(const sim_object_id_type& id, HostInterface_Types type, LHA_type max_logical_sector_address, 
 			unsigned int sectors_per_page, Data_Cache_Manager_Base* cache);
@@ -122,6 +126,9 @@ namespace SSD_Components
 			}
 			delete message;
 		}
+
+		virtual void Update_CXL_DRAM_state(bool rw, uint64_t lba){
+		}
 	
 		void Send_read_message_to_host(uint64_t addresss, unsigned int request_read_data_size);
 		void Send_write_message_to_host(uint64_t addresss, void* message, unsigned int message_size);
@@ -139,6 +146,7 @@ namespace SSD_Components
 		Input_Stream_Manager_Base* input_stream_manager;
 		Request_Fetch_Unit_Base* request_fetch_unit;
 		Data_Cache_Manager_Base* cache;
+		CXL_DRAM_Model* cxl_dram;
 		std::vector<UserRequestArrivedSignalHandlerType> connected_user_request_arrived_signal_handlers;
 
 		void broadcast_user_request_arrival_signal(User_Request* user_request)

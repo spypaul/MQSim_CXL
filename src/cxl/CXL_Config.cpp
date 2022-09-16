@@ -78,6 +78,13 @@ void cxl_config::readConfigFile() {
 
 			}
 		}
+		else if (info == "Total_number_of_requests") {
+			uint64_t value{ 0 };
+
+			configfile >> value;
+
+			total_number_of_requets = value;
+		}
 	}
 	configfile.close();
 }

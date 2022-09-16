@@ -9,12 +9,21 @@
 namespace SSD_Components
 {
 
-	CXL_Manager::CXL_Manager() {
+	CXL_Manager::CXL_Manager(Host_Interface_Base* hosti) {
 		cxl_config_para.readConfigFile();
 
 		dram = new dram_subsystem{ cxl_config_para };
 		dram->initDRAM();
+		hi = hosti;
 		mshr = new cxl_mshr;
+	}
+	CXL_Manager::~CXL_Manager() {
+		if (dram) {
+			delete dram;
+		}
+		if (mshr) {
+			delete mshr;
+		}
 	}
 	bool CXL_Manager::process_requests(uint64_t address, void* payload) {
 
@@ -22,7 +31,7 @@ namespace SSD_Components
 
 		Submission_Queue_Entry* sqe = (Submission_Queue_Entry*)payload;
 		LHA_type memory_addr{ (((LHA_type)sqe->Command_specific[1]) << 31 | (LHA_type)sqe->Command_specific[0]) };
-
+		
 		//No translate
 		//LHA_type lba{ memory_addr };
 		//translate 
@@ -31,15 +40,15 @@ namespace SSD_Components
 		LHA_type lsa{ lba * sqe->Command_specific[2]}; // lsa to be used for request
 		sqe->Command_specific[0] = (uint32_t)lsa;
 		sqe->Command_specific[1] = (uint32_t)(lsa >> 32);
-		if (lba == 2482) {
-			cout << "check" << endl;
-		}
+
 
 
 		if (dram->isCacheHit(lba)) {
 			cache_miss = 0;
 			bool rw{ (sqe->Opcode == NVME_READ_OPCODE) ? true : false };
-			dram->process_cache_hit(rw, lba);
+			CXL_DRAM_ACCESS* dram_request{ new CXL_DRAM_ACCESS{64, lba, rw, CXL_DRAM_EVENTS::CACHE_HIT, Simulator->Time()} };
+			((Host_Interface_CXL*)hi)->Send_request_to_CXL_DRAM(dram_request);
+			//dram->process_cache_hit(rw, lba);
 		}
 		else {
 			if (mshr->isInProgress(lba)) {
@@ -48,15 +57,24 @@ namespace SSD_Components
 			Submission_Queue_Entry* nsqe{ new Submission_Queue_Entry{*sqe} };
 			mshr->insertRequest(lba, Simulator->Time(), nsqe);
 		}
-		total_number_of_accesses++;
-		std::cout << "Total number of accesses" << total_number_of_accesses << std::endl;
-		//if (total_number_of_accesses == 134107) {
-		//	cout << "check" << endl;
-		//}
 
-		if (cache_miss) {
-			request_count++;
-			std::cout << "Request Number: " << request_count  << " Start LBA: "<< lba << "Initiation Time: " << Simulator->Time() << std::endl;
+
+		total_number_of_accesses++;
+
+		float current_progress{ static_cast<float>(total_number_of_accesses) / static_cast<float>(cxl_config_para.total_number_of_requets) };
+		if (current_progress*100 - perc > 1) {
+			perc += 1;
+			uint8_t number_of_bars{ static_cast<uint8_t> (perc/10) };
+			
+			std::cout << "Simulation progress: [";
+			for (auto i = 0; i < number_of_bars; i++) {
+				std::cout << "=";
+			}
+			for (auto i = 0; i < 10 - number_of_bars -1 ; i++) {
+				std::cout << " ";
+			}
+			
+			std::cout<<"] " << perc << "%" << std::endl;
 		}
 
 
@@ -71,9 +89,7 @@ namespace SSD_Components
 
 		if (sqe->Opcode == NVME_WRITE_OPCODE) {//flush done
 
-			finished_count++;
-
-			std::cout << "Finished count: " << finished_count << " Request initiation time: " << request->STAT_InitiationTime << "	Simulator Time: " << Simulator->Time() << " Flush Done" <<  std::endl;
+			outputf.of << "Flush done for : " << lba << " Request initiation time: " << request->STAT_InitiationTime << "	Simulator Time: " << Simulator->Time() <<  std::endl;
 			return;
 		}
 
@@ -91,10 +107,8 @@ namespace SSD_Components
 		for (auto i = 0; i < writecount; i++) {
 			dram->process_cache_hit(0, lba);
 		}
-		
-		finished_count++;
 
-		std::cout <<"Finished count: "<< finished_count<< " Request initiation time: " << request->STAT_InitiationTime  << "	Simulator Time: " << Simulator->Time() << std::endl;
+		outputf.of <<"Flash read for: "<< lba << " Request initiation time: " << request->STAT_InitiationTime  << "	Simulator Time: " << Simulator->Time() << std::endl;
 
 	}
 
@@ -507,15 +521,20 @@ namespace SSD_Components
 
 	Host_Interface_CXL::Host_Interface_CXL(const sim_object_id_type& id,
 		LHA_type max_logical_sector_address, uint16_t submission_queue_depth, uint16_t completion_queue_depth,
-		unsigned int no_of_input_streams, uint16_t queue_fetch_size, unsigned int sectors_per_page, Data_Cache_Manager_Base* cache) :
+		unsigned int no_of_input_streams, uint16_t queue_fetch_size, unsigned int sectors_per_page, Data_Cache_Manager_Base* cache, CXL_DRAM_Model* cxl_dram) :
 		Host_Interface_Base(id, HostInterface_Types::NVME, max_logical_sector_address, sectors_per_page, cache),
-		submission_queue_depth(submission_queue_depth), completion_queue_depth(completion_queue_depth), no_of_input_streams(no_of_input_streams)
+		submission_queue_depth(submission_queue_depth), completion_queue_depth(completion_queue_depth), no_of_input_streams(no_of_input_streams), cxl_dram(cxl_dram)
 	{
 		this->input_stream_manager = new Input_Stream_Manager_CXL(this, queue_fetch_size);
 		this->request_fetch_unit = new Request_Fetch_Unit_CXL(this);
 
-		this->cxl_man = new CXL_Manager();
+		this->cxl_man = new CXL_Manager((Host_Interface_CXL*)this);
 
+	}
+
+	Host_Interface_CXL::~Host_Interface_CXL() {
+		delete cxl_man;
+		delete cxl_dram;
 	}
 
 	stream_id_type Host_Interface_CXL::Create_new_stream(IO_Flow_Priority_Class priority_class, LHA_type start_logical_sector_address, LHA_type end_logical_sector_address,

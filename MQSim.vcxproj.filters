@@ -226,6 +226,12 @@
     <ClCompile Include="src\cxl\CXL_MSHR.cpp">
       <Filter>cxl</Filter>
     </ClCompile>
+    <ClCompile Include="src\cxl\DRAM_Model.cpp">
+      <Filter>cxl</Filter>
+    </ClCompile>
+    <ClCompile Include="src\cxl\OutputLog.cpp">
+      <Filter>cxl</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\exec\Device_Parameter_Set.h">
@@ -499,6 +505,12 @@
       <Filter>cxl</Filter>
     </ClInclude>
     <ClInclude Include="src\cxl\CXL_MSHR.h">
+      <Filter>cxl</Filter>
+    </ClInclude>
+    <ClInclude Include="src\cxl\DRAM_Model.h">
+      <Filter>cxl</Filter>
+    </ClInclude>
+    <ClInclude Include="src\cxl\OutputLog.h">
       <Filter>cxl</Filter>
     </ClInclude>
   </ItemGroup>

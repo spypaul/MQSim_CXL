@@ -4,3 +4,4 @@ Cache_policy Random
 LRFU_p_lambda 2 1
 Set_associativity 2
 Prefetcher Tagged
+Total_number_of_requests 501124
