@@ -7,7 +7,7 @@
 #include <vector>
 #include <list>
 #include "CXL_Config.h"
-
+#include "OutputLog.h"
 
 using namespace std;
 namespace SSD_Components {

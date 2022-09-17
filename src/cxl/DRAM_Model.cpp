@@ -32,10 +32,13 @@ namespace SSD_Components {
 		case CXL_DRAM_EVENTS::CACHE_HIT:
 			//update DRAM states
 			hi->Update_CXL_DRAM_state(current_access->rw, current_access->lba);
-			outputf.of << "Cache hit at: "<< current_access->lba <<" Starting time: " << current_access->initiate_time << " Finished time: " << Simulator->Time() << std::endl;
+			outputf.of << "Finished_time " << Simulator->Time()  <<" Starting_time " << current_access->initiate_time << " Cache_hit_at "<< current_access->lba << std::endl;
 			delete current_access;
 			break;
 		case CXL_DRAM_EVENTS::CACHE_MISS:
+			hi->Update_CXL_DRAM_state_when_miss_data_ready(current_access->rw, current_access->lba);
+			outputf.of << "Finished_time " << Simulator->Time()  << " Starting_time " << current_access->initiate_time << " Cache_miss_at " << current_access->lba << std::endl;
+			delete current_access;
 			break;
 		}
 

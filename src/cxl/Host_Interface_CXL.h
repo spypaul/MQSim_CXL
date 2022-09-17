@@ -30,7 +30,7 @@ namespace SSD_Components
 		~CXL_Manager();
 		
 		bool process_requests(uint64_t address, void* payload);
-		void request_serviced(User_Request* request, list<uint64_t>* flush_lba);
+		void request_serviced(User_Request* request);
 
 		cxl_mshr* mshr;
 
@@ -158,6 +158,8 @@ namespace SSD_Components
 		void Update_CXL_DRAM_state(bool rw, uint64_t lba){
 			this->cxl_man->dram->process_cache_hit(rw, lba);
 		}
+		void Update_CXL_DRAM_state_when_miss_data_ready(bool rw, uint64_t lba);
+
 		void Send_request_to_CXL_DRAM(CXL_DRAM_ACCESS* dram_request) {
 			cxl_dram->service_cxl_dram_access(dram_request);
 		}

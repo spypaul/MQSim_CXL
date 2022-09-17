@@ -37,6 +37,12 @@ namespace SSD_Components {
 
 	void dram_subsystem::process_cache_hit(bool rw, uint64_t lba) {
 
+		if (!dram_mapping->count(lba)) {
+			outputf.of << "Hit at LBA: " << lba << "is a false hit" << endl;
+			return;
+		}
+
+
 		uint64_t cache_index{ (*dram_mapping)[lba] };
 
 		if (cache_index < cpara.cache_portion_size / cpara.ssd_page_size) { // check if the cache hit is at cache portion or prefetch portion
@@ -63,11 +69,6 @@ namespace SSD_Components {
 
 		}
 
-		//model latency
-		if (rw) {
-		}
-		else {
-		}
 	}
 
 	void dram_subsystem::process_miss_data_ready(bool rw, uint64_t lba, list<uint64_t>* flush_lba) {

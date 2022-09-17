@@ -4,7 +4,7 @@
 #include <map>
 
 #include <list>
-#include <tuple>
+#include <set>
 #include "../ssd/Host_Interface_Defs.h"
 
 using namespace std;
@@ -34,7 +34,7 @@ public:
 	bool isInProgress(uint64_t lba);
 
 	void insertRequest(uint64_t lba, uint64_t time, Submission_Queue_Entry* sqe);
-	void removeRequest(uint64_t lba, uint64_t &readcount, uint64_t &writecount);
+	bool removeRequest(uint64_t lba, set<uint64_t> &readcount, set<uint64_t> &writecount);
 
 	
 private:

@@ -64,13 +64,13 @@ namespace SSD_Components
 		float current_progress{ static_cast<float>(total_number_of_accesses) / static_cast<float>(cxl_config_para.total_number_of_requets) };
 		if (current_progress*100 - perc > 1) {
 			perc += 1;
-			uint8_t number_of_bars{ static_cast<uint8_t> (perc/10) };
+			uint8_t number_of_bars{ static_cast<uint8_t> (perc/4) };
 			
 			std::cout << "Simulation progress: [";
 			for (auto i = 0; i < number_of_bars; i++) {
 				std::cout << "=";
 			}
-			for (auto i = 0; i < 10 - number_of_bars -1 ; i++) {
+			for (auto i = 0; i < 25 - number_of_bars -1 ; i++) {
 				std::cout << " ";
 			}
 			
@@ -82,18 +82,24 @@ namespace SSD_Components
 		return cache_miss;
 	}
 
-	void CXL_Manager::request_serviced(User_Request* request, list<uint64_t>* flush_lba) {
+	void CXL_Manager::request_serviced(User_Request* request) {
 		Submission_Queue_Entry* sqe = (Submission_Queue_Entry*)request->IO_command_info;
 
 		LHA_type lba{ (((LHA_type)sqe->Command_specific[1]) << 31 | (LHA_type)sqe->Command_specific[0]) / sqe->Command_specific[2] };
 
 		if (sqe->Opcode == NVME_WRITE_OPCODE) {//flush done
 
-			outputf.of << "Flush done for : " << lba << " Request initiation time: " << request->STAT_InitiationTime << "	Simulator Time: " << Simulator->Time() <<  std::endl;
+			outputf.of << "Finshed_time " << Simulator->Time()  << " Starting_time " << request->STAT_InitiationTime << " Flush_done_at " << lba <<  std::endl;
 			return;
 		}
 
-		uint64_t readcount{ 0 }, writecount{ 0 };
+		bool rw{ true};
+		CXL_DRAM_ACCESS* dram_request{ new CXL_DRAM_ACCESS{static_cast<unsigned int>(cxl_config_para.ssd_page_size), lba, rw, CXL_DRAM_EVENTS::CACHE_MISS, request->STAT_InitiationTime} };
+		((Host_Interface_CXL*)hi)->Send_request_to_CXL_DRAM(dram_request);
+
+
+
+		/*uint64_t readcount{ 0 }, writecount{ 0 };
 		mshr->removeRequest(lba, readcount, writecount);
 
 		bool rw{ (sqe->Opcode == NVME_READ_OPCODE) ? true : false };
@@ -108,7 +114,7 @@ namespace SSD_Components
 			dram->process_cache_hit(0, lba);
 		}
 
-		outputf.of <<"Flash read for: "<< lba << " Request initiation time: " << request->STAT_InitiationTime  << "	Simulator Time: " << Simulator->Time() << std::endl;
+		outputf.of <<"Flash read for: "<< lba << " Request initiation time: " << request->STAT_InitiationTime  << "	Simulator Time: " << Simulator->Time() << std::endl;*/
 
 	}
 
@@ -197,33 +203,34 @@ namespace SSD_Components
 		((Input_Stream_CXL*)input_streams[request->Stream_id])->Waiting_user_requests.remove(request);
 		((Input_Stream_CXL*)input_streams[stream_id])->On_the_fly_requests--;
 
-		list<uint64_t>* flush_lba{ new list<uint64_t> };
-		((Host_Interface_CXL*)host_interface)->cxl_man->request_serviced(request, flush_lba);
+		//list<uint64_t>* flush_lba{ new list<uint64_t> };
+		((Host_Interface_CXL*)host_interface)->cxl_man->request_serviced(request);
 
-		while (!flush_lba->empty()) {
-			uint64_t lba{ flush_lba->front() };
-			uint64_t lsa{ lba * 8 };
+		//while (!flush_lba->empty()) {
+		//	uint64_t lba{ flush_lba->front() };
+		//	uint64_t lsa{ lba * 8 };
 
 
-			flush_lba->pop_front();
-			Submission_Queue_Entry* sqe{ new Submission_Queue_Entry };
-			sqe->Command_Identifier = 0;
-			sqe->Opcode = NVME_WRITE_OPCODE;
+		//	flush_lba->pop_front();
+		//	Submission_Queue_Entry* sqe{ new Submission_Queue_Entry };
+		//	sqe->Command_Identifier = 0;
+		//	sqe->Opcode = NVME_WRITE_OPCODE;
 
-			sqe->Command_specific[0] = (uint32_t)lsa;
-			sqe->Command_specific[1] = (uint32_t)(lsa >> 32);
-			sqe->Command_specific[2] = ((uint32_t)((uint16_t)8)) & (uint32_t)(0x0000ffff);
+		//	sqe->Command_specific[0] = (uint32_t)lsa;
+		//	sqe->Command_specific[1] = (uint32_t)(lsa >> 32);
+		//	sqe->Command_specific[2] = ((uint32_t)((uint16_t)8)) & (uint32_t)(0x0000ffff);
 
-			sqe->PRP_entry_1 = (DATA_MEMORY_REGION);//Dummy addresses, just to emulate data read/write access
-			sqe->PRP_entry_2 = (DATA_MEMORY_REGION + 0x1000);//Dummy addresses
+		//	sqe->PRP_entry_1 = (DATA_MEMORY_REGION);//Dummy addresses, just to emulate data read/write access
+		//	sqe->PRP_entry_2 = (DATA_MEMORY_REGION + 0x1000);//Dummy addresses
 
-			((Request_Fetch_Unit_CXL*)((Host_Interface_CXL*)host_interface)->request_fetch_unit)->Fetch_next_request(0);
+		//	((Request_Fetch_Unit_CXL*)((Host_Interface_CXL*)host_interface)->request_fetch_unit)->Fetch_next_request(0);
 
-			((Request_Fetch_Unit_CXL*)((Host_Interface_CXL*)host_interface)->request_fetch_unit)->Process_pcie_read_message(0, sqe, sizeof(Submission_Queue_Entry));
+		//	((Request_Fetch_Unit_CXL*)((Host_Interface_CXL*)host_interface)->request_fetch_unit)->Process_pcie_read_message(0, sqe, sizeof(Submission_Queue_Entry));
 
-		}
+		//}
 
-		delete flush_lba;
+		//delete flush_lba;
+
 		DEBUG("** Host Interface: Request #" << request->ID << " from stream #" << request->Stream_id << " is finished")
 			////If this is a read request, then the read data should be written to host memory
 			//if (request->Type == UserRequestType::READ) {
@@ -628,4 +635,48 @@ namespace SSD_Components
 
 		xmlwriter.Write_close_tag();
 	}
+
+
+	void Host_Interface_CXL::Update_CXL_DRAM_state_when_miss_data_ready(bool rw, uint64_t lba) {
+		set<uint64_t> readcount, writecount;
+		rw = this->cxl_man->mshr->removeRequest(lba, readcount, writecount);
+		list<uint64_t>* flush_lba{ new list<uint64_t> };
+		this->cxl_man->dram->process_miss_data_ready(rw, lba, flush_lba);
+
+		for (auto i: readcount) {
+			CXL_DRAM_ACCESS* dram_request{ new CXL_DRAM_ACCESS{64, lba, 1, CXL_DRAM_EVENTS::CACHE_HIT, i} };
+			this->Send_request_to_CXL_DRAM(dram_request);
+		}
+
+		for (auto i: writecount) {
+			CXL_DRAM_ACCESS* dram_request{ new CXL_DRAM_ACCESS{64, lba, 0, CXL_DRAM_EVENTS::CACHE_HIT, i} };
+			this->Send_request_to_CXL_DRAM(dram_request);
+		}
+
+		while (!flush_lba->empty()) {
+			uint64_t lba{ flush_lba->front() };
+			uint64_t lsa{ lba * 8 };
+
+
+			flush_lba->pop_front();
+			Submission_Queue_Entry* sqe{ new Submission_Queue_Entry };
+			sqe->Command_Identifier = 0;
+			sqe->Opcode = NVME_WRITE_OPCODE;
+
+			sqe->Command_specific[0] = (uint32_t)lsa;
+			sqe->Command_specific[1] = (uint32_t)(lsa >> 32);
+			sqe->Command_specific[2] = ((uint32_t)((uint16_t)8)) & (uint32_t)(0x0000ffff);
+
+			sqe->PRP_entry_1 = (DATA_MEMORY_REGION);//Dummy addresses, just to emulate data read/write access
+			sqe->PRP_entry_2 = (DATA_MEMORY_REGION + 0x1000);//Dummy addresses
+
+			((Request_Fetch_Unit_CXL*)(this->request_fetch_unit))->Fetch_next_request(0);
+
+			((Request_Fetch_Unit_CXL*)(this->request_fetch_unit))->Process_pcie_read_message(0, sqe, sizeof(Submission_Queue_Entry));
+
+		}
+
+		delete flush_lba;
+	}
+
 }

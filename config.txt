@@ -1,7 +1,7 @@
-DRAM_size 32768
+DRAM_size 16777216
 Cache_portion_percentage 100
 Cache_policy Random
 LRFU_p_lambda 2 1
 Set_associativity 2
 Prefetcher Tagged
-Total_number_of_requests 501124
+Total_number_of_requests 1024256
