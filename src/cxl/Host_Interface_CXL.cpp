@@ -74,9 +74,16 @@ namespace SSD_Components
 				std::cout << " ";
 			}
 			
-			std::cout<<"] " << perc << "%" << std::endl;
+			std::cout << "] " << perc << "%" << "\r";
 		}
 
+		if (total_number_of_accesses == cxl_config_para.total_number_of_requets) {
+			std::cout << "Simulation progress: [";
+			for (auto i = 0; i < 25; i++) {
+				std::cout << "=";
+			}
+			std::cout << "] " << 100 << "%" << std::endl;
+		}
 
 
 		return cache_miss;

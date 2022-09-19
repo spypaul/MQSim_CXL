@@ -363,3 +363,4 @@ MigrationBackup/
 FodyWeavers.xsd
 /output.txt
 /traces/test-small.trace
+/traces/example.trace

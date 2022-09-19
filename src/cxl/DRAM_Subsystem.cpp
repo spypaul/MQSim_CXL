@@ -14,6 +14,9 @@ namespace SSD_Components {
 		if (cachedlba) {
 			delete cachedlba;
 		}
+		if (lrfucachedlba) {
+			delete lrfucachedlba;
+		}
 
 	}
 
@@ -27,6 +30,10 @@ namespace SSD_Components {
 
 		if (cpara.cpolicy == cachepolicy::random) {
 			cachedlba = new vector<uint64_t>;
+		}
+		else if (cpara.cpolicy == cachepolicy::lrfu) {
+			lrfucachedlba = new lrfuHeap;
+			lrfucachedlba->init(cpara.lrfu_p, cpara.lrfu_lambda);
 		}
 	}
 
@@ -44,13 +51,15 @@ namespace SSD_Components {
 
 
 		uint64_t cache_index{ (*dram_mapping)[lba] };
+		bool falsehit{ 0 };
 
 		if (cache_index < cpara.cache_portion_size / cpara.ssd_page_size) { // check if the cache hit is at cache portion or prefetch portion
 			if (cpara.cpolicy == cachepolicy::lru2) {
 
 			}
 			else if (cpara.cpolicy == cachepolicy::lrfu) {
-
+				lrfucachedlba->updateWhenHit(lba, falsehit);
+				lrfucachedlba->advanceTime();
 			}
 			else if (cpara.cpolicy == cachepolicy::cpu) {
 
@@ -91,11 +100,12 @@ namespace SSD_Components {
 			}
 			else if (cpara.cpolicy == cachepolicy::lrfu) {
 				//TODO
+				evict_lba_base_addr = lrfucachedlba->removeRoot();
 
 			}
 
 			uint64_t cl;
-			cl = (*dram_mapping)[lba];
+			cl = (*dram_mapping)[evict_lba_base_addr];
 
 
 			freeCL->push_back(cl);
@@ -118,6 +128,10 @@ namespace SSD_Components {
 
 		}
 		else if (cpara.cpolicy == cachepolicy::lrfu) {
+			bnode* node{ new bnode{lrfucachedlba->F(0), lrfucachedlba->getTime(), lba} };
+			lrfucachedlba->add(node);
+			lrfucachedlba->advanceTime();
+
 		}
 
 		dram_mapping->emplace(lba, cache_base_addr);

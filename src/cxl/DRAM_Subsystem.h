@@ -8,6 +8,7 @@
 #include <list>
 #include "CXL_Config.h"
 #include "OutputLog.h"
+#include "lrfu_heap.h"
 
 using namespace std;
 namespace SSD_Components {
@@ -31,7 +32,11 @@ namespace SSD_Components {
 		cxl_config cpara;
 		map<uint64_t, uint64_t>* dram_mapping{ NULL }; // LBA, cache line index
 		list<uint64_t>* freeCL{ NULL }; // aligned by ssd block size
-		vector<uint64_t>* cachedlba{ NULL };
+		
+		vector<uint64_t>* cachedlba{ NULL };//for random 
+		lrfuHeap* lrfucachedlba{NULL}; //for lrfu
+
+
 		map < uint64_t, uint64_t>* dirtyCL{ NULL }; //cache line index, write count
 
 	};

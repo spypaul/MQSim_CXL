@@ -232,6 +232,9 @@
     <ClCompile Include="src\cxl\OutputLog.cpp">
       <Filter>cxl</Filter>
     </ClCompile>
+    <ClCompile Include="src\cxl\lrfu_heap.cpp">
+      <Filter>cxl</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\exec\Device_Parameter_Set.h">
@@ -511,6 +514,9 @@
       <Filter>cxl</Filter>
     </ClInclude>
     <ClInclude Include="src\cxl\OutputLog.h">
+      <Filter>cxl</Filter>
+    </ClInclude>
+    <ClInclude Include="src\cxl\lrfu_heap.h">
       <Filter>cxl</Filter>
     </ClInclude>
   </ItemGroup>

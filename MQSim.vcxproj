@@ -25,6 +25,7 @@
     <ClCompile Include="src\cxl\DRAM_Model.cpp" />
     <ClCompile Include="src\cxl\DRAM_Subsystem.cpp" />
     <ClCompile Include="src\cxl\Host_Interface_CXL.cpp" />
+    <ClCompile Include="src\cxl\lrfu_heap.cpp" />
     <ClCompile Include="src\cxl\OutputLog.cpp" />
     <ClCompile Include="src\exec\Device_Parameter_Set.cpp" />
     <ClCompile Include="src\exec\Execution_Parameter_Set.cpp" />
@@ -94,6 +95,7 @@
     <ClInclude Include="src\cxl\DRAM_Model.h" />
     <ClInclude Include="src\cxl\DRAM_Subsystem.h" />
     <ClInclude Include="src\cxl\Host_Interface_CXL.h" />
+    <ClInclude Include="src\cxl\lrfu_heap.h" />
     <ClInclude Include="src\cxl\OutputLog.h" />
     <ClInclude Include="src\exec\Device_Parameter_Set.h" />
     <ClInclude Include="src\exec\Execution_Parameter_Set.h" />
