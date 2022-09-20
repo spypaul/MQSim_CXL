@@ -65,7 +65,7 @@ namespace SSD_Components
 
 		total_number_of_accesses++;
 
-		float current_progress{ static_cast<float>(total_number_of_accesses) / static_cast<float>(cxl_config_para.total_number_of_requets) };
+		float current_progress{ static_cast<float>(total_number_of_accesses - falsehitcount) / static_cast<float>(cxl_config_para.total_number_of_requets) };
 		if (current_progress*100 - perc > 1) {
 			perc += 1;
 			uint8_t number_of_bars{ static_cast<uint8_t> (perc/4) };
@@ -78,15 +78,15 @@ namespace SSD_Components
 				std::cout << " ";
 			}
 			
-			std::cout << "] " << perc << "%   Cache Miss Count: "<< cache_miss_count << "\r";
+			std::cout << "] " << perc << "%   Cache Miss Count: "<< cache_miss_count << "   False Hit Count: "<< falsehitcount << "\r";
 		}
 
-		if (total_number_of_accesses == cxl_config_para.total_number_of_requets) {
+		if (total_number_of_accesses - falsehitcount == cxl_config_para.total_number_of_requets) {
 			std::cout << "Simulation progress: [";
 			for (auto i = 0; i < 25; i++) {
 				std::cout << "=";
 			}
-			std::cout << "] " << 100 << "%" << std::endl;
+			std::cout << "] " << 100 << "%   Cache Miss Count: " << cache_miss_count << "   False Hit Count: " << falsehitcount << std::endl;
 		}
 
 
@@ -652,7 +652,7 @@ namespace SSD_Components
 		set<uint64_t> readcount, writecount;
 		rw = this->cxl_man->mshr->removeRequest(lba, readcount, writecount);
 		list<uint64_t>* flush_lba{ new list<uint64_t> };
-		this->cxl_man->dram->process_miss_data_ready(rw, lba, flush_lba);
+		this->cxl_man->dram->process_miss_data_ready(rw, lba, flush_lba, Simulator->Time());
 
 		for (auto i: readcount) {
 			CXL_DRAM_ACCESS* dram_request{ new CXL_DRAM_ACCESS{64, lba, 1, CXL_DRAM_EVENTS::CACHE_HIT, i} };

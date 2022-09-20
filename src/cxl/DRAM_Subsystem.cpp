@@ -119,16 +119,16 @@ namespace SSD_Components {
 		return dram_mapping->count(lba);
 	}
 
-	void dram_subsystem::process_cache_hit(bool rw, uint64_t lba) {
+	void dram_subsystem::process_cache_hit(bool rw, uint64_t lba, bool& falsehit) {
 
 		if (!dram_mapping->count(lba)) {
-			//cout << "Hit at LBA: " << lba << "is a false hit" << endl;
+			falsehit = 1;
 			return;
 		}
 
 
 		uint64_t cache_index{ (*dram_mapping)[lba] };
-		bool falsehit{ 0 };
+		
 
 		if (cache_index < cpara.cache_portion_size / cpara.ssd_page_size) { // check if the cache hit is at cache portion or prefetch portion
 			if (cpara.cpolicy == cachepolicy::lru2) {
@@ -157,7 +157,7 @@ namespace SSD_Components {
 
 	}
 
-	void dram_subsystem::process_miss_data_ready(bool rw, uint64_t lba, list<uint64_t>* flush_lba) {
+	void dram_subsystem::process_miss_data_ready(bool rw, uint64_t lba, list<uint64_t>* flush_lba, uint64_t simtime) {
 
 
 		if (freeCL->empty()) {
@@ -185,6 +185,7 @@ namespace SSD_Components {
 			uint64_t cl;
 			cl = (*dram_mapping)[evict_lba_base_addr];
 			dram_mapping->erase(dram_mapping->find(evict_lba_base_addr));
+			outputf.of << "Finished_time " << simtime << " Starting_time " << 0 << " Eviction/Flush_at " << evict_lba_base_addr << std::endl;
 
 			freeCL->push_back(cl);
 

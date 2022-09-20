@@ -28,11 +28,19 @@ namespace SSD_Components {
 	void CXL_DRAM_Model::Execute_simulator_event(MQSimEngine::Sim_Event* ev) {
 		CXL_DRAM_EVENTS eventype{(CXL_DRAM_EVENTS) ev->Type};
 
+		bool falsehit{ 0 };
+
 		switch (eventype) {
 		case CXL_DRAM_EVENTS::CACHE_HIT:
 			//update DRAM states
-			hi->Update_CXL_DRAM_state(current_access->rw, current_access->lba);
-			outputf.of << "Finished_time " << Simulator->Time()  <<" Starting_time " << current_access->initiate_time << " Cache_hit_at "<< current_access->lba << std::endl;
+			hi->Update_CXL_DRAM_state(current_access->rw, current_access->lba, falsehit);
+			if (!falsehit) {
+				outputf.of << "Finished_time " << Simulator->Time() << " Starting_time " << current_access->initiate_time << " Cache_hit_at " << current_access->lba << std::endl;
+			}
+			else {
+				outputf.of << "Finished_time " << Simulator->Time() << " Starting_time " << current_access->initiate_time << " False_hit_at " << current_access->lba << std::endl;
+				hi->Handle_CXL_false_hit(current_access->rw, current_access->lba);
+			}
 			delete current_access;
 			break;
 		case CXL_DRAM_EVENTS::CACHE_MISS:

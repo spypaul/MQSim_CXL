@@ -36,6 +36,8 @@ namespace SSD_Components
 
 		dram_subsystem* dram;
 
+		uint64_t falsehitcount{ 0 };
+
 	private:
 
 		cxl_config cxl_config_para;
@@ -142,7 +144,7 @@ namespace SSD_Components
 			}
 			else {
 
-				//((Submission_Queue_Entry*)message->Payload)->Opcode = NVME_READ_OPCODE;
+				((Submission_Queue_Entry*)message->Payload)->Opcode = NVME_READ_OPCODE;
 				request_fetch_unit->Fetch_next_request(0);
 			}
 
@@ -155,14 +157,42 @@ namespace SSD_Components
 			delete message;
 		}
 
-		void Update_CXL_DRAM_state(bool rw, uint64_t lba){
-			this->cxl_man->dram->process_cache_hit(rw, lba);
+		void Update_CXL_DRAM_state(bool rw, uint64_t lba, bool& falsehit){
+			this->cxl_man->dram->process_cache_hit(rw, lba, falsehit);
+			if (falsehit) this->cxl_man->falsehitcount++;
 		}
 		void Update_CXL_DRAM_state_when_miss_data_ready(bool rw, uint64_t lba);
 
 		void Send_request_to_CXL_DRAM(CXL_DRAM_ACCESS* dram_request) {
 			cxl_dram->service_cxl_dram_access(dram_request);
 		}
+
+		void Handle_CXL_false_hit(bool rw, uint64_t lba) {
+
+			Submission_Queue_Entry* sqe = new Submission_Queue_Entry;
+			sqe->Command_Identifier = 0;
+			sqe->Opcode = (rw) ? NVME_READ_OPCODE : NVME_WRITE_OPCODE;
+			sqe->Command_specific[0] = (uint32_t)lba*4096;
+			sqe->Command_specific[1] = (uint32_t)(lba*4096>>32);
+			sqe->Command_specific[2] = ((uint32_t)((uint16_t)8)) & (uint32_t)(0x0000ffff); // magic number
+			sqe->PRP_entry_1 = (DATA_MEMORY_REGION);//Dummy addresses, just to emulate data read/write access
+			sqe->PRP_entry_2 = (DATA_MEMORY_REGION + 0x1000);//Dummy addresses
+
+			if (!(cxl_man->process_requests(0, sqe))) {
+				delete sqe;
+				return;
+			}
+			else {
+
+				sqe->Opcode = NVME_READ_OPCODE;
+				request_fetch_unit->Fetch_next_request(0);
+			}
+
+			request_fetch_unit->Process_pcie_read_message(0, sqe, sizeof(Submission_Queue_Entry));
+
+			//delete sqe; // this is disrubting the mshr
+		}
+
 	private:
 		uint16_t submission_queue_depth, completion_queue_depth;
 		unsigned int no_of_input_streams;

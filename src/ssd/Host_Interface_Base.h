@@ -127,10 +127,11 @@ namespace SSD_Components
 			delete message;
 		}
 
-		virtual void Update_CXL_DRAM_state(bool rw, uint64_t lba){
+		virtual void Update_CXL_DRAM_state(bool rw, uint64_t lba, bool& falsehit){
 		}
 		virtual void Update_CXL_DRAM_state_when_miss_data_ready(bool rw, uint64_t lba) {
 		}
+		virtual void Handle_CXL_false_hit(bool rw, uint64_t lba){}
 	
 		void Send_read_message_to_host(uint64_t addresss, unsigned int request_read_data_size);
 		void Send_write_message_to_host(uint64_t addresss, void* message, unsigned int message_size);

@@ -38,8 +38,8 @@ namespace SSD_Components {
 		void initDRAM();
 		bool isCacheHit(uint64_t lba);
 
-		void process_cache_hit(bool rw, uint64_t lba);
-		void process_miss_data_ready(bool rw, uint64_t lba, list<uint64_t>* flush_lba);
+		void process_cache_hit(bool rw, uint64_t lba, bool& falsehit);
+		void process_miss_data_ready(bool rw, uint64_t lba, list<uint64_t>* flush_lba, uint64_t simtime);
 
 
 
