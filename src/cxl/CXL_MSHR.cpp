@@ -8,7 +8,7 @@ cxl_mshr::~cxl_mshr() {
 	if (mshr) {
 		for (auto i : *mshr) {
 			for (auto j : *(i.second)) {
-				delete j->sqe;
+				//delete j->sqe;
 				delete j;
 			}
 			i.second->clear();

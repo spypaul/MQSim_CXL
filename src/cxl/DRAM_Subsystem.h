@@ -10,6 +10,22 @@
 #include "OutputLog.h"
 #include "lrfu_heap.h"
 
+class lruTwoListClass {
+private:
+	list<uint64_t> active;
+	list<uint64_t> inactive;
+	uint64_t activeBound;
+public:
+	lruTwoListClass() { activeBound = 0; }
+
+	void init(uint64_t numCL);
+	void add(uint64_t lba);
+	uint64_t evictLBA();
+	void updateWhenHit(uint64_t lba, bool& falsehit);
+	void reset();
+};
+
+
 using namespace std;
 namespace SSD_Components {
 
@@ -35,6 +51,7 @@ namespace SSD_Components {
 		
 		vector<uint64_t>* cachedlba{ NULL };//for random 
 		lrfuHeap* lrfucachedlba{NULL}; //for lrfu
+		lruTwoListClass* lru2cachedlba{NULL};
 
 
 		map < uint64_t, uint64_t>* dirtyCL{ NULL }; //cache line index, write count

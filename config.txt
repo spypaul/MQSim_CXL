@@ -1,6 +1,6 @@
 DRAM_size 16777216
 Cache_portion_percentage 100
-Cache_policy LRFU
+Cache_policy Random
 LRFU_p_lambda 2 1
 Set_associativity 2
 Prefetcher Tagged

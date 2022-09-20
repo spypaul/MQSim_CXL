@@ -49,10 +49,14 @@ namespace SSD_Components
 			CXL_DRAM_ACCESS* dram_request{ new CXL_DRAM_ACCESS{64, lba, rw, CXL_DRAM_EVENTS::CACHE_HIT, Simulator->Time()} };
 			((Host_Interface_CXL*)hi)->Send_request_to_CXL_DRAM(dram_request);
 			//dram->process_cache_hit(rw, lba);
+			cache_hit_count++;
 		}
 		else {
 			if (mshr->isInProgress(lba)) {
 				cache_miss = 0;
+			}
+			else {
+				cache_miss_count++;
 			}
 			Submission_Queue_Entry* nsqe{ new Submission_Queue_Entry{*sqe} };
 			mshr->insertRequest(lba, Simulator->Time(), nsqe);
@@ -74,7 +78,7 @@ namespace SSD_Components
 				std::cout << " ";
 			}
 			
-			std::cout << "] " << perc << "%" << "\r";
+			std::cout << "] " << perc << "%   Cache Miss Count: "<< cache_miss_count << "\r";
 		}
 
 		if (total_number_of_accesses == cxl_config_para.total_number_of_requets) {

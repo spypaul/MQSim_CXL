@@ -11,3 +11,4 @@ public:
 };
 
 extern outlog outputf;
+extern outlog evictf;

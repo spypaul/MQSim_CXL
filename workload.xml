@@ -3,7 +3,7 @@
 	<IO_Scenario>
 		<IO_Flow_Parameter_Set_Trace_Based>
 				 <Priority_Class>HIGH</Priority_Class>
-				 <Device_Level_Data_Caching_Mode>WRITE_CACHE</Device_Level_Data_Caching_Mode>
+				 <Device_Level_Data_Caching_Mode>TURNED_OFF</Device_Level_Data_Caching_Mode>
 				 <Channel_IDs>0,1,2,3</Channel_IDs>
 				 <Chip_IDs>0,1,2,3</Chip_IDs>
 				 <Die_IDs>0</Die_IDs>
