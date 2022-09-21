@@ -29,14 +29,28 @@ namespace SSD_Components
 		CXL_Manager(Host_Interface_Base* hosti);
 		~CXL_Manager();
 		
-		bool process_requests(uint64_t address, void* payload);
+		bool process_requests(uint64_t address, void* payload, bool is_pref_req);
 		void request_serviced(User_Request* request);
+
+
 
 		cxl_mshr* mshr;
 
 		dram_subsystem* dram;
 
 		uint64_t falsehitcount{ 0 };
+
+
+		//prefetchers
+
+		void prefetch_decision_maker(uint64_t lba, bool isMiss);
+
+		set<uint64_t>* prefetched_lba;
+
+		//tagged prefetcher
+		set<uint64_t> tagAssertedLBA;
+		uint16_t prefetchK{ 10 };
+
 
 	private:
 
@@ -46,6 +60,9 @@ namespace SSD_Components
 		float perc{ 1 };
 
 		Host_Interface_Base* hi{NULL};
+
+
+
 
 	};
 
@@ -138,7 +155,7 @@ namespace SSD_Components
 
 		void Consume_pcie_message(Host_Components::PCIe_Message* message)
 		{
-			if (!(cxl_man->process_requests(message->Address, message->Payload))) {
+			if (!(cxl_man->process_requests(message->Address, message->Payload, 0))) {
 				delete message;
 				return;
 			}
@@ -162,6 +179,7 @@ namespace SSD_Components
 			if (falsehit) this->cxl_man->falsehitcount++;
 		}
 		void Update_CXL_DRAM_state_when_miss_data_ready(bool rw, uint64_t lba);
+		void process_CXL_prefetch_requests(list<uint64_t> prefetchlba);
 
 		void Send_request_to_CXL_DRAM(CXL_DRAM_ACCESS* dram_request) {
 			cxl_dram->service_cxl_dram_access(dram_request);
@@ -172,13 +190,13 @@ namespace SSD_Components
 			Submission_Queue_Entry* sqe = new Submission_Queue_Entry;
 			sqe->Command_Identifier = 0;
 			sqe->Opcode = (rw) ? NVME_READ_OPCODE : NVME_WRITE_OPCODE;
-			sqe->Command_specific[0] = (uint32_t)lba*4096;
-			sqe->Command_specific[1] = (uint32_t)(lba*4096>>32);
+			sqe->Command_specific[0] = (uint32_t)lba*4096; //cxl_man->process_requests will do a translation
+			sqe->Command_specific[1] = (uint32_t)(lba*4096>>32); 
 			sqe->Command_specific[2] = ((uint32_t)((uint16_t)8)) & (uint32_t)(0x0000ffff); // magic number
 			sqe->PRP_entry_1 = (DATA_MEMORY_REGION);//Dummy addresses, just to emulate data read/write access
 			sqe->PRP_entry_2 = (DATA_MEMORY_REGION + 0x1000);//Dummy addresses
 
-			if (!(cxl_man->process_requests(0, sqe))) {
+			if (!(cxl_man->process_requests(0, sqe, 0))) {
 				delete sqe;
 				return;
 			}

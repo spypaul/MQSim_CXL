@@ -77,9 +77,15 @@ namespace SSD_Components {
 	dram_subsystem::~dram_subsystem() {
 		freeCL->clear();
 		delete freeCL;
+		//pref_dirtyCL->clear();
+		//delete pref_dirtyCL;
+
 		if (dirtyCL) {
 			delete dirtyCL;
 		}
+		//if (pref_dirtyCL) {
+		//	delete pref_dirtyCL;
+		//}
 		if (cachedlba) {
 			delete cachedlba;
 		}
@@ -91,15 +97,37 @@ namespace SSD_Components {
 			delete lru2cachedlba;
 		}
 
+		//if (pref_lru2cachedlba) {
+		//	delete pref_lru2cachedlba;
+		//}
+
+		if (dram_mapping) {
+			dram_mapping->clear();
+			delete dram_mapping;
+		}
+
+		//if (pref_dram_mapping) {
+		//	dram_mapping->clear();
+		//	delete dram_mapping;
+		//}
 	}
 
 	void dram_subsystem::initDRAM() {
 		dram_mapping = new map<uint64_t, uint64_t>;
 		freeCL = new list<uint64_t>;
 		dirtyCL = new map<uint64_t, uint64_t>;
+
+		//pref_dram_mapping = new map<uint64_t, uint64_t>;
+		//pref_freeCL = new list<uint64_t>;
+		//pref_dirtyCL = new map<uint64_t, uint64_t>;
+
 		for (uint64_t i = 0; i < cpara.cache_portion_size / cpara.ssd_page_size; i++) {
 			freeCL->push_back(i);
 		}
+
+		//for (uint64_t i = cpara.cache_portion_size / cpara.ssd_page_size; i < cpara.dram_size / cpara.ssd_page_size; i++) {
+		//	pref_freeCL->push_back(i);
+		//}
 
 		if (cpara.cpolicy == cachepolicy::random) {
 			cachedlba = new vector<uint64_t>;
@@ -111,6 +139,9 @@ namespace SSD_Components {
 		else if (cpara.cpolicy == cachepolicy::lru2) {
 			lru2cachedlba = new lruTwoListClass;
 			lru2cachedlba->init(freeCL->size());
+
+			//pref_lru2cachedlba = new lruTwoListClass;
+			//pref_lru2cachedlba->init(pref_freeCL->size());
 		}
 	}
 
@@ -119,7 +150,12 @@ namespace SSD_Components {
 		return dram_mapping->count(lba);
 	}
 
+	//bool dram_subsystem::isPrefetchHit(uint64_t lba) {
+	//	return pref_dram_mapping->count(lba);
+	//}
+
 	void dram_subsystem::process_cache_hit(bool rw, uint64_t lba, bool& falsehit) {
+
 
 		if (!dram_mapping->count(lba)) {
 			falsehit = 1;
@@ -128,6 +164,24 @@ namespace SSD_Components {
 
 
 		uint64_t cache_index{ (*dram_mapping)[lba] };
+
+
+
+		//if (!dram_mapping->count(lba) && !pref_dram_mapping->count(lba)) {
+		//	falsehit = 1;
+		//	return;
+		//}
+
+
+		//uint64_t cache_index{ 0 };
+
+		//if (pref_dram_mapping->count(lba)) {
+		//	cache_index = (*pref_dram_mapping)[lba];
+		//}
+		//else {
+		//	cache_index = (*dram_mapping)[lba];
+		//}
+
 		
 
 		if (cache_index < cpara.cache_portion_size / cpara.ssd_page_size) { // check if the cache hit is at cache portion or prefetch portion
@@ -152,12 +206,30 @@ namespace SSD_Components {
 			}
 		}
 		else {
+			//if (cpara.cpolicy == cachepolicy::lru2) {
+			//	pref_lru2cachedlba->updateWhenHit(lba, falsehit);
+			//}
+			//else if (cpara.cpolicy == cachepolicy::lrfu) {
+
+			//}
+			//else if (cpara.cpolicy == cachepolicy::cpu) {
+
+			//}
+
+			//if (!rw && cpara.cpolicy != cachepolicy::cpu) {
+			//	if (pref_dirtyCL->count(cache_index) > 0) {
+			//		(*pref_dirtyCL)[cache_index] ++;
+			//	}
+			//	else {
+			//		pref_dirtyCL->emplace(cache_index, 1);
+			//	}
+			//}
 
 		}
 
 	}
 
-	void dram_subsystem::process_miss_data_ready(bool rw, uint64_t lba, list<uint64_t>* flush_lba, uint64_t simtime) {
+	void dram_subsystem::process_miss_data_ready(bool rw, uint64_t lba, list<uint64_t>* flush_lba, uint64_t simtime, set<uint64_t>* prefetched_lba) {
 
 
 		if (freeCL->empty()) {
@@ -186,6 +258,10 @@ namespace SSD_Components {
 			cl = (*dram_mapping)[evict_lba_base_addr];
 			dram_mapping->erase(dram_mapping->find(evict_lba_base_addr));
 			outputf.of << "Finished_time " << simtime << " Starting_time " << 0 << " Eviction/Flush_at " << evict_lba_base_addr << std::endl;
+			if (prefetched_lba->count(evict_lba_base_addr)) {
+				prefetched_lba->erase(prefetched_lba->find(evict_lba_base_addr));
+			}
+
 
 			freeCL->push_back(cl);
 

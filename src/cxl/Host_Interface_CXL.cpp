@@ -16,6 +16,7 @@ namespace SSD_Components
 		dram->initDRAM();
 		hi = hosti;
 		mshr = new cxl_mshr;
+		prefetched_lba = new set<uint64_t>;
 	}
 	CXL_Manager::~CXL_Manager() {
 		if (dram) {
@@ -24,8 +25,44 @@ namespace SSD_Components
 		if (mshr) {
 			delete mshr;
 		}
+		if (prefetched_lba) {
+			prefetched_lba->clear();
+			delete prefetched_lba;
+		}
 	}
-	bool CXL_Manager::process_requests(uint64_t address, void* payload) {
+
+	void CXL_Manager::prefetch_decision_maker(uint64_t lba, bool isMiss) {
+		list<uint64_t> prefetchlba;
+
+
+		if (cxl_config_para.prefetch_policy == prefetchertype::tagged) {
+			if (!isMiss && tagAssertedLBA.count(lba) == 0) {
+				return;
+			}
+
+			for (uint64_t i = 1; i <= prefetchK; i++) {
+				uint64_t plba{ lba + i };
+				if (!dram->isCacheHit(plba) && !mshr->isInProgress(plba) && 
+					plba*8 <= ((Input_Stream_CXL*)(((Host_Interface_CXL*)hi)->input_stream_manager->input_streams[0]))->End_logical_sector_address) {
+					prefetchlba.push_back(plba);
+					prefetched_lba->insert(plba);
+					tagAssertedLBA.insert(plba);
+				}
+			}
+			if (tagAssertedLBA.count(lba)) {
+				tagAssertedLBA.erase(tagAssertedLBA.find(lba));
+			}
+
+
+		}
+
+		((Host_Interface_CXL*)hi)->process_CXL_prefetch_requests(prefetchlba);
+
+
+	}
+
+
+	bool CXL_Manager::process_requests(uint64_t address, void* payload, bool is_pref_req) {
 
 		bool cache_miss{ 1 };
 
@@ -50,6 +87,10 @@ namespace SSD_Components
 			((Host_Interface_CXL*)hi)->Send_request_to_CXL_DRAM(dram_request);
 			//dram->process_cache_hit(rw, lba);
 			cache_hit_count++;
+
+			if (!is_pref_req && prefetched_lba->count(lba)) {
+				prefetch_decision_maker(lba, 0);
+			}
 		}
 		else {
 			if (mshr->isInProgress(lba)) {
@@ -57,36 +98,42 @@ namespace SSD_Components
 			}
 			else {
 				cache_miss_count++;
+				if(!is_pref_req)prefetch_decision_maker(lba, 1);
 			}
+
 			Submission_Queue_Entry* nsqe{ new Submission_Queue_Entry{*sqe} };
 			mshr->insertRequest(lba, Simulator->Time(), nsqe);
+
+
 		}
 
+		if (!is_pref_req) {
 
-		total_number_of_accesses++;
+			total_number_of_accesses++;
 
-		float current_progress{ static_cast<float>(total_number_of_accesses - falsehitcount) / static_cast<float>(cxl_config_para.total_number_of_requets) };
-		if (current_progress*100 - perc > 1) {
-			perc += 1;
-			uint8_t number_of_bars{ static_cast<uint8_t> (perc/4) };
-			
-			std::cout << "Simulation progress: [";
-			for (auto i = 0; i < number_of_bars; i++) {
-				std::cout << "=";
-			}
-			for (auto i = 0; i < 25 - number_of_bars -1 ; i++) {
-				std::cout << " ";
-			}
-			
-			std::cout << "] " << perc << "%   Cache Miss Count: "<< cache_miss_count << "   False Hit Count: "<< falsehitcount << "\r";
-		}
+			float current_progress{ static_cast<float>(total_number_of_accesses - falsehitcount) / static_cast<float>(cxl_config_para.total_number_of_requets) };
+			if (current_progress * 100 - perc > 1) {
+				perc += 1;
+				uint8_t number_of_bars{ static_cast<uint8_t> (perc / 4) };
 
-		if (total_number_of_accesses - falsehitcount == cxl_config_para.total_number_of_requets) {
-			std::cout << "Simulation progress: [";
-			for (auto i = 0; i < 25; i++) {
-				std::cout << "=";
+				std::cout << "Simulation progress: [";
+				for (auto i = 0; i < number_of_bars; i++) {
+					std::cout << "=";
+				}
+				for (auto i = 0; i < 25 - number_of_bars - 1; i++) {
+					std::cout << " ";
+				}
+
+				std::cout << "] " << perc << "%   Cache Miss Count: " << cache_miss_count << "   Prefetch Count: " << prefetched_lba->size() << "\r";
 			}
-			std::cout << "] " << 100 << "%   Cache Miss Count: " << cache_miss_count << "   False Hit Count: " << falsehitcount << std::endl;
+
+			if (total_number_of_accesses - falsehitcount == cxl_config_para.total_number_of_requets) {
+				std::cout << "Simulation progress: [";
+				for (auto i = 0; i < 25; i++) {
+					std::cout << "=";
+				}
+				std::cout << "] " << 100 << "%   Cache Miss Count: " << cache_miss_count << "   Prefetch Count: " << prefetched_lba->size() << std::endl;
+			}
 		}
 
 
@@ -652,7 +699,7 @@ namespace SSD_Components
 		set<uint64_t> readcount, writecount;
 		rw = this->cxl_man->mshr->removeRequest(lba, readcount, writecount);
 		list<uint64_t>* flush_lba{ new list<uint64_t> };
-		this->cxl_man->dram->process_miss_data_ready(rw, lba, flush_lba, Simulator->Time());
+		this->cxl_man->dram->process_miss_data_ready(rw, lba, flush_lba, Simulator->Time(), this->cxl_man->prefetched_lba);
 
 		for (auto i: readcount) {
 			CXL_DRAM_ACCESS* dram_request{ new CXL_DRAM_ACCESS{64, lba, 1, CXL_DRAM_EVENTS::CACHE_HIT, i} };
@@ -667,7 +714,6 @@ namespace SSD_Components
 		while (!flush_lba->empty()) {
 			uint64_t lba{ flush_lba->front() };
 			uint64_t lsa{ lba * 8 };
-
 
 			flush_lba->pop_front();
 			Submission_Queue_Entry* sqe{ new Submission_Queue_Entry };
@@ -690,4 +736,38 @@ namespace SSD_Components
 		delete flush_lba;
 	}
 
+	void Host_Interface_CXL::process_CXL_prefetch_requests(list<uint64_t> prefetchlba) {
+
+		while (!prefetchlba.empty()) {
+			uint64_t lba{ prefetchlba.front() };
+
+			prefetchlba.pop_front();
+
+			Submission_Queue_Entry* sqe = new Submission_Queue_Entry;
+			sqe->Command_Identifier = 0;
+			sqe->Opcode = NVME_READ_OPCODE;
+			sqe->Command_specific[0] = (uint32_t)lba * 4096; //cxl_man->process_requests will do a translation
+			sqe->Command_specific[1] = (uint32_t)(lba * 4096 >> 32);
+			sqe->Command_specific[2] = ((uint32_t)((uint16_t)8)) & (uint32_t)(0x0000ffff); // magic number
+			sqe->PRP_entry_1 = (DATA_MEMORY_REGION);//Dummy addresses, just to emulate data read/write access
+			sqe->PRP_entry_2 = (DATA_MEMORY_REGION + 0x1000);//Dummy addresses
+
+			if (!(cxl_man->process_requests(0, sqe, 1))) {
+				delete sqe;
+				continue;
+			}
+			else {
+
+				sqe->Opcode = NVME_READ_OPCODE;
+				request_fetch_unit->Fetch_next_request(0);
+			}
+
+			request_fetch_unit->Process_pcie_read_message(0, sqe, sizeof(Submission_Queue_Entry));
+
+		}
+
+	}
+
 }
+
+
