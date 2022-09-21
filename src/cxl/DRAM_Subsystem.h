@@ -37,11 +37,11 @@ namespace SSD_Components {
 
 		void initDRAM();
 		bool isCacheHit(uint64_t lba);
-		//bool isPrefetchHit(uint64_t lba);
 
 
 		void process_cache_hit(bool rw, uint64_t lba, bool& falsehit);
 		void process_miss_data_ready(bool rw, uint64_t lba, list<uint64_t>* flush_lba, uint64_t simtime, set<uint64_t>* prefetched_lba);
+		void process_miss_data_ready_new(bool rw, uint64_t lba, list<uint64_t>* flush_lba, uint64_t simtime, set<uint64_t>* prefetched_lba);
 
 
 
@@ -58,12 +58,15 @@ namespace SSD_Components {
 
 		map < uint64_t, uint64_t>* dirtyCL{ NULL }; //cache line index, write count
 
-		//map<uint64_t, uint64_t>* pref_dram_mapping{ NULL };
-		//list<uint64_t>* pref_freeCL{ NULL };
+		map<uint64_t, uint64_t>* pref_dram_mapping{ NULL };
+		list<uint64_t>* pref_freeCL{ NULL };
 
-		//lruTwoListClass* pref_lru2cachedlba{ NULL };
+		vector<uint64_t>* pref_cachedlba{ NULL };//for random 
+		lrfuHeap* pref_lrfucachedlba{ NULL }; //for lrfu
+		lruTwoListClass* pref_lru2cachedlba{ NULL };
 
-		//map<uint64_t, uint64_t>* pref_dirtyCL{ NULL };
+
+		map<uint64_t, uint64_t>* pref_dirtyCL{ NULL };
 
 	};
 

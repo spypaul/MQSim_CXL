@@ -34,8 +34,10 @@ namespace SSD_Components
 	void CXL_Manager::prefetch_decision_maker(uint64_t lba, bool isMiss) {
 		list<uint64_t> prefetchlba;
 
-
-		if (cxl_config_para.prefetch_policy == prefetchertype::tagged) {
+		if (cxl_config_para.prefetch_policy == prefetchertype::no) {
+			return;
+		}
+		else if (cxl_config_para.prefetch_policy == prefetchertype::tagged) {
 			if (!isMiss && tagAssertedLBA.count(lba) == 0) {
 				return;
 			}
@@ -86,9 +88,11 @@ namespace SSD_Components
 			CXL_DRAM_ACCESS* dram_request{ new CXL_DRAM_ACCESS{64, lba, rw, CXL_DRAM_EVENTS::CACHE_HIT, Simulator->Time()} };
 			((Host_Interface_CXL*)hi)->Send_request_to_CXL_DRAM(dram_request);
 			//dram->process_cache_hit(rw, lba);
-			cache_hit_count++;
+
+			if(!is_pref_req)cache_hit_count++;
 
 			if (!is_pref_req && prefetched_lba->count(lba)) {
+				prefetch_hit_count++;
 				prefetch_decision_maker(lba, 0);
 			}
 		}
@@ -124,7 +128,7 @@ namespace SSD_Components
 					std::cout << " ";
 				}
 
-				std::cout << "] " << perc << "%   Cache Miss Count: " << cache_miss_count << "   Prefetch Count: " << prefetched_lba->size() << "\r";
+				std::cout << "] " << perc << "%   Prefetch Hit Count: " << prefetch_hit_count << "   Cache Hit Count: " << cache_hit_count << "\r";
 			}
 
 			if (total_number_of_accesses - falsehitcount == cxl_config_para.total_number_of_requets) {
@@ -132,7 +136,7 @@ namespace SSD_Components
 				for (auto i = 0; i < 25; i++) {
 					std::cout << "=";
 				}
-				std::cout << "] " << 100 << "%   Cache Miss Count: " << cache_miss_count << "   Prefetch Count: " << prefetched_lba->size() << std::endl;
+				std::cout << "] " << 100 << "%   Prefetch Hit Count: " << prefetch_hit_count << "   Cache Hit Count: " << cache_hit_count << std::endl;
 			}
 		}
 
@@ -699,7 +703,7 @@ namespace SSD_Components
 		set<uint64_t> readcount, writecount;
 		rw = this->cxl_man->mshr->removeRequest(lba, readcount, writecount);
 		list<uint64_t>* flush_lba{ new list<uint64_t> };
-		this->cxl_man->dram->process_miss_data_ready(rw, lba, flush_lba, Simulator->Time(), this->cxl_man->prefetched_lba);
+		this->cxl_man->dram->process_miss_data_ready_new(rw, lba, flush_lba, Simulator->Time(), this->cxl_man->prefetched_lba);
 
 		for (auto i: readcount) {
 			CXL_DRAM_ACCESS* dram_request{ new CXL_DRAM_ACCESS{64, lba, 1, CXL_DRAM_EVENTS::CACHE_HIT, i} };

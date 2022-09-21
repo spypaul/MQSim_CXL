@@ -1,6 +1,8 @@
-DRAM_size 1073741824
+DRAM_size 67108864
+Mix_mode 1
 Cache_portion_percentage 100
 Cache_policy LRU2
+Prefetch_cache_policy LRU2
 LRFU_p_lambda 2 1
 Set_associativity 2
 Prefetcher Tagged

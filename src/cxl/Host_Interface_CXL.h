@@ -56,7 +56,7 @@ namespace SSD_Components
 
 		cxl_config cxl_config_para;
 
-		uint64_t cache_miss_count{ 0 }, cache_hit_count{ 0 }, total_number_of_accesses{0};
+		uint64_t cache_miss_count{ 0 }, cache_hit_count{ 0 }, total_number_of_accesses{ 0 }, prefetch_hit_count{0};
 		float perc{ 1 };
 
 		Host_Interface_Base* hi{NULL};

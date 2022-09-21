@@ -12,6 +12,7 @@ typedef enum class cachepolicy {
 }cachepolicy;
 
 typedef enum class prefetchertype {
+	no,
 	tagged,
 	bo,
 	stms,
@@ -23,10 +24,13 @@ typedef enum class prefetchertype {
 class cxl_config {
 public:
 	uint64_t dram_size;
+	bool mix_mode{0};
 	uint64_t cache_portion_size;
 	uint64_t prefetch_portion_size;
 	uint64_t ssd_page_size;
+	uint64_t logical_sector_size{ 512 };
 	cachepolicy cpolicy;
+	cachepolicy pref_cpolicy;
 	double lrfu_p;
 	double lrfu_lambda;
 	uint16_t set_associativity;
