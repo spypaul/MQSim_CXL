@@ -87,3 +87,95 @@ void boClass::reset() {
 	rrtable.clear();
 
 }
+
+
+void leapClass::leapinit() {
+
+}
+
+void leapClass::historyinsert(uint64_t addr) {
+	if (hbuffer.size() == 0) {
+		hbuffer.push_back({ addr, 0 });
+		return;
+	}
+
+	uint64_t preaddr{ hbuffer.back().first };
+	int64_t delta{ static_cast<int64_t>(addr) - static_cast<int64_t>(preaddr) }; //careful
+
+	hbuffer.push_back({ addr, delta });
+
+	if (hbuffer.size() > maxbuffersize) {
+		hbuffer.pop_front();
+	}
+
+}
+int64_t leapClass::findoffset() {
+	uint64_t wsize{ hbuffer.size() / splitvalue };
+	int64_t delta{ 0 };
+	while (1) {
+		auto iter{ hbuffer.end() };
+		for (uint64_t i = 0; i < wsize; i++)iter--;
+
+		//boyer-moore algorithm
+		int64_t candidate{ 0 };
+		uint64_t vote{ 0 };
+		auto iter2{ iter };
+
+		while (iter2 != hbuffer.end()) {
+			if (vote == 0) candidate = iter2->second;
+			vote = (iter2->second == candidate) ? vote++ : vote--;
+			iter2++;
+		}
+
+		uint64_t count{ 0 };
+
+		while (iter != hbuffer.end()) {
+			if (iter->second == candidate) count++;
+			iter++;
+		}
+
+		if (count > wsize / 2) {
+			delta = candidate;
+		}
+
+		wsize = 2 * wsize + 1;
+
+		if (delta != 0 || wsize > hbuffer.size() || wsize == 0) return delta;
+
+	}
+
+	return delta;
+}
+
+uint64_t leapClass::getk(uint64_t prefetchHitCount) {
+	uint64_t prefetchamount{ 0 };
+	if ((prefetchHitCount - lastprefetchhit) == 0) {
+		prefetchamount = leapinitialprefetchamount;
+	}
+	else {
+		prefetchamount = pow(2, static_cast<uint64_t>(ceil(log2(prefetchHitCount - lastprefetchhit + 1))));
+	}
+
+	prefetchamount = (prefetchamount <= maxprefetchamount) ? prefetchamount : maxprefetchamount;
+	if (prefetchamount < lastprefetchamount / 2) {
+		prefetchamount = lastprefetchamount / 2;
+	}
+	lastprefetchhit = prefetchHitCount;
+
+	lastprefetchamount = prefetchamount;
+
+	return prefetchamount;
+
+}
+void leapClass::reset() {
+	hbuffer.clear();
+	//windowsize = maxbuffersize ;
+	splitvalue = 8;
+	lastprefetchamount = 0;
+	lastprefetchhit = 0;
+}
+
+void leapClass::setvalues(uint64_t bsize, uint64_t svalue) {
+	maxbuffersize = bsize;
+	splitvalue = svalue;
+}

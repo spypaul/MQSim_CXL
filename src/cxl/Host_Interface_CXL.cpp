@@ -31,7 +31,7 @@ namespace SSD_Components
 		}
 	}
 
-	void CXL_Manager::prefetch_decision_maker(uint64_t lba, bool isMiss) {
+	void CXL_Manager::prefetch_decision_maker(uint64_t lba, bool isMiss, uint64_t prefetch_hit_count) {
 		list<uint64_t> prefetchlba;
 
 		if (cxl_config_para.prefetch_policy == prefetchertype::no) {
@@ -95,6 +95,51 @@ namespace SSD_Components
 			}
 
 		}
+		else if (cxl_config_para.prefetch_policy == prefetchertype::leap && isMiss) {
+			leapPrefetcher.historyinsert(lba);
+			int64_t offset{ leapPrefetcher.findoffset() };
+
+			uint64_t leapprefetchK{ leapPrefetcher.getk(prefetch_hit_count) };
+
+			if (offset == 0) {
+				offset = leapPrefetcher.last_offset;
+				for (uint64_t i = 1; i <= leapprefetchK; i++) {
+
+					uint64_t plba{ lba + i };
+
+					plba = (offset >= 0) ? plba + static_cast<uint64_t>(offset) : plba - static_cast<uint64_t>(-1 * offset);
+
+					//check if the prefetch block is in the cache or miss map
+					//prefetcher_ol.print_offset(plba - event->lba);
+					if (!dram->isCacheHit(plba) && !mshr->isInProgress(plba) &&
+						plba * 8 <= ((Input_Stream_CXL*)(((Host_Interface_CXL*)hi)->input_stream_manager->input_streams[0]))->End_logical_sector_address) {
+						
+						prefetchlba.push_back(plba);
+						prefetched_lba->insert(plba);
+					}
+				}
+			}
+			else {
+				for (uint64_t i = 1; i <= leapprefetchK; i++) {
+					uint64_t plba{ lba };
+
+					plba = (offset >= 0) ? plba + i * static_cast<uint64_t>(offset) : plba - i * static_cast<uint64_t>(-1 * offset);
+
+					//check if the prefetch block is in the cache or miss map
+					//prefetcher_ol.print_offset(plba - event->lba);
+					if (!dram->isCacheHit(plba) && !mshr->isInProgress(plba) &&
+						plba * 8 <= ((Input_Stream_CXL*)(((Host_Interface_CXL*)hi)->input_stream_manager->input_streams[0]))->End_logical_sector_address) {
+						
+						prefetchlba.push_back(plba);
+						prefetched_lba->insert(plba);
+						
+					}
+				}
+			}
+			leapPrefetcher.last_offset = offset;
+
+
+		}
 
 		((Host_Interface_CXL*)hi)->process_CXL_prefetch_requests(prefetchlba);
 
@@ -131,7 +176,7 @@ namespace SSD_Components
 
 			if (!is_pref_req && prefetched_lba->count(lba)) {
 				prefetch_hit_count++;
-				prefetch_decision_maker(lba, 0);
+				prefetch_decision_maker(lba, 0, prefetch_hit_count);
 			}
 		}
 		else {
@@ -142,7 +187,7 @@ namespace SSD_Components
 
 				if (!is_pref_req) { 
 					cache_miss_count++;
-					prefetch_decision_maker(lba, 1); 
+					prefetch_decision_maker(lba, 1, prefetch_hit_count);
 				}
 			}
 

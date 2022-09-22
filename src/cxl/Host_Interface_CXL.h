@@ -44,7 +44,7 @@ namespace SSD_Components
 
 		//prefetchers
 
-		void prefetch_decision_maker(uint64_t lba, bool isMiss);
+		void prefetch_decision_maker(uint64_t lba, bool isMiss, uint64_t prefetch_hit_count);
 
 		set<uint64_t>* prefetched_lba;
 
@@ -54,6 +54,9 @@ namespace SSD_Components
 
 		//Best-offset prefetcher
 		boClass boPrefetcher;
+
+		//leap
+		leapClass leapPrefetcher;
 
 
 	private:

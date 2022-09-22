@@ -37,3 +37,25 @@ public:
 	bool endlphase();
 	void reset();
 };
+
+
+class leapClass {
+private:
+	list<pair<uint64_t, int64_t>> hbuffer;
+	uint64_t maxbuffersize{ 39 };
+	//uint64_t windowsize{ maxbuffersize };
+	uint64_t splitvalue{ 8 };
+	const uint64_t maxprefetchamount{ 16 };
+	uint64_t lastprefetchamount{ 0 };
+	uint64_t lastprefetchhit{ 0 };
+
+	uint64_t leapinitialprefetchamount{ 1 };
+public:
+	uint64_t last_offset{ 0 };
+	void setvalues(uint64_t bsize, uint64_t svalue);
+	void leapinit();
+	int64_t findoffset();
+	void historyinsert(uint64_t addr);
+	uint64_t getk(uint64_t prefetchHitCount);
+	void reset();
+};
