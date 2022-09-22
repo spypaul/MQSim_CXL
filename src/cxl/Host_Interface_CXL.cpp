@@ -57,6 +57,44 @@ namespace SSD_Components
 
 
 		}
+		else if (cxl_config_para.prefetch_policy == prefetchertype::bo) {
+			if (lba >= boPrefetcher.offsetundertest && boPrefetcher.inhistory(lba - boPrefetcher.offsetundertest)) {
+				boPrefetcher.incrementscore(boPrefetcher.offsetundertest);
+			}
+
+			boPrefetcher.addhistory(lba);
+			boPrefetcher.offsetundertest++;
+
+			if (boPrefetcher.endround()) {
+				boPrefetcher.offsetundertest = 1;
+				boPrefetcher.round++;
+				if (boPrefetcher.endlphase()) {
+					boPrefetcher.round = 0;
+					boPrefetcher.findoffsets();
+					if (boPrefetcher.olist.size() > 0) {
+						boPrefetcher.prefetch_on = 1;
+					}
+					else {
+						boPrefetcher.prefetch_on = 0;
+					}
+					boPrefetcher.resetscore();
+				}
+			}
+
+			if (boPrefetcher.prefetch_on) {
+				for (auto i : boPrefetcher.olist) {
+					uint64_t plba{ lba + (i)};
+					
+
+					if (!dram->isCacheHit(plba) && !mshr->isInProgress(plba) &&
+						plba * 8 <= ((Input_Stream_CXL*)(((Host_Interface_CXL*)hi)->input_stream_manager->input_streams[0]))->End_logical_sector_address) {
+						prefetchlba.push_back(plba);
+						prefetched_lba->insert(plba);
+					}
+				}
+			}
+
+		}
 
 		((Host_Interface_CXL*)hi)->process_CXL_prefetch_requests(prefetchlba);
 
@@ -101,8 +139,11 @@ namespace SSD_Components
 				cache_miss = 0;
 			}
 			else {
-				cache_miss_count++;
-				if(!is_pref_req)prefetch_decision_maker(lba, 1);
+
+				if (!is_pref_req) { 
+					cache_miss_count++;
+					prefetch_decision_maker(lba, 1); 
+				}
 			}
 
 			Submission_Queue_Entry* nsqe{ new Submission_Queue_Entry{*sqe} };

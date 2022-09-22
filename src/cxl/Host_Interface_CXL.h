@@ -15,6 +15,7 @@
 #include "CXL_MSHR.h"
 #include "DRAM_Model.h"
 #include "OutputLog.h"
+#include "Prefetching_Alg.h"
 
 using namespace std;
 
@@ -50,6 +51,9 @@ namespace SSD_Components
 		//tagged prefetcher
 		set<uint64_t> tagAssertedLBA;
 		uint16_t prefetchK{ 10 };
+
+		//Best-offset prefetcher
+		boClass boPrefetcher;
 
 
 	private:
