@@ -51,7 +51,7 @@ private:
 
 	uint64_t leapinitialprefetchamount{ 1 };
 public:
-	uint64_t last_offset{ 0 };
+	int64_t last_offset{ 0 };
 	void setvalues(uint64_t bsize, uint64_t svalue);
 	void leapinit();
 	int64_t findoffset();

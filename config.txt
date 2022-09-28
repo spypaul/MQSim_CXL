@@ -1,9 +1,9 @@
 DRAM_size 67108864
 Mix_mode 1
 Cache_portion_percentage 100
-Cache_policy LRU2
-Prefetch_cache_policy LRU2
+Cache_policy LRFU2
+Prefetch_cache_policy LRFU2
 LRFU_p_lambda 2 1
 Set_associativity 2
-Prefetcher Leap
-Total_number_of_requests 11270380
+Prefetcher No
+Total_number_of_requests 10040911

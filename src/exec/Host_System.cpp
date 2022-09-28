@@ -40,6 +40,8 @@ Host_System::Host_System(Host_Parameter_Set* parameters, bool preconditioning_re
 	this->cxl_pcie->Set_pcie_switch(this->PCIe_switch);
 	Simulator->AddObject(this->cxl_pcie);
 
+	this->PCIe_switch->cxl_pcie = this->cxl_pcie;
+
 
 	//Create IO flows
 	LHA_type address_range_per_flow = ssd_host_interface->Get_max_logical_sector_address() / parameters->IO_Flow_Definitions.size();
@@ -99,6 +101,7 @@ Host_System::Host_System(Host_Parameter_Set* parameters, bool preconditioning_re
 					parameters->Enable_ResponseTime_Logging, parameters->ResponseTime_Logging_Period_Length, parameters->Input_file_path + ".IO_Flow.No_" + std::to_string(flow_id) + ".log", this->cxl_pcie);
 
 				this->IO_flows.push_back(io_flow);
+				this->cxl_pcie->Set_io_flow(io_flow);
 				break;
 			}
 			default:
@@ -107,6 +110,9 @@ Host_System::Host_System(Host_Parameter_Set* parameters, bool preconditioning_re
 		Simulator->AddObject(io_flow);
 		
 	}
+
+	
+
 	this->PCIe_root_complex->Set_io_flows(&this->IO_flows);
 	//if (((SSD_Components::Host_Interface_NVMe*)ssd_host_interface)->GetType() == HostInterface_Types::SATA) {
 	//	this->SATA_hba->Set_io_flows(&this->IO_flows);

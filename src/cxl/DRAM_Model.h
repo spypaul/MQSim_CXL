@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <list>
+#include <map>
 #include "../sim/Sim_Object.h"
 #include "../sim/Sim_Reporter.h"
 #include "../ssd/User_Request.h"
@@ -9,12 +10,12 @@
 #include "../ssd/Host_Interface_Base.h"
 #include "OutputLog.h"
 
-
 namespace SSD_Components {
 
 	enum class CXL_DRAM_EVENTS {
 		CACHE_HIT,
-		CACHE_MISS
+		CACHE_MISS,
+		CACHE_HIT_UNDER_MISS
 	};
 	struct CXL_DRAM_ACCESS {
 		unsigned int Size_in_bytes{ 0 };
@@ -23,6 +24,7 @@ namespace SSD_Components {
 		bool rw{ 1 };
 		CXL_DRAM_EVENTS type{ CXL_DRAM_EVENTS::CACHE_HIT };
 		sim_time_type initiate_time{0};
+		sim_time_type arrive_dram_time{ 0 };
 
 		CXL_DRAM_ACCESS(unsigned int size, uint64_t addr, bool read, CXL_DRAM_EVENTS t , sim_time_type ti) {
 			Size_in_bytes = size;
@@ -68,6 +70,9 @@ namespace SSD_Components {
 		std::list<CXL_DRAM_ACCESS*>* waiting_request_queue;
 
 		CXL_DRAM_ACCESS* current_access{NULL};
+		std::map<sim_time_type, list<CXL_DRAM_ACCESS*>>* list_of_current_access{ NULL };
+		uint64_t num_working_request{ 0 };
+		uint64_t num_chan{ 8 };
 
 	};
 }

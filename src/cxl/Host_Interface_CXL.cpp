@@ -34,6 +34,10 @@ namespace SSD_Components
 	void CXL_Manager::prefetch_decision_maker(uint64_t lba, bool isMiss, uint64_t prefetch_hit_count) {
 		list<uint64_t> prefetchlba;
 
+		if (mshr->isFull()) {
+			return;
+		}
+		
 		if (cxl_config_para.prefetch_policy == prefetchertype::no) {
 			return;
 		}
@@ -141,6 +145,10 @@ namespace SSD_Components
 
 		}
 
+		if (prefetchlba.size() > mshr->getSize()) {
+			prefetchlba.resize(mshr->getSize());
+		}
+
 		((Host_Interface_CXL*)hi)->process_CXL_prefetch_requests(prefetchlba);
 
 
@@ -160,9 +168,16 @@ namespace SSD_Components
 		// 4096 is the page size
 		LHA_type lba{ memory_addr / 4096 }; //stream alignment will be done when dealing with transaction segmentation
 		LHA_type lsa{ lba * sqe->Command_specific[2]}; // lsa to be used for request
+
+		if (lsa < ((Input_Stream_CXL*)hi->input_stream_manager->input_streams[0])->Start_logical_sector_address || lsa >((Input_Stream_CXL*)hi->input_stream_manager->input_streams[0])->End_logical_sector_address) {
+			lsa = ((Input_Stream_CXL*)hi->input_stream_manager->input_streams[0])->Start_logical_sector_address
+				+ (lsa % (((Input_Stream_CXL*)hi->input_stream_manager->input_streams[0])->End_logical_sector_address - (((Input_Stream_CXL*)hi->input_stream_manager->input_streams[0])->Start_logical_sector_address)));
+			lba = lsa / sqe->Command_specific[2];
+		}
+
+
 		sqe->Command_specific[0] = (uint32_t)lsa;
 		sqe->Command_specific[1] = (uint32_t)(lsa >> 32);
-
 
 
 		if (dram->isCacheHit(lba)) {
@@ -182,26 +197,40 @@ namespace SSD_Components
 		else {
 			if (mshr->isInProgress(lba)) {
 				cache_miss = 0;
+
+				Submission_Queue_Entry* nsqe{ new Submission_Queue_Entry{*sqe} };
+				mshr->insertRequest(lba, Simulator->Time(), nsqe);
+				if (mshr->isFull()) {
+					//notify cxl pcie device is full
+					hi->Notify_CXL_Host_mshr_full();
+				}
 			}
 			else {
-
+				Submission_Queue_Entry* nsqe{ new Submission_Queue_Entry{*sqe} };
+				mshr->insertRequest(lba, Simulator->Time(), nsqe);
+				if (mshr->isFull()) {
+					//notify cxl pcie device is full
+					hi->Notify_CXL_Host_mshr_full();
+				}
 				if (!is_pref_req) { 
 					cache_miss_count++;
 					prefetch_decision_maker(lba, 1, prefetch_hit_count);
 				}
 			}
 
-			Submission_Queue_Entry* nsqe{ new Submission_Queue_Entry{*sqe} };
-			mshr->insertRequest(lba, Simulator->Time(), nsqe);
-
-
+			//Submission_Queue_Entry* nsqe{ new Submission_Queue_Entry{*sqe} };
+			//mshr->insertRequest(lba, Simulator->Time(), nsqe);
+			//if (mshr->isFull()) {
+			//	//notify cxl pcie device is full
+			//	hi->Notify_CXL_Host_mshr_full();
+			//}
 		}
 
 		if (!is_pref_req) {
 
 			total_number_of_accesses++;
 
-			float current_progress{ static_cast<float>(total_number_of_accesses - falsehitcount) / static_cast<float>(cxl_config_para.total_number_of_requets) };
+			float current_progress{ static_cast<float>(total_number_of_accesses ) / static_cast<float>(cxl_config_para.total_number_of_requets) };
 			if (current_progress * 100 - perc > 1) {
 				perc += 1;
 				uint8_t number_of_bars{ static_cast<uint8_t> (perc / 4) };
@@ -217,12 +246,13 @@ namespace SSD_Components
 				std::cout << "] " << perc << "%   Prefetch Hit Count: " << prefetch_hit_count << "   Cache Hit Count: " << cache_hit_count << "\r";
 			}
 
-			if (total_number_of_accesses - falsehitcount == cxl_config_para.total_number_of_requets) {
+			if (total_number_of_accesses == cxl_config_para.total_number_of_requets) {
 				std::cout << "Simulation progress: [";
 				for (auto i = 0; i < 25; i++) {
 					std::cout << "=";
 				}
 				std::cout << "] " << 100 << "%   Prefetch Hit Count: " << prefetch_hit_count << "   Cache Hit Count: " << cache_hit_count << std::endl;
+				std::cout << "False hit rate: " << static_cast<float>(falsehitcount) / static_cast<float>(cxl_config_para.total_number_of_requets) * 100 << " %" << std::endl;
 			}
 		}
 
@@ -786,18 +816,25 @@ namespace SSD_Components
 
 
 	void Host_Interface_CXL::Update_CXL_DRAM_state_when_miss_data_ready(bool rw, uint64_t lba) {
-		set<uint64_t> readcount, writecount;
-		rw = this->cxl_man->mshr->removeRequest(lba, readcount, writecount);
+		list<uint64_t> readcount, writecount;
+		bool wasfull{0};
+		rw = this->cxl_man->mshr->removeRequest(lba, readcount, writecount, wasfull);
+
+		if (wasfull) {
+			//notify cxl pcie  no longer full
+
+			this->Notify_CXL_Host_mshr_not_full();
+		}
 		list<uint64_t>* flush_lba{ new list<uint64_t> };
 		this->cxl_man->dram->process_miss_data_ready_new(rw, lba, flush_lba, Simulator->Time(), this->cxl_man->prefetched_lba);
 
 		for (auto i: readcount) {
-			CXL_DRAM_ACCESS* dram_request{ new CXL_DRAM_ACCESS{64, lba, 1, CXL_DRAM_EVENTS::CACHE_HIT, i} };
+			CXL_DRAM_ACCESS* dram_request{ new CXL_DRAM_ACCESS{64, lba, 1, CXL_DRAM_EVENTS::CACHE_HIT_UNDER_MISS, i} };
 			this->Send_request_to_CXL_DRAM(dram_request);
 		}
 
 		for (auto i: writecount) {
-			CXL_DRAM_ACCESS* dram_request{ new CXL_DRAM_ACCESS{64, lba, 0, CXL_DRAM_EVENTS::CACHE_HIT, i} };
+			CXL_DRAM_ACCESS* dram_request{ new CXL_DRAM_ACCESS{64, lba, 0, CXL_DRAM_EVENTS::CACHE_HIT_UNDER_MISS, i} };
 			this->Send_request_to_CXL_DRAM(dram_request);
 		}
 

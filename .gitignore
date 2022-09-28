@@ -365,3 +365,6 @@ FodyWeavers.xsd
 /traces/test-small.trace
 /traces/example.trace
 /evictionlog.txt
+/traces/bert_test_inf_cpu.trace
+/traces/bert_test_inf_gpu.trace
+/traces/bert_test_train_gpu.trace

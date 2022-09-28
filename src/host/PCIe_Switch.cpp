@@ -26,4 +26,15 @@ namespace Host_Components
 	{
 		return this->host_interface != NULL;
 	}
+
+	void PCIe_Switch::Notify_request_complete() {
+		cxl_pcie->Request_completed();
+	}
+
+	void PCIe_Switch::Notify_mshr_full() {
+		cxl_pcie->MSHR_full();
+	}
+	void PCIe_Switch::Notify_mshr_not_full() {
+		cxl_pcie->MSHR_not_full();
+	}
 }

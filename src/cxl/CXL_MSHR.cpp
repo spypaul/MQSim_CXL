@@ -30,15 +30,43 @@ void cxl_mshr::insertRequest(uint64_t lba, uint64_t time, Submission_Queue_Entry
 	if (!mshr->count(lba)) {
 		list<mshr_request*>* lp{ new list<mshr_request*> };
 		mshr->emplace(lba, lp);
+		row_count++;
 	}
 
 	mshr_request* p{ new mshr_request{time, sqe} };
 	(*mshr)[lba]->push_back(p);
+
+
+	if (row_count == max_row_size) {
+		full = 1;
+		return;
+	}
 	
+	if ((*mshr)[lba]->size() > max_col_count) {
+		max_col_count = (*mshr)[lba]->size();
+
+		if (max_col_count == max_col_size) {
+			full = 1;
+		}
+
+	}
 }
 
-bool cxl_mshr::removeRequest(uint64_t lba, set<uint64_t>& readcount, set<uint64_t>& writecount) {
+bool cxl_mshr::removeRequest(uint64_t lba, list<uint64_t>& readcount, list<uint64_t>& writecount, bool& wasfull) {
 	bool rw{ 1 };
+	
+	if (((*mshr)[lba])->size() == max_col_count && max_col_count >= max_col_size) {
+		full = 0;
+		max_col_count = 0;
+		wasfull = 1;
+	}
+
+	if (row_count >= max_row_size) {
+		full = 0;
+		wasfull = 1;
+	}
+	row_count--;
+	
 	for (auto i : *(*mshr)[lba]) {
 		Submission_Queue_Entry* s{ i->sqe };
 
@@ -50,10 +78,10 @@ bool cxl_mshr::removeRequest(uint64_t lba, set<uint64_t>& readcount, set<uint64_
 
 
 		if (s->Opcode == NVME_READ_OPCODE) {
-			readcount.emplace(i->time);
+			readcount.push_back(i->time);
 		}
 		else {
-			writecount.emplace(i->time);
+			writecount.push_back(i->time);
 		}
 
 		delete i;

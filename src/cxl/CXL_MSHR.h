@@ -34,10 +34,22 @@ public:
 	bool isInProgress(uint64_t lba);
 
 	void insertRequest(uint64_t lba, uint64_t time, Submission_Queue_Entry* sqe);
-	bool removeRequest(uint64_t lba, set<uint64_t> &readcount, set<uint64_t> &writecount);
+	bool removeRequest(uint64_t lba, list<uint64_t> &readcount, list<uint64_t> &writecount, bool& wasfull);
 
+	bool isFull() { return full; }
+
+	uint64_t getSize() {
+		return max_row_size - row_count;
+	}
 	
 private:
 	map<uint64_t, list<mshr_request*>*>* mshr;
+
+	uint64_t max_row_size{ 1024 };
+	uint64_t max_col_size{ 1024 };
+
+	uint64_t row_count{ 0 };
+	uint64_t max_col_count{ 0 };
+	bool full{ 0 };
 
 };

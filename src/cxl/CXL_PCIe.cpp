@@ -1,5 +1,6 @@
 #include "CXL_PCIe.h"
 
+uint64_t resumefeeding{ 0 };
 
 namespace Host_Components {
 	CXL_PCIe::CXL_PCIe(const sim_object_id_type& id) : Sim_Object(id) {
@@ -16,6 +17,17 @@ namespace Host_Components {
 
 	void CXL_PCIe::Validate_simulation_config() {}
 	void CXL_PCIe::Execute_simulator_event(MQSimEngine::Sim_Event* event) {
+
+		if (mshr_full) {
+			skipped_requests++;
+			return;
+		}
+
+		if (requests_queue.size() >= device_request_queue_max_size) {
+			//std::cout << " resume feeding "<< resumefeeding << std::endl;
+			Simulator->Register_sim_event(Simulator->Time(), (MQSimEngine::Sim_Object*)io_flow, 0, 0);
+		}
+
 		Host_IO_Request* io_request{ requests_queue.front()};
 		requests_queue.pop_front();
 
@@ -40,12 +52,27 @@ namespace Host_Components {
 
 		pcie_switch->Deliver_to_device(message);
 
+		//request_count++;
+
 		delete io_request;
 
 	}
 
 	void CXL_PCIe::Set_pcie_switch(PCIe_Switch* pcie_switch) {
 		this->pcie_switch = pcie_switch;
+	}
+
+	void CXL_PCIe::MSHR_full() {
+		mshr_full = 1;
+	}
+
+	void CXL_PCIe::MSHR_not_full() {
+		mshr_full = 0;
+		while (skipped_requests > 0) {
+
+			skipped_requests--;
+			Simulator->Register_sim_event(Simulator->Time(), this, 0, 0);
+		}
 	}
 
 }

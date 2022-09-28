@@ -5,7 +5,7 @@
 
 
 
-
+uint64_t skipped_feeding{ 0 };
 
 namespace Host_Components
 {
@@ -189,11 +189,17 @@ namespace Host_Components
 
 	void IO_Flow_Trace_Based::Execute_simulator_event(MQSimEngine::Sim_Event*)
 	{
+		if (!cxl_pcie->device_avail()) {
+			//cout << "skipped feeding" << skipped_feeding << endl;
+			return;
+		}
 		Host_IO_Request* request = Generate_next_request();
 		if (request != NULL) {
 			//Submit_io_request(request);
 			cxl_pcie->requests_queue.push_back(request);
-			Simulator->Register_sim_event(request->Arrival_time, cxl_pcie, 0, 0);
+			sim_time_type firetime{ 0 };
+			firetime = (request->Arrival_time < Simulator->Time()) ? Simulator->Time() : request->Arrival_time;
+			Simulator->Register_sim_event(firetime, cxl_pcie, 0, 0);
 		}
 		
 
@@ -221,9 +227,18 @@ namespace Host_Components
 				Submit_io_request(Generate_next_request());
 			}
 #else
-			Simulator->Register_sim_event(time_offset + std::strtoll(current_trace_line[ASCIITraceTimeColumn].c_str(), &pEnd, 10), this);
+			sim_time_type firetime{ 0 };
+			firetime = (std::strtoll(current_trace_line[ASCIITraceTimeColumn].c_str(), &pEnd, 10) < Simulator->Time()) ? Simulator->Time() : std::strtoll(current_trace_line[ASCIITraceTimeColumn].c_str(), &pEnd, 10);
+			//Simulator->Register_sim_event(time_offset + std::strtoll(current_trace_line[ASCIITraceTimeColumn].c_str(), &pEnd, 10), this);
+			Simulator->Register_sim_event(time_offset + firetime, this);
+
+			//if (STAT_generated_request_count == 2368903) {
+			//	cout << "Check" << endl;
+			//}
+			
 #endif
 		}
+
 	}
 
 	void IO_Flow_Trace_Based::Get_statistics(Utils::Workload_Statistics& stats, LPA_type(*Convert_host_logical_address_to_device_address)(LHA_type lha),

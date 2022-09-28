@@ -4,6 +4,7 @@
 #include "PCIe_Message.h"
 #include "PCIe_Link.h"
 #include "../ssd/Host_Interface_Base.h"
+#include "../cxl/CXL_PCIe.h"
 
 namespace SSD_Components
 {
@@ -12,6 +13,7 @@ namespace SSD_Components
 
 namespace Host_Components
 {
+	class CXL_PCIe;
 	class PCIe_Link;
 	class PCIe_Switch
 	{
@@ -21,9 +23,15 @@ namespace Host_Components
 		void Send_to_host(PCIe_Message*);
 		void Attach_ssd_device(SSD_Components::Host_Interface_Base* host_interface);
 		bool Is_ssd_connected();
+
+		void Notify_request_complete();
+		void Notify_mshr_full();
+		void Notify_mshr_not_full();
+		CXL_PCIe* cxl_pcie{ NULL };
 	private:
 		PCIe_Link* pcie_link;
 		SSD_Components::Host_Interface_Base* host_interface;
+
 	};
 }
 #endif //!PCIE_SWITCH_H
