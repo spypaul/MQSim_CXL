@@ -129,9 +129,14 @@ namespace SSD_Components
 
 		virtual void Update_CXL_DRAM_state(bool rw, uint64_t lba, bool& falsehit){
 		}
-		virtual void Update_CXL_DRAM_state_when_miss_data_ready(bool rw, uint64_t lba) {
+		virtual void Update_CXL_DRAM_state_when_miss_data_ready(bool rw, uint64_t lba, bool serviced_before, bool& completed_removed_from_mshr) {
 		}
 		virtual void Handle_CXL_false_hit(bool rw, uint64_t lba){}
+		virtual void Notify_DRAM_is_free() {}
+		
+		
+		void Notify_DRAM_is_full();
+		void Notify_host_DRAM_is_free();
 		void Notify_CXL_Host_request_complete();
 		void Notify_CXL_Host_mshr_full();
 		void Notify_CXL_Host_mshr_not_full();

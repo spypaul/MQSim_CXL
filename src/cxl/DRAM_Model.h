@@ -56,7 +56,9 @@ namespace SSD_Components {
 
 		void Execute_simulator_event(MQSimEngine::Sim_Event* ev);
 
-		bool dram_is_busy{ 0 };
+		bool dram_is_busy{ 0 }; 
+
+		uint64_t getDRAMAvailability();
 
 
 	private:
@@ -68,11 +70,14 @@ namespace SSD_Components {
 		Host_Interface_Base* hi{NULL};
 
 		std::list<CXL_DRAM_ACCESS*>* waiting_request_queue;
+		uint64_t max_wait_queue_size{ 8 };
 
 		CXL_DRAM_ACCESS* current_access{NULL};
 		std::map<sim_time_type, list<CXL_DRAM_ACCESS*>>* list_of_current_access{ NULL };
 		uint64_t num_working_request{ 0 };
-		uint64_t num_chan{ 8 };
+		uint64_t num_chan{ 1 };
+
+		
 
 	};
 }

@@ -30,6 +30,7 @@ public:
 	void init(double pvalue, double lvalue);
 	void add(bnode* block);
 	uint64_t removeRoot();
+	uint64_t getCandidate();
 
 	void updateWhenHit(uint64_t lba, bool& falsehit);
 	void restore(uint64_t bindex);

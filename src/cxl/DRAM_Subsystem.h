@@ -20,6 +20,7 @@ public:
 
 	void init(uint64_t numCL);
 	void add(uint64_t lba);
+	uint64_t getCandidate();
 	uint64_t evictLBA();
 	void updateWhenHit(uint64_t lba, bool& falsehit);
 	void reset();
@@ -40,10 +41,10 @@ namespace SSD_Components {
 
 
 		void process_cache_hit(bool rw, uint64_t lba, bool& falsehit);
-		void process_miss_data_ready(bool rw, uint64_t lba, list<uint64_t>* flush_lba, uint64_t simtime, set<uint64_t>* prefetched_lba);
+		//void process_miss_data_ready(bool rw, uint64_t lba, list<uint64_t>* flush_lba, uint64_t simtime, set<uint64_t>* prefetched_lba);
 		void process_miss_data_ready_new(bool rw, uint64_t lba, list<uint64_t>* flush_lba, uint64_t simtime, set<uint64_t>* prefetched_lba);
 
-
+		bool is_next_evict_candidate(uint64_t lba);
 
 
 	private:
@@ -51,7 +52,7 @@ namespace SSD_Components {
 		map<uint64_t, uint64_t>* dram_mapping{ NULL }; // LBA, cache line index
 		list<uint64_t>* freeCL{ NULL }; // aligned by ssd block size
 		
-		vector<uint64_t>* cachedlba{ NULL };//for random 
+		set<uint64_t>* cachedlba{ NULL };//for random 
 		lrfuHeap* lrfucachedlba{NULL}; //for lrfu
 		lruTwoListClass* lru2cachedlba{NULL};
 
@@ -61,12 +62,15 @@ namespace SSD_Components {
 		map<uint64_t, uint64_t>* pref_dram_mapping{ NULL };
 		list<uint64_t>* pref_freeCL{ NULL };
 
-		vector<uint64_t>* pref_cachedlba{ NULL };//for random 
+		set<uint64_t>* pref_cachedlba{ NULL };//for random 
 		lrfuHeap* pref_lrfucachedlba{ NULL }; //for lrfu
 		lruTwoListClass* pref_lru2cachedlba{ NULL };
 
 
 		map<uint64_t, uint64_t>* pref_dirtyCL{ NULL };
+		
+		uint64_t* next_eviction_candidate{ NULL };
+		uint64_t* pref_next_eviction_candidate{ NULL };
 
 	};
 

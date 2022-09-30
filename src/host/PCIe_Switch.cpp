@@ -37,4 +37,11 @@ namespace Host_Components
 	void PCIe_Switch::Notify_mshr_not_full() {
 		cxl_pcie->MSHR_not_full();
 	}
+
+	void PCIe_Switch::Notify_dram_full() {
+		cxl_pcie->mark_dram_full();
+	}
+	void PCIe_Switch::Notify_dram_avail() {
+		cxl_pcie->mark_dram_free();
+	}
 }

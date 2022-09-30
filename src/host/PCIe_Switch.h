@@ -27,6 +27,8 @@ namespace Host_Components
 		void Notify_request_complete();
 		void Notify_mshr_full();
 		void Notify_mshr_not_full();
+		void Notify_dram_full();
+		void Notify_dram_avail();
 		CXL_PCIe* cxl_pcie{ NULL };
 	private:
 		PCIe_Link* pcie_link;

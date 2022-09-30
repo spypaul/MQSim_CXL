@@ -36,6 +36,8 @@ public:
 	void insertRequest(uint64_t lba, uint64_t time, Submission_Queue_Entry* sqe);
 	bool removeRequest(uint64_t lba, list<uint64_t> &readcount, list<uint64_t> &writecount, bool& wasfull);
 
+	mshr_request* removeRequestNew(uint64_t lba, list<uint64_t>& readcount, list<uint64_t>& writecount, bool& wasfull, uint64_t dram_avail, bool serviced_before, bool& completely_removed);
+
 	bool isFull() { return full; }
 
 	uint64_t getSize() {
@@ -45,8 +47,8 @@ public:
 private:
 	map<uint64_t, list<mshr_request*>*>* mshr;
 
-	uint64_t max_row_size{ 1024 };
-	uint64_t max_col_size{ 1024 };
+	uint64_t max_row_size{ 32 };
+	uint64_t max_col_size{ 32 };
 
 	uint64_t row_count{ 0 };
 	uint64_t max_col_count{ 0 };

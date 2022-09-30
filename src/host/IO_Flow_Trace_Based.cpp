@@ -189,6 +189,10 @@ namespace Host_Components
 
 	void IO_Flow_Trace_Based::Execute_simulator_event(MQSimEngine::Sim_Event*)
 	{
+
+		//if (Simulator->Time() >= 243230814) {
+		//	cout << "Check" << Simulator->Time() << endl;
+		//}
 		if (!cxl_pcie->device_avail()) {
 			//cout << "skipped feeding" << skipped_feeding << endl;
 			return;

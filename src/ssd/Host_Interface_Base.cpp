@@ -56,7 +56,12 @@ namespace SSD_Components
 	void Host_Interface_Base::Validate_simulation_config()
 	{
 	}
-
+	void Host_Interface_Base::Notify_DRAM_is_full() {
+		pcie_switch->Notify_dram_full();
+	}
+	void Host_Interface_Base::Notify_host_DRAM_is_free() {
+		pcie_switch->Notify_dram_avail();
+	}
 	void Host_Interface_Base::Notify_CXL_Host_request_complete() {
 		pcie_switch->Notify_request_complete();
 	}

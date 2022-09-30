@@ -58,12 +58,16 @@ namespace SSD_Components
 		//leap
 		leapClass leapPrefetcher;
 
-
-	private:
+		//for dram avaialable scheduling
+		set<uint64_t> serviced_before_lba;
+		set<uint64_t> not_yet_serviced_lba;
 
 		cxl_config cxl_config_para;
+	private:
 
-		uint64_t cache_miss_count{ 0 }, cache_hit_count{ 0 }, total_number_of_accesses{ 0 }, prefetch_hit_count{0};
+		
+
+		uint64_t cache_miss_count{ 0 }, cache_hit_count{ 0 }, total_number_of_accesses{ 0 }, prefetch_hit_count{0}, flush_count{0};
 		float perc{ 1 };
 
 		Host_Interface_Base* hi{NULL};
@@ -185,12 +189,18 @@ namespace SSD_Components
 			this->cxl_man->dram->process_cache_hit(rw, lba, falsehit);
 			if (falsehit) this->cxl_man->falsehitcount++;
 		}
-		void Update_CXL_DRAM_state_when_miss_data_ready(bool rw, uint64_t lba);
+		void Update_CXL_DRAM_state_when_miss_data_ready(bool rw, uint64_t lba, bool serviced_before, bool& completed_removed_from_mshr);
 		void process_CXL_prefetch_requests(list<uint64_t> prefetchlba);
 
 		void Send_request_to_CXL_DRAM(CXL_DRAM_ACCESS* dram_request) {
 			cxl_dram->service_cxl_dram_access(dram_request);
 		}
+
+		void Notify_DRAM_is_free() {
+			Simulator->Register_sim_event(Simulator->Time(), this, 0, 0);
+		}
+
+
 
 		void Handle_CXL_false_hit(bool rw, uint64_t lba) {
 

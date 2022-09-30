@@ -43,6 +43,13 @@ namespace Host_Components {
 
 		void MSHR_full();
 		void MSHR_not_full();
+		
+		void mark_dram_full() {
+			device_dram_avail = 0;
+		}
+
+		void mark_dram_free();
+
 
 		std::list<Host_IO_Request*> requests_queue;
 
@@ -51,12 +58,13 @@ namespace Host_Components {
 		PCIe_Switch* pcie_switch;
 		uint64_t returned_request_count{ 0 };
 
-		uint64_t device_request_queue_max_size{ 1024 };
+		uint64_t device_request_queue_max_size{ 32 };
 		uint64_t request_count{ 0 };
 		bool mshr_full{ 0 };
 		IO_Flow_Base* io_flow{ NULL };
 		uint64_t skipped_requests{ 0 };
 
+		uint64_t device_dram_avail{ 1 };
 	};
 }
 

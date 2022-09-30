@@ -57,6 +57,10 @@ uint64_t lrfuHeap::removeRoot() {
 
 	return victimlba;
 }
+uint64_t lrfuHeap::getCandidate() {
+	bnode* candidate{ Q[0] };
+	return candidate->lba;
+}
 
 void lrfuHeap::updateWhenHit(uint64_t lba, bool& falsehit) {
 	if (!M.count(lba)) {

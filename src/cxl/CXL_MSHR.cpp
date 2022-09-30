@@ -91,3 +91,64 @@ bool cxl_mshr::removeRequest(uint64_t lba, list<uint64_t>& readcount, list<uint6
 	mshr->erase(mshr->find(lba));
 	return rw;
 }
+
+mshr_request* cxl_mshr::removeRequestNew(uint64_t lba, list<uint64_t>& readcount, list<uint64_t>& writecount, bool& wasfull, uint64_t dram_avail, bool serviced_before, bool& completely_removed) {
+	//bool rw{ 1 };
+	mshr_request* first_entry{ NULL };
+	
+	if (((*mshr)[lba])->size() == max_col_count && max_col_count >= max_col_size) {
+		full = 0;
+		max_col_count = 0;
+		wasfull = 1;
+	}
+
+
+
+	if (!serviced_before) {
+		mshr_request* r{ (*mshr)[lba]->front() };
+		Submission_Queue_Entry* s{ r->sqe };
+		(*mshr)[lba]->pop_front();
+		
+		first_entry = r;
+		dram_avail--;
+		//delete r;
+	}
+
+
+	
+	for (auto i = 0; i < dram_avail; i++) {
+		if ((*mshr)[lba]->empty()) {
+			break;
+		}
+
+		mshr_request* r{ (*mshr)[lba]->front() };
+		Submission_Queue_Entry* s{ r->sqe };
+		(*mshr)[lba]->pop_front();
+
+		if (s->Opcode == NVME_READ_OPCODE) {
+			readcount.push_back(r->time);
+		}
+		else {
+			writecount.push_back(r->time);
+		}
+
+		delete r;
+	}
+	
+
+	
+	if (((*mshr)[lba])->empty()) {
+
+		if (row_count >= max_row_size) {
+			full = 0;
+			wasfull = 1;
+		}
+
+		row_count--;
+		delete (*mshr)[lba];
+		mshr->erase(mshr->find(lba));
+		completely_removed = 1;
+	}
+	return first_entry;
+	
+}

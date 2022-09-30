@@ -63,7 +63,7 @@ namespace SSD_Components {
 		switch (eventype) {
 		case CXL_DRAM_EVENTS::CACHE_HIT:
 			//update DRAM states
-			hi->Update_CXL_DRAM_state(current_access->rw, current_access->lba, falsehit);
+			//hi->Update_CXL_DRAM_state(current_access->rw, current_access->lba, falsehit);
 			if (!falsehit) {
 				outputf.of << "Finished_time " << Simulator->Time() << " Starting_time " << current_access->initiate_time << " Cache_hit_at " << current_access->lba << std::endl;
 				//hi->Notify_CXL_Host_request_complete();
@@ -76,7 +76,7 @@ namespace SSD_Components {
 			delete current_access;
 			break;
 		case CXL_DRAM_EVENTS::CACHE_HIT_UNDER_MISS:
-			hi->Update_CXL_DRAM_state(current_access->rw, current_access->lba, falsehit);
+			//hi->Update_CXL_DRAM_state(current_access->rw, current_access->lba, falsehit);
 			if (!falsehit) {
 				outputf.of << "Finished_time " << Simulator->Time() << " Starting_time " << current_access->initiate_time << " Cache_hit_under_miss_at " << current_access->lba << std::endl;
 				//hi->Notify_CXL_Host_request_complete();
@@ -89,7 +89,7 @@ namespace SSD_Components {
 			delete current_access;
 			break;
 		case CXL_DRAM_EVENTS::CACHE_MISS:
-			hi->Update_CXL_DRAM_state_when_miss_data_ready(current_access->rw, current_access->lba);
+			//hi->Update_CXL_DRAM_state_when_miss_data_ready(current_access->rw, current_access->lba);
 			outputf.of << "Finished_time " << Simulator->Time()  << " Starting_time " << current_access->initiate_time << " Cache_miss_at " << current_access->lba << std::endl;
 			//hi->Notify_CXL_Host_request_complete();
 			totalcount++;
@@ -125,6 +125,10 @@ namespace SSD_Components {
 				dram_busrt_size, dram_burst_transfer_time_ddr, dram_tRCD, dram_tCL, dram_tRP), this, NULL, static_cast<int>(caccess->type));
 
 			if (num_working_request >= num_chan)dram_is_busy = 1;
+
+			if (waiting_request_queue->size() < max_wait_queue_size) {
+				hi->Notify_DRAM_is_free();
+			}
 		}
 
 		//ofi << totalcount << endl;
@@ -139,11 +143,19 @@ namespace SSD_Components {
 		if (dram_is_busy) {
 			request->arrive_dram_time = Simulator->Time();
 			waiting_request_queue->push_back(request);
+
+			if (waiting_request_queue->size() >= max_wait_queue_size) {
+				hi->Notify_DRAM_is_full();
+			}
 		}
 		else {
 			//current_access = request;
 			sim_time_type ts{ Simulator->Time() + estimate_dram_access_time(request->Size_in_bytes, dram_row_size,
 				dram_busrt_size, dram_burst_transfer_time_ddr, dram_tRCD, dram_tCL, dram_tRP) };
+			//when miss data ready, return ts, so the time for the sub requests can be right
+			// if miss data ready is in wait, ...issue 
+			//cout << Simulator->Time() << endl; 
+			//cout << ts - Simulator->Time() << endl;
 			if (list_of_current_access->count(ts)) {
 				(*list_of_current_access)[ts].push_back(request);
 			}
@@ -167,4 +179,12 @@ namespace SSD_Components {
 		hi = hosti;
 	}
 
+	uint64_t CXL_DRAM_Model::getDRAMAvailability() {
+		if (dram_is_busy) {
+			return max_wait_queue_size - waiting_request_queue->size();
+		}
+		else {
+			return max_wait_queue_size - waiting_request_queue->size() + 1;
+		}
+	}
 }

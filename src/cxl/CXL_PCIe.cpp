@@ -18,10 +18,15 @@ namespace Host_Components {
 	void CXL_PCIe::Validate_simulation_config() {}
 	void CXL_PCIe::Execute_simulator_event(MQSimEngine::Sim_Event* event) {
 
-		if (mshr_full) {
+		if (mshr_full || !device_dram_avail) {
 			skipped_requests++;
 			return;
 		}
+
+		//if (!device_dram_avail) {
+		//	skipped_requests++;
+		//	return;
+		//}
 
 		if (requests_queue.size() >= device_request_queue_max_size) {
 			//std::cout << " resume feeding "<< resumefeeding << std::endl;
@@ -72,7 +77,18 @@ namespace Host_Components {
 
 			skipped_requests--;
 			Simulator->Register_sim_event(Simulator->Time(), this, 0, 0);
+
 		}
+	}
+
+	void CXL_PCIe::mark_dram_free() {
+		device_dram_avail = 1;
+		while (skipped_requests > 0) {
+			skipped_requests--;
+			Simulator->Register_sim_event(Simulator->Time(), this, 0, 0);
+
+		}
+
 	}
 
 }
