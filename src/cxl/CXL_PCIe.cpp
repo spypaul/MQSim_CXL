@@ -1,4 +1,10 @@
 #include "CXL_PCIe.h"
+#include <fstream>;
+
+ofstream ofsus_mshr { "device_suspend_time_mshr.txt" };
+ofstream ofsus_flash{ "device_suspend_time_flash.txt" };
+uint64_t SUS_START_TIME_MSHR{ 0 }, SUS_START_TIME_FLASH{ 0 };
+
 
 uint64_t resumefeeding{ 0 };
 
@@ -18,7 +24,7 @@ namespace Host_Components {
 	void CXL_PCIe::Validate_simulation_config() {}
 	void CXL_PCIe::Execute_simulator_event(MQSimEngine::Sim_Event* event) {
 
-		if (mshr_full || !device_dram_avail) {
+		if (mshr_full || !device_dram_avail || !flash_device_avail) {
 			skipped_requests++;
 			return;
 		}
@@ -69,6 +75,7 @@ namespace Host_Components {
 
 	void CXL_PCIe::MSHR_full() {
 		mshr_full = 1;
+		SUS_START_TIME_MSHR = Simulator->Time();
 	}
 
 	void CXL_PCIe::MSHR_not_full() {
@@ -79,6 +86,7 @@ namespace Host_Components {
 			Simulator->Register_sim_event(Simulator->Time(), this, 0, 0);
 
 		}
+		ofsus_mshr << SUS_START_TIME_MSHR << " " << Simulator->Time() << endl;
 	}
 
 	void CXL_PCIe::mark_dram_free() {
@@ -89,6 +97,21 @@ namespace Host_Components {
 
 		}
 
+	}
+
+	void CXL_PCIe::mark_flash_full() {
+		flash_device_avail = 0;
+		SUS_START_TIME_FLASH = Simulator->Time();
+	}
+
+	void CXL_PCIe::mark_flash_free() {
+		flash_device_avail = 1;
+		while (skipped_requests > 0) {
+			skipped_requests--;
+			Simulator->Register_sim_event(Simulator->Time(), this, 0, 0);
+
+		}
+		ofsus_flash << SUS_START_TIME_FLASH << " " << Simulator->Time() << endl;
 	}
 
 }

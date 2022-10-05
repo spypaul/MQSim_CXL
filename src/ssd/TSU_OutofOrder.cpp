@@ -1,4 +1,15 @@
 #include "TSU_OutofOrder.h"
+#include <iostream>
+#include <fstream>
+
+ofstream of1{ "Read_suspended_cause_write.txt" };
+//ofstream of2{ "Flash_read_channel.txt" };
+//ofstream of3{ "Flash_write_channel.txt" };
+
+uint64_t READ_COUNT{ 0 };
+uint64_t READ_SUS_COUNT{ 0 };
+bool SUS_CAUSE_WR{ 0 };
+
 
 namespace SSD_Components
 {
@@ -155,6 +166,9 @@ namespace SSD_Components
 			return;
 		}
 
+		uint64_t userioch{ 0 }, useriochip{ 0 };
+		bool isUserRead{ 0 };
+
 		for(std::list<NVM_Transaction_Flash*>::iterator it = transaction_receive_slots.begin();
 			it != transaction_receive_slots.end(); it++)
 		{
@@ -163,7 +177,15 @@ namespace SSD_Components
 					switch ((*it)->Source) {
 						case Transaction_Source_Type::CACHE:
 						case Transaction_Source_Type::USERIO:
+							if ((it == transaction_receive_slots.begin())) {
+								//of2 << (*it)->Issue_time <<" "<< (*it)->Address.ChannelID<< (*it)->Address.ChipID << endl;
+								READ_COUNT++;
+								userioch = (*it)->Address.ChannelID;
+								useriochip = (*it)->Address.ChipID;
+								isUserRead = 1;
+							}
 							UserReadTRQueue[(*it)->Address.ChannelID][(*it)->Address.ChipID].push_back((*it));
+							
 							break;
 						case Transaction_Source_Type::MAPPING:
 							MappingReadTRQueue[(*it)->Address.ChannelID][(*it)->Address.ChipID].push_back((*it));
@@ -179,6 +201,9 @@ namespace SSD_Components
 					switch ((*it)->Source) {
 						case Transaction_Source_Type::CACHE:
 						case Transaction_Source_Type::USERIO:
+							if ((it == transaction_receive_slots.begin())) {
+								//of3 << (*it)->Issue_time << " " << (*it)->Address.ChannelID<< (*it)->Address.ChipID << endl;
+							}
 							UserWriteTRQueue[(*it)->Address.ChannelID][(*it)->Address.ChipID].push_back((*it));
 							trigger = true;
 							break;
@@ -199,6 +224,7 @@ namespace SSD_Components
 					break;
 			}
 		}
+
 		
 		for (flash_channel_ID_type channelID = 0; channelID < channel_count; channelID++) {
 			if (_NVMController->Get_channel_status(channelID) == BusChannelStatus::IDLE) {
@@ -206,6 +232,10 @@ namespace SSD_Components
 					NVM::FlashMemory::Flash_Chip* chip = _NVMController->Get_chip(channelID, Round_robin_turn_of_channel[channelID]);
 					//The TSU does not check if the chip is idle or not since it is possible to suspend a busy chip and issue a new command
 					if (!service_read_transaction(chip)) {
+						if (SUS_CAUSE_WR && isUserRead && userioch == channelID && useriochip == chip->ChipID) {
+							READ_SUS_COUNT++;
+							SUS_CAUSE_WR = 0;
+						}
 						if (!service_write_transaction(chip)) {
 							service_erase_transaction(chip);
 						}
@@ -217,6 +247,8 @@ namespace SSD_Components
 				}
 			}
 		}
+
+		of1 << READ_COUNT << " " << READ_SUS_COUNT << endl;
 	}
 	
 	bool TSU_OutOfOrder::service_read_transaction(NVM::FlashMemory::Flash_Chip* chip)
@@ -265,7 +297,7 @@ namespace SSD_Components
 				return false;
 			}
 		}
-
+		
 		bool suspensionRequired = false;
 		ChipStatus cs = _NVMController->GetChipStatus(chip);
 		switch (cs) {
@@ -279,6 +311,7 @@ namespace SSD_Components
 					return false;
 				}
 				suspensionRequired = true;
+				SUS_CAUSE_WR = suspensionRequired;
 			case ChipStatus::ERASING:
 				if (!eraseSuspensionEnabled || _NVMController->HasSuspendedCommand(chip)) {
 					return false;
@@ -290,6 +323,9 @@ namespace SSD_Components
 			default:
 				return false;
 		}
+
+		
+
 		
 		flash_die_ID_type dieID = sourceQueue1->front()->Address.DieID;
 		flash_page_ID_type pageID = sourceQueue1->front()->Address.PageID;

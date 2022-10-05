@@ -63,11 +63,12 @@ namespace SSD_Components
 		set<uint64_t> not_yet_serviced_lba;
 
 		cxl_config cxl_config_para;
+		uint64_t cache_miss_count{ 0 }, cache_hit_count{ 0 }, total_number_of_accesses{ 0 }, prefetch_hit_count{ 0 }, flush_count{ 0 }, flash_read_count{ 0 };
+
+		uint64_t flash_back_end_queue_size{ 128 };
+		uint64_t flash_back_end_access_count{ 0 };
 	private:
 
-		
-
-		uint64_t cache_miss_count{ 0 }, cache_hit_count{ 0 }, total_number_of_accesses{ 0 }, prefetch_hit_count{0}, flush_count{0};
 		float perc{ 1 };
 
 		Host_Interface_Base* hi{NULL};
@@ -163,6 +164,7 @@ namespace SSD_Components
 		uint16_t Get_completion_queue_depth();
 		void Report_results_in_XML(std::string name_prefix, Utils::XmlWriter& xmlwriter);
 		CXL_Manager* cxl_man;
+		CXL_DRAM_Model* cxl_dram;
 
 		void Consume_pcie_message(Host_Components::PCIe_Message* message)
 		{
@@ -199,7 +201,9 @@ namespace SSD_Components
 		void Notify_DRAM_is_free() {
 			Simulator->Register_sim_event(Simulator->Time(), this, 0, 0);
 		}
-
+		uint64_t Get_flush_count() {
+			return cxl_man->flush_count;
+		}
 
 
 		void Handle_CXL_false_hit(bool rw, uint64_t lba) {
@@ -231,7 +235,7 @@ namespace SSD_Components
 	private:
 		uint16_t submission_queue_depth, completion_queue_depth;
 		unsigned int no_of_input_streams;
-		CXL_DRAM_Model* cxl_dram;
+		
 	};
 }
 

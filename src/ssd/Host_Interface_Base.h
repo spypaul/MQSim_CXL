@@ -133,13 +133,15 @@ namespace SSD_Components
 		}
 		virtual void Handle_CXL_false_hit(bool rw, uint64_t lba){}
 		virtual void Notify_DRAM_is_free() {}
-		
+		virtual uint64_t Get_flush_count() { return 0; }
 		
 		void Notify_DRAM_is_full();
 		void Notify_host_DRAM_is_free();
 		void Notify_CXL_Host_request_complete();
 		void Notify_CXL_Host_mshr_full();
 		void Notify_CXL_Host_mshr_not_full();
+		void Notify_CXL_Host_flash_full();
+		void Notify_CXL_Host_flash_not_full();
 	
 		void Send_read_message_to_host(uint64_t addresss, unsigned int request_read_data_size);
 		void Send_write_message_to_host(uint64_t addresss, void* message, unsigned int message_size);

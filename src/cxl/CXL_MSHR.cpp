@@ -30,26 +30,35 @@ void cxl_mshr::insertRequest(uint64_t lba, uint64_t time, Submission_Queue_Entry
 	if (!mshr->count(lba)) {
 		list<mshr_request*>* lp{ new list<mshr_request*> };
 		mshr->emplace(lba, lp);
-		row_count++;
+		//row_count++;
 	}
 
 	mshr_request* p{ new mshr_request{time, sqe} };
 	(*mshr)[lba]->push_back(p);
 
 
+
+	if ((*mshr)[lba]->size() % max_col_size == 1) {
+		row_count++;
+	}
+
 	if (row_count == max_row_size) {
 		full = 1;
-		return;
 	}
-	
-	if ((*mshr)[lba]->size() > max_col_count) {
-		max_col_count = (*mshr)[lba]->size();
 
-		if (max_col_count == max_col_size) {
-			full = 1;
-		}
+	//if (row_count == max_row_size) {
+	//	full = 1;
+	//	return;
+	//}
+	//
+	//if ((*mshr)[lba]->size() > max_col_count) {
+	//	max_col_count = (*mshr)[lba]->size();
 
-	}
+	//	if (max_col_count == max_col_size) {
+	//		full = 1;
+	//	}
+
+	//}
 }
 
 bool cxl_mshr::removeRequest(uint64_t lba, list<uint64_t>& readcount, list<uint64_t>& writecount, bool& wasfull) {
@@ -95,12 +104,15 @@ bool cxl_mshr::removeRequest(uint64_t lba, list<uint64_t>& readcount, list<uint6
 mshr_request* cxl_mshr::removeRequestNew(uint64_t lba, list<uint64_t>& readcount, list<uint64_t>& writecount, bool& wasfull, uint64_t dram_avail, bool serviced_before, bool& completely_removed) {
 	//bool rw{ 1 };
 	mshr_request* first_entry{ NULL };
+
+	uint64_t oldrowcount{ (*mshr)[lba]->size() / max_col_size };
+	if ((*mshr)[lba]->size() % max_col_size > 0) oldrowcount++;
 	
-	if (((*mshr)[lba])->size() == max_col_count && max_col_count >= max_col_size) {
-		full = 0;
-		max_col_count = 0;
-		wasfull = 1;
-	}
+	//if (!serviced_before && ((*mshr)[lba])->size() == max_col_count && max_col_count >= max_col_size) {
+	//	full = 0;
+	//	max_col_count = 0;
+	//	wasfull = 1;
+	//}
 
 
 
@@ -134,21 +146,37 @@ mshr_request* cxl_mshr::removeRequestNew(uint64_t lba, list<uint64_t>& readcount
 
 		delete r;
 	}
-	
 
+	uint64_t newrowcount{ (*mshr)[lba]->size() / max_col_size };
+	if ((*mshr)[lba]->size() % max_col_size > 0) newrowcount++;
 	
-	if (((*mshr)[lba])->empty()) {
-
+	if (newrowcount < oldrowcount) {
 		if (row_count >= max_row_size) {
 			full = 0;
 			wasfull = 1;
 		}
+		row_count-= oldrowcount - newrowcount;
+		if (((*mshr)[lba])->empty()) {
+			delete (*mshr)[lba];
+			mshr->erase(mshr->find(lba));
+			completely_removed = 1;
+		}
 
-		row_count--;
-		delete (*mshr)[lba];
-		mshr->erase(mshr->find(lba));
-		completely_removed = 1;
 	}
+
+	
+	//if (((*mshr)[lba])->empty()) {
+
+	//	if (row_count >= max_row_size) {
+	//		full = 0;
+	//		wasfull = 1;
+	//	}
+
+	//	row_count--;
+	//	delete (*mshr)[lba];
+	//	mshr->erase(mshr->find(lba));
+	//	completely_removed = 1;
+	//}
 	return first_entry;
 	
 }

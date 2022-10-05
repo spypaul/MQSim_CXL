@@ -4,7 +4,9 @@
 #include "Host_Interface_CXL.h"
 #include "../ssd/NVM_Transaction_Flash_RD.h"
 #include "../ssd/NVM_Transaction_Flash_WR.h"
+#include <fstream>
 
+//ofstream ofFlush{ "Flush_initiation_time.txt" };
 
 namespace SSD_Components
 {
@@ -17,6 +19,7 @@ namespace SSD_Components
 		hi = hosti;
 		mshr = new cxl_mshr;
 		prefetched_lba = new set<uint64_t>;
+		((Host_Interface_CXL*)hi)->cxl_dram->total_number_of_requests = cxl_config_para.total_number_of_requets;
 	}
 	CXL_Manager::~CXL_Manager() {
 		if (dram) {
@@ -231,50 +234,59 @@ namespace SSD_Components
 			//}
 		}
 
-		if (!is_pref_req) {
+		//if (!is_pref_req) {
 
-			total_number_of_accesses++;
+		//	total_number_of_accesses++;
 
-			float current_progress{ static_cast<float>(total_number_of_accesses ) / static_cast<float>(cxl_config_para.total_number_of_requets) };
-			if (current_progress * 100 - perc > 1) {
-				perc += 1;
-				uint8_t number_of_bars{ static_cast<uint8_t> (perc / 4) };
+		//	float current_progress{ static_cast<float>(total_number_of_accesses ) / static_cast<float>(cxl_config_para.total_number_of_requets) };
+		//	if (current_progress * 100 - perc > 1) {
+		//		perc += 1;
+		//		uint8_t number_of_bars{ static_cast<uint8_t> (perc / 4) };
 
-				std::cout << "Simulation progress: [";
-				for (auto i = 0; i < number_of_bars; i++) {
-					std::cout << "=";
-				}
-				for (auto i = 0; i < 25 - number_of_bars - 1; i++) {
-					std::cout << " ";
-				}
+		//		std::cout << "Simulation progress: [";
+		//		for (auto i = 0; i < number_of_bars; i++) {
+		//			std::cout << "=";
+		//		}
+		//		for (auto i = 0; i < 25 - number_of_bars - 1; i++) {
+		//			std::cout << " ";
+		//		}
 
-				std::cout << "] " << perc << "%   Prefetch Hit Count: " << prefetch_hit_count << "   Cache Hit Count: " << cache_hit_count << "\r";
-			}
+		//		std::cout << "] " << perc << "%   Prefetch Hit Count: " << prefetch_hit_count << "   Cache Hit Count: " << cache_hit_count << "\r";
+		//	}
 
-			if (total_number_of_accesses == cxl_config_para.total_number_of_requets) {
-				std::cout << "Simulation progress: [";
-				for (auto i = 0; i < 25; i++) {
-					std::cout << "=";
-				}
-				std::cout << "] " << 100 << "%   Prefetch Hit Count: " << prefetch_hit_count << "   Cache Hit Count: " << cache_hit_count << std::endl;
-				std::cout << "False hit rate: " << static_cast<float>(falsehitcount) / static_cast<float>(cxl_config_para.total_number_of_requets) * 100 << " %" << std::endl;
-				std::cout << "Flush Count:" << flush_count << endl;
-				std::cout << "Request ends at timestamp: " << Simulator->Time() << endl;
-			}
-		}
+		//	if (total_number_of_accesses == cxl_config_para.total_number_of_requets) {
+		//		std::cout << "Simulation progress: [";
+		//		for (auto i = 0; i < 25; i++) {
+		//			std::cout << "=";
+		//		}
+		//		std::cout << "] " << 100 << "%   Prefetch Hit Count: " << prefetch_hit_count << "   Cache Hit Count: " << cache_hit_count << std::endl;
+		//		std::cout << "False hit rate: " << static_cast<float>(falsehitcount) / static_cast<float>(cxl_config_para.total_number_of_requets) * 100 << " %" << std::endl;
+		//		std::cout << "Flush Count: " << flush_count << endl;
+		//		std::cout << "Flash Read Count: " << flash_read_count << endl;
+		//		std::cout << "Request ends at timestamp: " << Simulator->Time() << endl;
+		//	}
+		//}
 
 
 		return cache_miss;
 	}
 
 	void CXL_Manager::request_serviced(User_Request* request) {
+
+
+
 		Submission_Queue_Entry* sqe = (Submission_Queue_Entry*)request->IO_command_info;
 
 		LHA_type lba{ (((LHA_type)sqe->Command_specific[1]) << 31 | (LHA_type)sqe->Command_specific[0]) / sqe->Command_specific[2] };
 
 		if (sqe->Opcode == NVME_WRITE_OPCODE) {//flush done
-			flush_count++;
+			if (flash_back_end_access_count >= flash_back_end_queue_size) {
+				hi->Notify_CXL_Host_flash_not_full();
+			}
+			flash_back_end_access_count--;
 
+			//flush_count++;
+			//ofFlush << request->STAT_InitiationTime << " " << Simulator->Time() << endl;
 			outputf.of << "Finshed_time " << Simulator->Time()  << " Starting_time " << request->STAT_InitiationTime << " Flush_done_at " << lba <<  std::endl;
 			return;
 		}
@@ -380,7 +392,7 @@ namespace SSD_Components
 			((Input_Stream_CXL*)input_streams[request->Stream_id])->Waiting_user_requests.push_back(request);
 			((Input_Stream_CXL*)input_streams[request->Stream_id])->STAT_number_of_read_requests++;
 			segment_user_request(request);
-
+			
 			((Host_Interface_CXL*)host_interface)->broadcast_user_request_arrival_signal(request);
 		}
 		else {//This is a write request
@@ -404,7 +416,7 @@ namespace SSD_Components
 
 		//list<uint64_t>* flush_lba{ new list<uint64_t> };
 		((Host_Interface_CXL*)host_interface)->cxl_man->request_serviced(request);
-
+		
 
 		DEBUG("** Host Interface: Request #" << request->ID << " from stream #" << request->Stream_id << " is finished")
 			////If this is a read request, then the read data should be written to host memory
@@ -525,6 +537,7 @@ namespace SSD_Components
 				input_streams[user_request->Stream_id]->STAT_number_of_read_transactions++;
 			}
 			else {//user_request->Type == UserRequestType::WRITE
+				//cout << user_request->Start_LBA << endl;
 				NVM_Transaction_Flash_WR* transaction = new NVM_Transaction_Flash_WR(Transaction_Source_Type::USERIO, user_request->Stream_id,
 					transaction_size * SECTOR_SIZE_IN_BYTE, lpa, user_request, 0, access_status_bitmap, CurrentTimeStamp);
 				user_request->Transaction_list.push_back(transaction);
@@ -623,16 +636,24 @@ namespace SSD_Components
 				new_reqeust->Start_LBA = ((LHA_type)sqe->Command_specific[1]) << 31 | (LHA_type)sqe->Command_specific[0];//Command Dword 10 and Command Dword 11
 				new_reqeust->SizeInSectors = sqe->Command_specific[2] & (LHA_type)(0x0000ffff);
 				new_reqeust->Size_in_byte = new_reqeust->SizeInSectors * SECTOR_SIZE_IN_BYTE;
+				hi->cxl_man->flash_read_count++;
+				hi->cxl_man->flash_back_end_access_count++;
 				break;
 			case NVME_WRITE_OPCODE:
 				new_reqeust->Type = UserRequestType::WRITE;
 				new_reqeust->Start_LBA = ((LHA_type)sqe->Command_specific[1]) << 31 | (LHA_type)sqe->Command_specific[0];//Command Dword 10 and Command Dword 11
+				//cout << new_reqeust->Start_LBA << endl;
 				new_reqeust->SizeInSectors = sqe->Command_specific[2] & (LHA_type)(0x0000ffff);
 				new_reqeust->Size_in_byte = new_reqeust->SizeInSectors * SECTOR_SIZE_IN_BYTE;
+				hi->cxl_man->flash_back_end_access_count++;
 				break;
 			default:
 				throw std::invalid_argument("NVMe command is not supported!");
 			}
+			if (hi->cxl_man->flash_back_end_access_count >= hi->cxl_man->flash_back_end_queue_size) {
+				hi->Notify_CXL_Host_flash_full();
+			}
+
 			((Input_Stream_Manager_CXL*)(hi->input_stream_manager))->Handle_new_arrived_request(new_reqeust);
 			break;
 		}
@@ -856,14 +877,22 @@ namespace SSD_Components
 		}
 
 		if (!serviced_before) {
-			CXL_DRAM_ACCESS* dram_request{ new CXL_DRAM_ACCESS{static_cast<unsigned int>(cxl_man->cxl_config_para.ssd_page_size), lba, rw, CXL_DRAM_EVENTS::CACHE_MISS, first_entry->time} };
+			CXL_DRAM_ACCESS* dram_request{ new CXL_DRAM_ACCESS{static_cast<unsigned int>(64), lba, rw, CXL_DRAM_EVENTS::CACHE_MISS, first_entry->time} };
 			Send_request_to_CXL_DRAM(dram_request);
-
 			rw = (first_entry->sqe->Opcode == NVME_READ_OPCODE) ? 1 : 0;
 			list<uint64_t>* flush_lba{ new list<uint64_t> };
 			this->cxl_man->dram->process_miss_data_ready_new(rw, lba, flush_lba, Simulator->Time(), this->cxl_man->prefetched_lba);
 
+			if (cxl_man->flash_back_end_access_count >= cxl_man->flash_back_end_queue_size) {
+				Notify_CXL_Host_flash_not_full();
+			}
+			cxl_man->flash_back_end_access_count--;
+
 			while (!flush_lba->empty()) {
+
+
+				//ofFlush << static_cast<float>(cxl_man->total_number_of_accesses) / static_cast<float>(cxl_man->cxl_config_para.total_number_of_requets) * 100 << endl;
+				cxl_man->flush_count++;
 				uint64_t lba{ flush_lba->front() };
 				uint64_t lsa{ lba * 8 };
 

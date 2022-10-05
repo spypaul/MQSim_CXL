@@ -50,6 +50,9 @@ namespace Host_Components {
 
 		void mark_dram_free();
 
+		void mark_flash_full();
+
+		void mark_flash_free();
 
 		std::list<Host_IO_Request*> requests_queue;
 
@@ -65,6 +68,7 @@ namespace Host_Components {
 		uint64_t skipped_requests{ 0 };
 
 		uint64_t device_dram_avail{ 1 };
+		uint64_t flash_device_avail{ 1 };
 	};
 }
 

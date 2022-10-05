@@ -368,3 +368,6 @@ FodyWeavers.xsd
 /traces/bert_test_inf_cpu.trace
 /traces/bert_test_inf_gpu.trace
 /traces/bert_test_train_gpu.trace
+/device_suspend_time_flash.txt
+/device_suspend_time_mshr.txt
+/Read_suspended_cause_write.txt

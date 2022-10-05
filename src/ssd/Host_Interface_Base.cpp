@@ -73,6 +73,13 @@ namespace SSD_Components
 		pcie_switch->Notify_mshr_not_full();
 	}
 
+	void Host_Interface_Base::Notify_CXL_Host_flash_full() {
+		pcie_switch->Notify_flash_full();
+	}
+	void Host_Interface_Base::Notify_CXL_Host_flash_not_full() {
+		pcie_switch->Notify_flash_not_full();
+	}
+
 	void Host_Interface_Base::Send_read_message_to_host(uint64_t addresss, unsigned int request_read_data_size)
 	{
 		Host_Components::PCIe_Message* pcie_message = new Host_Components::PCIe_Message;

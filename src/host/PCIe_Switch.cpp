@@ -44,4 +44,12 @@ namespace Host_Components
 	void PCIe_Switch::Notify_dram_avail() {
 		cxl_pcie->mark_dram_free();
 	}
+
+	void PCIe_Switch::Notify_flash_full() {
+		cxl_pcie->mark_flash_full();
+
+	}
+	void PCIe_Switch::Notify_flash_not_full() {
+		cxl_pcie->mark_flash_free();
+	}
 }

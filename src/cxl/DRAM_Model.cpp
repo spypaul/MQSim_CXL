@@ -2,7 +2,8 @@
 
 #include <fstream>
 
-ofstream ofi{ "cache_wait_time.txt" };
+//ofstream ofi{ "cache_wait_time.txt" };
+//ofstream ofi2{ "Flash_read_time.txt" };
 uint64_t totalcount{ 0 };
 
 namespace SSD_Components {
@@ -64,6 +65,7 @@ namespace SSD_Components {
 		case CXL_DRAM_EVENTS::CACHE_HIT:
 			//update DRAM states
 			//hi->Update_CXL_DRAM_state(current_access->rw, current_access->lba, falsehit);
+			cache_hit_count++;
 			if (!falsehit) {
 				outputf.of << "Finished_time " << Simulator->Time() << " Starting_time " << current_access->initiate_time << " Cache_hit_at " << current_access->lba << std::endl;
 				//hi->Notify_CXL_Host_request_complete();
@@ -77,6 +79,7 @@ namespace SSD_Components {
 			break;
 		case CXL_DRAM_EVENTS::CACHE_HIT_UNDER_MISS:
 			//hi->Update_CXL_DRAM_state(current_access->rw, current_access->lba, falsehit);
+			cache_hum_count++;
 			if (!falsehit) {
 				outputf.of << "Finished_time " << Simulator->Time() << " Starting_time " << current_access->initiate_time << " Cache_hit_under_miss_at " << current_access->lba << std::endl;
 				//hi->Notify_CXL_Host_request_complete();
@@ -89,6 +92,9 @@ namespace SSD_Components {
 			delete current_access;
 			break;
 		case CXL_DRAM_EVENTS::CACHE_MISS:
+			flash_read_count++;
+			cache_miss_count++;
+			//ofi2 << current_access->initiate_time << " " << Simulator->Time() << endl;
 			//hi->Update_CXL_DRAM_state_when_miss_data_ready(current_access->rw, current_access->lba);
 			outputf.of << "Finished_time " << Simulator->Time()  << " Starting_time " << current_access->initiate_time << " Cache_miss_at " << current_access->lba << std::endl;
 			//hi->Notify_CXL_Host_request_complete();
@@ -119,7 +125,7 @@ namespace SSD_Components {
 			num_working_request++;
 
 
-			ofi << Simulator->Time() - caccess->arrive_dram_time << endl;
+			//ofi << Simulator->Time() - caccess->arrive_dram_time << endl;
 
 			Simulator->Register_sim_event(Simulator->Time() + estimate_dram_access_time(caccess->Size_in_bytes, dram_row_size,
 				dram_busrt_size, dram_burst_transfer_time_ddr, dram_tRCD, dram_tCL, dram_tRP), this, NULL, static_cast<int>(caccess->type));
@@ -132,6 +138,34 @@ namespace SSD_Components {
 		}
 
 		//ofi << totalcount << endl;
+		number_of_accesses++;
+
+		float current_progress{ static_cast<float>(number_of_accesses) / static_cast<float>(total_number_of_requests) };
+		if (current_progress * 100 - perc > 1) {
+			perc += 1;
+			uint8_t number_of_bars{ static_cast<uint8_t> (perc / 4) };
+
+			std::cout << "Simulation progress: [";
+			for (auto i = 0; i < number_of_bars; i++) {
+				std::cout << "=";
+			}
+			for (auto i = 0; i < 25 - number_of_bars - 1; i++) {
+				std::cout << " ";
+			}
+
+			std::cout << "] " << perc << "%   Cache Hit Count: " << cache_hit_count << "\r";
+		}
+
+		if (number_of_accesses == total_number_of_requests) {
+			std::cout << "Simulation progress: [";
+			for (auto i = 0; i < 25; i++) {
+				std::cout << "=";
+			}
+			std::cout << "] " << 100 << "%    Cache Hit Count: " << cache_hit_count << std::endl;
+			std::cout << "Flash Read Count: " << flash_read_count << endl;
+			std::cout << "Flush count: " << hi->Get_flush_count() << endl;
+			std::cout << "Request ends at timestamp: " << Simulator->Time() << endl;
+		}
 
 		
 	}
