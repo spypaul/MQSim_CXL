@@ -44,9 +44,7 @@ namespace Host_Components {
 		void MSHR_full();
 		void MSHR_not_full();
 		
-		void mark_dram_full() {
-			device_dram_avail = 0;
-		}
+		void mark_dram_full();
 
 		void mark_dram_free();
 

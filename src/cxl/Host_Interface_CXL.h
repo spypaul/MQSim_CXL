@@ -47,6 +47,8 @@ namespace SSD_Components
 		void prefetch_decision_maker(uint64_t lba, bool isMiss, uint64_t prefetch_hit_count);
 
 		set<uint64_t>* prefetched_lba;
+		map<uint64_t, uint64_t>* in_progress_prefetch_lba;
+		uint64_t prefetch_queue_size{ 64 };
 
 		//tagged prefetcher
 		set<uint64_t> tagAssertedLBA;
@@ -65,8 +67,10 @@ namespace SSD_Components
 		cxl_config cxl_config_para;
 		uint64_t cache_miss_count{ 0 }, cache_hit_count{ 0 }, total_number_of_accesses{ 0 }, prefetch_hit_count{ 0 }, flush_count{ 0 }, flash_read_count{ 0 };
 
-		uint64_t flash_back_end_queue_size{ 64 };
+		uint64_t flash_back_end_queue_size{ 128 };
 		uint64_t flash_back_end_access_count{ 0 };
+
+		
 	private:
 
 		float perc{ 1 };

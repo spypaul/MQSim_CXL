@@ -3,7 +3,9 @@
 
 ofstream ofsus_mshr { "device_suspend_time_mshr.txt" };
 ofstream ofsus_flash{ "device_suspend_time_flash.txt" };
-uint64_t SUS_START_TIME_MSHR{ 0 }, SUS_START_TIME_FLASH{ 0 };
+//ofstream ofsus_dram{ "device_suspend_time_dram.txt" };
+
+uint64_t SUS_START_TIME_MSHR{ 0 }, SUS_START_TIME_FLASH{ 0 }, SUS_START_TIME_DRAM{ 0 };
 
 
 uint64_t resumefeeding{ 0 };
@@ -89,6 +91,11 @@ namespace Host_Components {
 		ofsus_mshr << SUS_START_TIME_MSHR << " " << Simulator->Time() << endl;
 	}
 
+	void CXL_PCIe::mark_dram_full() {
+		device_dram_avail = 0;
+		SUS_START_TIME_DRAM = Simulator->Time();
+	}
+
 	void CXL_PCIe::mark_dram_free() {
 		device_dram_avail = 1;
 		while (skipped_requests > 0) {
@@ -96,6 +103,7 @@ namespace Host_Components {
 			Simulator->Register_sim_event(Simulator->Time(), this, 0, 0);
 
 		}
+		//ofsus_dram << SUS_START_TIME_DRAM << " " << Simulator->Time() << endl;
 
 	}
 

@@ -7,6 +7,7 @@
 #include <fstream>
 
 //ofstream ofFlush{ "Flush_initiation_time.txt" };
+//ofstream ofrequest{ "Request_recieved.txt" };
 
 namespace SSD_Components
 {
@@ -19,6 +20,8 @@ namespace SSD_Components
 		hi = hosti;
 		mshr = new cxl_mshr;
 		prefetched_lba = new set<uint64_t>;
+		in_progress_prefetch_lba = new map<uint64_t, uint64_t>;
+
 		((Host_Interface_CXL*)hi)->cxl_dram->total_number_of_requests = cxl_config_para.total_number_of_requets;
 	}
 	CXL_Manager::~CXL_Manager() {
@@ -37,7 +40,11 @@ namespace SSD_Components
 	void CXL_Manager::prefetch_decision_maker(uint64_t lba, bool isMiss, uint64_t prefetch_hit_count) {
 		list<uint64_t> prefetchlba;
 
-		if (mshr->isFull()) {
+		/*if (mshr->getSize() < 5 || flash_back_end_queue_size - flash_back_end_access_count - 1 < 9) {
+			return;
+		}*/
+
+		if (in_progress_prefetch_lba->size() == prefetch_queue_size || flash_back_end_queue_size - flash_back_end_access_count - 1 < 9) {
 			return;
 		}
 		
@@ -51,10 +58,10 @@ namespace SSD_Components
 
 			for (uint64_t i = 1; i <= prefetchK; i++) {
 				uint64_t plba{ lba + i };
-				if (!dram->isCacheHit(plba) && !mshr->isInProgress(plba) && 
+				if (!dram->isCacheHit(plba) && !mshr->isInProgress(plba) && (in_progress_prefetch_lba->count(plba) == 0) &&
 					plba*8 <= ((Input_Stream_CXL*)(((Host_Interface_CXL*)hi)->input_stream_manager->input_streams[0]))->End_logical_sector_address) {
 					prefetchlba.push_back(plba);
-					prefetched_lba->insert(plba);
+					//prefetched_lba->insert(plba);
 					tagAssertedLBA.insert(plba);
 				}
 			}
@@ -93,10 +100,10 @@ namespace SSD_Components
 					uint64_t plba{ lba + (i)};
 					
 
-					if (!dram->isCacheHit(plba) && !mshr->isInProgress(plba) &&
+					if (!dram->isCacheHit(plba) && !mshr->isInProgress(plba) && (in_progress_prefetch_lba->count(plba)==0)  &&
 						plba * 8 <= ((Input_Stream_CXL*)(((Host_Interface_CXL*)hi)->input_stream_manager->input_streams[0]))->End_logical_sector_address) {
 						prefetchlba.push_back(plba);
-						prefetched_lba->insert(plba);
+						//prefetched_lba->insert(plba);
 					}
 				}
 			}
@@ -118,11 +125,11 @@ namespace SSD_Components
 
 					//check if the prefetch block is in the cache or miss map
 					//prefetcher_ol.print_offset(plba - event->lba);
-					if (!dram->isCacheHit(plba) && !mshr->isInProgress(plba) &&
+					if (!dram->isCacheHit(plba) && !mshr->isInProgress(plba) && (in_progress_prefetch_lba->count(plba) == 0) &&
 						plba * 8 <= ((Input_Stream_CXL*)(((Host_Interface_CXL*)hi)->input_stream_manager->input_streams[0]))->End_logical_sector_address) {
 						
 						prefetchlba.push_back(plba);
-						prefetched_lba->insert(plba);
+						//prefetched_lba->insert(plba);
 					}
 				}
 			}
@@ -134,11 +141,11 @@ namespace SSD_Components
 
 					//check if the prefetch block is in the cache or miss map
 					//prefetcher_ol.print_offset(plba - event->lba);
-					if (!dram->isCacheHit(plba) && !mshr->isInProgress(plba) &&
+					if (!dram->isCacheHit(plba) && !mshr->isInProgress(plba) && (in_progress_prefetch_lba->count(plba) == 0) &&
 						plba * 8 <= ((Input_Stream_CXL*)(((Host_Interface_CXL*)hi)->input_stream_manager->input_streams[0]))->End_logical_sector_address) {
 						
 						prefetchlba.push_back(plba);
-						prefetched_lba->insert(plba);
+						//prefetched_lba->insert(plba);
 						
 					}
 				}
@@ -148,10 +155,31 @@ namespace SSD_Components
 
 		}
 
-		if (prefetchlba.size() > mshr->getSize()) {
-			prefetchlba.resize(mshr->getSize());
+		//if (mshr->getSize()-4 < flash_back_end_queue_size - flash_back_end_access_count - 8) {
+		//	if (prefetchlba.size() > mshr->getSize()-4) {
+		//		prefetchlba.resize(mshr->getSize()-4);
+		//	}
+		//}
+		//else {
+		//	if (prefetchlba.size() > flash_back_end_queue_size - flash_back_end_access_count - 1 - 8) {
+		//		prefetchlba.resize(flash_back_end_queue_size - flash_back_end_access_count - 1 - 8);
+		//	}
+		//}
+
+		if (prefetch_queue_size - in_progress_prefetch_lba->size() < flash_back_end_queue_size - flash_back_end_access_count - 8) {
+			if (prefetchlba.size() > prefetch_queue_size - in_progress_prefetch_lba->size()) {
+				prefetchlba.resize(prefetch_queue_size - in_progress_prefetch_lba->size());
+			}
+		}
+		else {
+			if (prefetchlba.size() > flash_back_end_queue_size - flash_back_end_access_count - 1 - 8) {
+				prefetchlba.resize(flash_back_end_queue_size - flash_back_end_access_count - 1 - 8);
+			}
 		}
 
+		for (auto i : prefetchlba) {
+			prefetched_lba->insert(i);
+		}
 		((Host_Interface_CXL*)hi)->process_CXL_prefetch_requests(prefetchlba);
 
 
@@ -220,9 +248,15 @@ namespace SSD_Components
 					//notify cxl pcie device is full
 					hi->Notify_CXL_Host_mshr_full();
 				}
-				if (!is_pref_req) { 
-					cache_miss_count++;
-					prefetch_decision_maker(lba, 1, prefetch_hit_count);
+				
+				if (in_progress_prefetch_lba->count(lba)) {
+					cache_miss = 0;
+				}
+				else {
+					if (!is_pref_req) {
+						cache_miss_count++;
+						prefetch_decision_maker(lba, 1, prefetch_hit_count);
+					}
 				}
 			}
 
@@ -236,7 +270,9 @@ namespace SSD_Components
 
 		//if (!is_pref_req) {
 
-		//	total_number_of_accesses++;
+		//total_number_of_accesses++;
+
+		//ofrequest << total_number_of_accesses << endl;
 
 		//	float current_progress{ static_cast<float>(total_number_of_accesses ) / static_cast<float>(cxl_config_para.total_number_of_requets) };
 		//	if (current_progress * 100 - perc > 1) {
@@ -868,25 +904,63 @@ namespace SSD_Components
 		bool wasfull{0};
 		uint64_t dram_avail{ this->cxl_dram->getDRAMAvailability() };
 		bool completely_removed{ 0 };
-		first_entry = this->cxl_man->mshr->removeRequestNew(lba, readcount, writecount, wasfull, dram_avail, serviced_before,completely_removed);
 
-		if (wasfull) {
-			//notify cxl pcie  no longer full
+		if (this->cxl_man->mshr->isInProgress(lba)) {
+			first_entry = this->cxl_man->mshr->removeRequestNew(lba, readcount, writecount, wasfull, dram_avail, serviced_before, completely_removed);
+			if (wasfull) {
+				//notify cxl pcie  no longer full
 
-			this->Notify_CXL_Host_mshr_not_full();
+				this->Notify_CXL_Host_mshr_not_full();
+			}
+		}
+		else {
+			completely_removed = 1; //for prefetched data
 		}
 
+
+
 		if (!serviced_before) {
-			CXL_DRAM_ACCESS* dram_request{ new CXL_DRAM_ACCESS{static_cast<unsigned int>(64), lba, rw, CXL_DRAM_EVENTS::CACHE_MISS, first_entry->time} };
+			//CXL_DRAM_EVENTS evt{ CXL_DRAM_EVENTS::CACHE_MISS };
+			//if (this->cxl_man->in_progress_prefetch_lba->count(lba)) { 
+			//	evt = CXL_DRAM_EVENTS::PREFETCH_READY; 
+			//}
+
+			CXL_DRAM_EVENTS evt{ CXL_DRAM_EVENTS::CACHE_MISS };
+			if (first_entry == NULL) { //disregard slow prefetch
+				evt = CXL_DRAM_EVENTS::PREFETCH_READY; 
+			}
+			else {
+				if (this->cxl_man->in_progress_prefetch_lba->count(lba)) {
+					evt = CXL_DRAM_EVENTS::SLOW_PREFETCH;
+				}
+			}
+
+			sim_time_type itime{0};
+			if (first_entry == NULL) {
+				itime = (*(this->cxl_man->in_progress_prefetch_lba))[lba];
+			}
+			else {
+
+				itime = first_entry->time;
+			} 
+			
+			CXL_DRAM_ACCESS* dram_request{ new CXL_DRAM_ACCESS{static_cast<unsigned int>(64), lba, rw, evt, itime} };
 			Send_request_to_CXL_DRAM(dram_request);
-			rw = (first_entry->sqe->Opcode == NVME_READ_OPCODE) ? 1 : 0;
+
+			if (first_entry)rw = (first_entry->sqe->Opcode == NVME_READ_OPCODE) ? 1 : 0;
+			else rw = 1;
+
 			list<uint64_t>* flush_lba{ new list<uint64_t> };
 			this->cxl_man->dram->process_miss_data_ready_new(rw, lba, flush_lba, Simulator->Time(), this->cxl_man->prefetched_lba);
-
 			if (cxl_man->flash_back_end_access_count >= cxl_man->flash_back_end_queue_size) {
 				Notify_CXL_Host_flash_not_full();
 			}
 			cxl_man->flash_back_end_access_count--;
+
+			if (this->cxl_man->in_progress_prefetch_lba->count(lba)) {
+				this->cxl_man->in_progress_prefetch_lba->erase(this->cxl_man->in_progress_prefetch_lba->find(lba));
+			}
+
 
 			while (!flush_lba->empty()) {
 
@@ -951,21 +1025,26 @@ namespace SSD_Components
 			Submission_Queue_Entry* sqe = new Submission_Queue_Entry;
 			sqe->Command_Identifier = 0;
 			sqe->Opcode = NVME_READ_OPCODE;
-			sqe->Command_specific[0] = (uint32_t)lba * 4096; //cxl_man->process_requests will do a translation
-			sqe->Command_specific[1] = (uint32_t)(lba * 4096 >> 32);
+			//sqe->Command_specific[0] = (uint32_t)lba * 4096; //cxl_man->process_requests will do a translation
+			//sqe->Command_specific[1] = (uint32_t)(lba * 4096 >> 32);
+			sqe->Command_specific[0] = (uint32_t)lba * 8; //cxl_man->process_requests will do a translation
+			sqe->Command_specific[1] = (uint32_t)(lba * 8 >> 32);
 			sqe->Command_specific[2] = ((uint32_t)((uint16_t)8)) & (uint32_t)(0x0000ffff); // magic number
 			sqe->PRP_entry_1 = (DATA_MEMORY_REGION);//Dummy addresses, just to emulate data read/write access
 			sqe->PRP_entry_2 = (DATA_MEMORY_REGION + 0x1000);//Dummy addresses
 
-			if (!(cxl_man->process_requests(0, sqe, 1))) {
-				delete sqe;
-				continue;
-			}
-			else {
+			//if (!(cxl_man->process_requests(0, sqe, 1))) {
+			//	delete sqe;
+			//	continue;
+			//}
+			//else {
 
-				sqe->Opcode = NVME_READ_OPCODE;
-				request_fetch_unit->Fetch_next_request(0);
-			}
+			//	sqe->Opcode = NVME_READ_OPCODE;
+			//	request_fetch_unit->Fetch_next_request(0);
+			//}
+
+			cxl_man->in_progress_prefetch_lba->emplace(lba, Simulator->Time());
+			request_fetch_unit->Fetch_next_request(0);
 
 			request_fetch_unit->Process_pcie_read_message(0, sqe, sizeof(Submission_Queue_Entry));
 

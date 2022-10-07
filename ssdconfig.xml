@@ -41,7 +41,7 @@
 			 <Preferred_suspend_erase_time_for_read>100000</Preferred_suspend_erase_time_for_read>
 			 <Preferred_suspend_erase_time_for_write>10000</Preferred_suspend_erase_time_for_write>
 			 <Preferred_suspend_write_time_for_read>20000</Preferred_suspend_write_time_for_read>
-			 <Flash_Channel_Count>4</Flash_Channel_Count>
+			 <Flash_Channel_Count>8</Flash_Channel_Count>
 			 <Flash_Channel_Width>1</Flash_Channel_Width>
 			 <Channel_Transfer_Rate>1200</Channel_Transfer_Rate>
 			 <Chip_No_Per_Channel>4</Chip_No_Per_Channel>

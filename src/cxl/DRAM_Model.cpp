@@ -4,6 +4,7 @@
 
 //ofstream ofi{ "cache_wait_time.txt" };
 //ofstream ofi2{ "Flash_read_time.txt" };
+//ofstream ofi3{ "Serviced_Request_Amount.txt" };
 uint64_t totalcount{ 0 };
 
 namespace SSD_Components {
@@ -63,6 +64,7 @@ namespace SSD_Components {
 
 		switch (eventype) {
 		case CXL_DRAM_EVENTS::CACHE_HIT:
+			number_of_accesses++;
 			//update DRAM states
 			//hi->Update_CXL_DRAM_state(current_access->rw, current_access->lba, falsehit);
 			cache_hit_count++;
@@ -78,6 +80,7 @@ namespace SSD_Components {
 			delete current_access;
 			break;
 		case CXL_DRAM_EVENTS::CACHE_HIT_UNDER_MISS:
+			number_of_accesses++;
 			//hi->Update_CXL_DRAM_state(current_access->rw, current_access->lba, falsehit);
 			cache_hum_count++;
 			if (!falsehit) {
@@ -92,11 +95,30 @@ namespace SSD_Components {
 			delete current_access;
 			break;
 		case CXL_DRAM_EVENTS::CACHE_MISS:
+			number_of_accesses++;
 			flash_read_count++;
 			cache_miss_count++;
 			//ofi2 << current_access->initiate_time << " " << Simulator->Time() << endl;
 			//hi->Update_CXL_DRAM_state_when_miss_data_ready(current_access->rw, current_access->lba);
 			outputf.of << "Finished_time " << Simulator->Time()  << " Starting_time " << current_access->initiate_time << " Cache_miss_at " << current_access->lba << std::endl;
+			//hi->Notify_CXL_Host_request_complete();
+			totalcount++;
+			delete current_access;
+			break;
+		case CXL_DRAM_EVENTS::PREFETCH_READY:
+			flash_read_count++;
+			outputf.of << "Finished_time " << Simulator->Time() << " Starting_time " << current_access->initiate_time << " Prefetch_ready_at " << current_access->lba << std::endl;
+			prefetch_amount++;
+			delete current_access;
+			break;
+		case CXL_DRAM_EVENTS::SLOW_PREFETCH:
+			number_of_accesses++;
+			flash_read_count++;
+			cache_miss_count++;
+			prefetch_amount++;
+			//ofi2 << current_access->initiate_time << " " << Simulator->Time() << endl;
+			//hi->Update_CXL_DRAM_state_when_miss_data_ready(current_access->rw, current_access->lba);
+			outputf.of << "Finished_time " << Simulator->Time() << " Starting_time " << current_access->initiate_time << " Slow_prefetch_at " << current_access->lba << std::endl;
 			//hi->Notify_CXL_Host_request_complete();
 			totalcount++;
 			delete current_access;
@@ -138,10 +160,10 @@ namespace SSD_Components {
 		}
 
 		//ofi << totalcount << endl;
-		number_of_accesses++;
+		//number_of_accesses++;
 
 		float current_progress{ static_cast<float>(number_of_accesses) / static_cast<float>(total_number_of_requests) };
-		if (current_progress * 100 - perc > 1) {
+		if (current_progress<1 && current_progress * 100 - perc > 1) {
 			perc += 1;
 			uint8_t number_of_bars{ static_cast<uint8_t> (perc / 4) };
 
@@ -153,20 +175,22 @@ namespace SSD_Components {
 				std::cout << " ";
 			}
 
-			std::cout << "] " << perc << "%   Cache Hit Count: " << cache_hit_count << "\r";
+			std::cout << "] " << perc << "%   Cache Hit Count: " << cache_hit_count << "   Prefetch amount: "<< prefetch_amount << "\r";
 		}
 
-		if (number_of_accesses == total_number_of_requests) {
+		if (number_of_accesses == total_number_of_requests && !results_printed) {
+			results_printed = 1;
 			std::cout << "Simulation progress: [";
 			for (auto i = 0; i < 25; i++) {
 				std::cout << "=";
 			}
-			std::cout << "] " << 100 << "%    Cache Hit Count: " << cache_hit_count << std::endl;
+			std::cout << "] " << 100 << "%    Cache Hit Count: " << cache_hit_count << "   Prefetch amount: " << prefetch_amount << std::endl;
 			std::cout << "Flash Read Count: " << flash_read_count << endl;
 			std::cout << "Flush count: " << hi->Get_flush_count() << endl;
 			std::cout << "Request ends at timestamp: " << static_cast<float>(Simulator->Time()) / 1000000000 << " s" << endl;
 		}
 
+		//ofi3 << number_of_accesses << endl;
 		
 	}
 

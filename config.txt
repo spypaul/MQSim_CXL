@@ -5,5 +5,5 @@ Cache_policy LRU2
 Prefetch_cache_policy LRU2
 LRFU_p_lambda 2 0.5
 Set_associativity 2
-Prefetcher No
-Total_number_of_requests 1024
+Prefetcher Leap
+Total_number_of_requests 11270380

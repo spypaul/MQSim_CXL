@@ -15,7 +15,9 @@ namespace SSD_Components {
 	enum class CXL_DRAM_EVENTS {
 		CACHE_HIT,
 		CACHE_MISS,
-		CACHE_HIT_UNDER_MISS
+		CACHE_HIT_UNDER_MISS,
+		PREFETCH_READY,
+		SLOW_PREFETCH
 	};
 	struct CXL_DRAM_ACCESS {
 		unsigned int Size_in_bytes{ 0 };
@@ -60,8 +62,9 @@ namespace SSD_Components {
 
 		uint64_t getDRAMAvailability();
 
-		uint64_t cache_miss_count{ 0 }, cache_hum_count{ 0 },cache_hit_count{ 0 }, total_number_of_requests{ 0 }, flash_read_count{ 0 }, number_of_accesses{0};
+		uint64_t cache_miss_count{ 0 }, cache_hum_count{ 0 },cache_hit_count{ 0 }, total_number_of_requests{ 0 }, flash_read_count{ 0 }, number_of_accesses{0}, prefetch_amount{0};
 		float perc{ 1 };
+		bool results_printed{ 0 };
 
 	private:
 		unsigned int dram_row_size{0};//The size of the DRAM rows in bytes
