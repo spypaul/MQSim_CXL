@@ -9,6 +9,15 @@
 //ofstream ofFlush{ "Flush_initiation_time.txt" };
 //ofstream ofrequest{ "Request_recieved.txt" };
 
+ofstream oflatep{ "late_prefetch_lateness.txt" };
+class prefetch_info_node {
+public:
+	uint64_t hit_count{ 0 };
+	bool late{ 0 };
+};
+
+map<uint64_t, prefetch_info_node> PREFETCH_INFO_MAP;
+
 namespace SSD_Components
 {
 
@@ -211,7 +220,8 @@ namespace SSD_Components
 		sqe->Command_specific[1] = (uint32_t)(lsa >> 32);
 
 
-		if (dram->isCacheHit(lba) && !dram->is_next_evict_candidate(lba)) {
+		if (dram->isCacheHit(lba)) {// && !dram->is_next_evict_candidate(lba)
+
 			cache_miss = 0;
 			bool rw{ (sqe->Opcode == NVME_READ_OPCODE) ? true : false };
 			CXL_DRAM_ACCESS* dram_request{ new CXL_DRAM_ACCESS{64, lba, rw, CXL_DRAM_EVENTS::CACHE_HIT, Simulator->Time()} };
@@ -227,6 +237,7 @@ namespace SSD_Components
 
 			if (!is_pref_req && prefetched_lba->count(lba)) {
 				prefetch_hit_count++;
+				PREFETCH_INFO_MAP[lba].hit_count++;
 				prefetch_decision_maker(lba, 0, prefetch_hit_count);
 			}
 		}
@@ -896,7 +907,26 @@ namespace SSD_Components
 
 		xmlwriter.Write_close_tag();
 	}
+	void Host_Interface_CXL::print_prefetch_info() {
 
+		if (PREFETCH_INFO_MAP.size() == 0) return;
+
+		uint64_t accurate_prefetch{ 0 };
+		uint64_t late_prefetch{ 0 };
+
+		for (auto & i : PREFETCH_INFO_MAP) {
+			if (i.second.hit_count > 0) {
+				accurate_prefetch++;
+				if (i.second.late) {
+					late_prefetch++;
+				}
+			}
+		}
+		
+		cout << "Prefetch Accuracy: " << static_cast<float>(accurate_prefetch) / static_cast<float>(PREFETCH_INFO_MAP.size()) << endl;
+		cout << "Prefetch Lateness: " << static_cast<float>(late_prefetch) / static_cast<float>(accurate_prefetch) << endl;
+	
+	}
 
 	void Host_Interface_CXL::Update_CXL_DRAM_state_when_miss_data_ready(bool rw, uint64_t lba, bool serviced_before, bool& completed_removed_from_mshr) {
 		list<uint64_t> readcount, writecount;
@@ -928,10 +958,22 @@ namespace SSD_Components
 			CXL_DRAM_EVENTS evt{ CXL_DRAM_EVENTS::CACHE_MISS };
 			if (first_entry == NULL) { //disregard slow prefetch
 				evt = CXL_DRAM_EVENTS::PREFETCH_READY; 
+
+				if (PREFETCH_INFO_MAP.count(lba) == 0) {
+					prefetch_info_node n;
+					PREFETCH_INFO_MAP.emplace(lba, n);
+				}
 			}
 			else {
 				if (this->cxl_man->in_progress_prefetch_lba->count(lba)) {
 					evt = CXL_DRAM_EVENTS::SLOW_PREFETCH;
+					oflatep << first_entry->time << " " << Simulator->Time() << endl;
+					if (PREFETCH_INFO_MAP.count(lba) == 0) {
+						prefetch_info_node n;
+						n.late = 1;
+						n.hit_count++;
+						PREFETCH_INFO_MAP.emplace(lba, n);
+					}
 				}
 			}
 
@@ -1000,6 +1042,10 @@ namespace SSD_Components
 			bool falsehit{ 0 };
 			Update_CXL_DRAM_state(1, lba, falsehit);
 			if (falsehit) cxl_man->falsehitcount++;
+
+			if (cxl_man->prefetched_lba->count(lba)) {
+				PREFETCH_INFO_MAP[lba].hit_count++;
+			}
 		}
 
 		for (auto i: writecount) {
@@ -1009,6 +1055,10 @@ namespace SSD_Components
 			bool falsehit{ 0 };
 			Update_CXL_DRAM_state(0, lba, falsehit);
 			if (falsehit) cxl_man->falsehitcount++;
+
+			if (cxl_man->prefetched_lba->count(lba)) {
+				PREFETCH_INFO_MAP[lba].hit_count++;
+			}
 		}
 		completed_removed_from_mshr = completely_removed;
 

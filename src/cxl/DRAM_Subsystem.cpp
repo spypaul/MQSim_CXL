@@ -433,24 +433,29 @@ namespace SSD_Components {
 			uint64_t evict_lba_base_addr{ 0 };
 			if (cp == cachepolicy::random) {
 				//eviction policy random
-				/*srand(static_cast<unsigned int>(lba));
+				srand(static_cast<unsigned int>(lba));
 				uint64_t evict_position{ rand() % temp_cachedlba->size() };
-				evict_lba_base_addr = (*temp_cachedlba)[evict_position];
-				temp_cachedlba->erase(temp_cachedlba->begin() + evict_position);*/
-				evict_lba_base_addr = *next_cand;
-				temp_cachedlba->erase(temp_cachedlba->find(*next_cand));
+				auto it{ temp_cachedlba->begin() };
+				for (auto i = 0; i < evict_position; i++)it++;
+				evict_lba_base_addr = *it;
+				temp_cachedlba->erase(temp_cachedlba->find(*it));
+
+				/*evict_lba_base_addr = *next_cand;
+				temp_cachedlba->erase(temp_cachedlba->find(*next_cand));*/
 
 			}
 			else if (cp == cachepolicy::lru2) {
 				//TODO
-				//evict_lba_base_addr = temp_lru2cachedlba->evictLBA();
-				evict_lba_base_addr = *next_cand;
+				evict_lba_base_addr = temp_lru2cachedlba->evictLBA();
+
+				//evict_lba_base_addr = *next_cand;
 
 			}
 			else if (cp == cachepolicy::lrfu) {
 				//TODO
-				//evict_lba_base_addr = temp_lrfucachedlba->removeRoot();
-				evict_lba_base_addr = *next_cand;
+				evict_lba_base_addr = temp_lrfucachedlba->removeRoot();
+
+				//evict_lba_base_addr = *next_cand;
 			}
 
 			uint64_t cl;
@@ -482,35 +487,35 @@ namespace SSD_Components {
 		if (cp == cachepolicy::random) {
 			temp_cachedlba->emplace(lba);//random
 
-			if (temp_freeCL->empty()) {
-				srand(static_cast<unsigned int>(lba));
-				uint64_t evict_position{ rand() % temp_cachedlba->size() };
-				auto it{ temp_cachedlba->begin() };
-				for (auto i = 0; i < evict_position; i++)it++;
-				*next_cand = *it;
-			}
+			//if (temp_freeCL->empty()) {
+			//	srand(static_cast<unsigned int>(lba));
+			//	uint64_t evict_position{ rand() % temp_cachedlba->size() };
+			//	auto it{ temp_cachedlba->begin() };
+			//	for (auto i = 0; i < evict_position; i++)it++;
+			//	*next_cand = *it;
+			//}
 
 
 		}
 		else if (cp == cachepolicy::lru2) {
-			if (temp_freeCL->empty()) {
-				*next_cand = temp_lru2cachedlba->evictLBA();
-			}
+			//if (temp_freeCL->empty()) {
+			//	*next_cand = temp_lru2cachedlba->evictLBA();
+			//}
 			
 
 			temp_lru2cachedlba->add(lba);
-			//*next_cand = temp_lru2cachedlba->getCandidate();
+			
 			
 		}
 		else if (cp == cachepolicy::lrfu) {
-			if (temp_freeCL->empty()) {
-				*next_cand = temp_lrfucachedlba->removeRoot();
-			}
+			//if (temp_freeCL->empty()) {
+			//	*next_cand = temp_lrfucachedlba->removeRoot();
+			//}
 
 			bnode* node{ new bnode{temp_lrfucachedlba->F(0), temp_lrfucachedlba->getTime(), lba} };
 			temp_lrfucachedlba->add(node);
 			temp_lrfucachedlba->advanceTime();
-			//*next_cand = temp_lrfucachedlba->getCandidate();
+			
 			
 
 		}

@@ -134,6 +134,7 @@ namespace SSD_Components
 		virtual void Handle_CXL_false_hit(bool rw, uint64_t lba){}
 		virtual void Notify_DRAM_is_free() {}
 		virtual uint64_t Get_flush_count() { return 0; }
+		virtual void print_prefetch_info(){}
 		
 		void Notify_DRAM_is_full();
 		void Notify_host_DRAM_is_free();

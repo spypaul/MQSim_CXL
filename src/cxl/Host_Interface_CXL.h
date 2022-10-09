@@ -208,6 +208,7 @@ namespace SSD_Components
 		uint64_t Get_flush_count() {
 			return cxl_man->flush_count;
 		}
+		void print_prefetch_info();
 
 
 		void Handle_CXL_false_hit(bool rw, uint64_t lba) {

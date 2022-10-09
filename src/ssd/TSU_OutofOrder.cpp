@@ -3,8 +3,8 @@
 #include <fstream>
 
 ofstream of1{ "Read_suspended_cause_write.txt" };
-ofstream of2{ "Flash_read_channel.txt" };
-ofstream of3{ "Flash_write_channel.txt" };
+//ofstream of2{ "Flash_read_channel.txt" };
+//ofstream of3{ "Flash_write_channel.txt" };
 
 uint64_t READ_COUNT{ 0 };
 uint64_t READ_SUS_COUNT{ 0 };
@@ -178,7 +178,7 @@ namespace SSD_Components
 						case Transaction_Source_Type::CACHE:
 						case Transaction_Source_Type::USERIO:
 							if ((it == transaction_receive_slots.begin())) {
-								of2 << (*it)->LPA << " " << (*it)->Issue_time <<" "<< (*it)->Address.ChannelID<< (*it)->Address.ChipID << endl;
+								//of2 << (*it)->LPA << " " << (*it)->Issue_time <<" "<< (*it)->Address.ChannelID<< (*it)->Address.ChipID << endl;
 								READ_COUNT++;
 								userioch = (*it)->Address.ChannelID;
 								useriochip = (*it)->Address.ChipID;
@@ -202,7 +202,7 @@ namespace SSD_Components
 						case Transaction_Source_Type::CACHE:
 						case Transaction_Source_Type::USERIO:
 							if ((it == transaction_receive_slots.begin())) {
-								of3 << (*it)->LPA << " " << (*it)->Issue_time << " " << (*it)->Address.ChannelID << (*it)->Address.ChipID << endl;
+								//of3 << (*it)->LPA << " " << (*it)->Issue_time << " " << (*it)->Address.ChannelID << (*it)->Address.ChipID << endl;
 							}
 							UserWriteTRQueue[(*it)->Address.ChannelID][(*it)->Address.ChipID].push_back((*it));
 							trigger = true;
