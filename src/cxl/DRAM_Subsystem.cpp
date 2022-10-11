@@ -380,7 +380,7 @@ namespace SSD_Components {
 
 
 
-	void dram_subsystem::process_miss_data_ready_new(bool rw, uint64_t lba, list<uint64_t>* flush_lba, uint64_t simtime, set<uint64_t>* prefetched_lba) {
+	void dram_subsystem::process_miss_data_ready_new(bool rw, uint64_t lba, list<uint64_t>* flush_lba, uint64_t simtime, set<uint64_t>* prefetched_lba, set<uint64_t> not_finished) {
 
 
 		list<uint64_t>* temp_freeCL{NULL};
@@ -440,8 +440,8 @@ namespace SSD_Components {
 				evict_lba_base_addr = *it;
 				temp_cachedlba->erase(temp_cachedlba->find(*it));
 
-				/*evict_lba_base_addr = *next_cand;
-				temp_cachedlba->erase(temp_cachedlba->find(*next_cand));*/
+				//evict_lba_base_addr = *next_cand;
+				//temp_cachedlba->erase(temp_cachedlba->find(*next_cand));
 
 			}
 			else if (cp == cachepolicy::lru2) {
@@ -458,6 +458,10 @@ namespace SSD_Components {
 				//evict_lba_base_addr = *next_cand;
 			}
 
+			if (not_finished.count(evict_lba_base_addr) > 0) {
+				cout << "Check" << endl;
+			}
+			
 			uint64_t cl;
 			if (temp_dram_mapping->count(evict_lba_base_addr) == 0) {
 				cout << "Check" << endl;

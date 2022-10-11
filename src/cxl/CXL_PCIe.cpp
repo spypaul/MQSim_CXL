@@ -38,7 +38,11 @@ namespace Host_Components {
 
 		if (requests_queue.size() >= device_request_queue_max_size) {
 			//std::cout << " resume feeding "<< resumefeeding << std::endl;
-			Simulator->Register_sim_event(Simulator->Time(), (MQSimEngine::Sim_Object*)io_flow, 0, 0);
+			for (auto i = 0; i < skipped_trace_reading; i++) {
+				Simulator->Register_sim_event(Simulator->Time(), (MQSimEngine::Sim_Object*)io_flow, 0, 0);
+			}
+			skipped_trace_reading = 0;
+			
 		}
 
 		Host_IO_Request* io_request{ requests_queue.front()};

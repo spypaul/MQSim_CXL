@@ -194,6 +194,7 @@ namespace Host_Components
 		//	cout << "Check" << Simulator->Time() << endl;
 		//}
 		if (!cxl_pcie->device_avail()) {
+			cxl_pcie->skipped_trace_reading++;
 			//cout << "skipped feeding" << skipped_feeding << endl;
 			return;
 		}
@@ -235,10 +236,6 @@ namespace Host_Components
 			firetime = (std::strtoll(current_trace_line[ASCIITraceTimeColumn].c_str(), &pEnd, 10) < Simulator->Time()) ? Simulator->Time() : std::strtoll(current_trace_line[ASCIITraceTimeColumn].c_str(), &pEnd, 10);
 			//Simulator->Register_sim_event(time_offset + std::strtoll(current_trace_line[ASCIITraceTimeColumn].c_str(), &pEnd, 10), this);
 			Simulator->Register_sim_event(time_offset + firetime, this);
-
-			//if (STAT_generated_request_count == 2368903) {
-			//	cout << "Check" << endl;
-			//}
 			
 #endif
 		}

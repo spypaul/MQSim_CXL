@@ -42,7 +42,7 @@ namespace SSD_Components {
 
 		void process_cache_hit(bool rw, uint64_t lba, bool& falsehit);
 		//void process_miss_data_ready(bool rw, uint64_t lba, list<uint64_t>* flush_lba, uint64_t simtime, set<uint64_t>* prefetched_lba);
-		void process_miss_data_ready_new(bool rw, uint64_t lba, list<uint64_t>* flush_lba, uint64_t simtime, set<uint64_t>* prefetched_lba);
+		void process_miss_data_ready_new(bool rw, uint64_t lba, list<uint64_t>* flush_lba, uint64_t simtime, set<uint64_t>* prefetched_lba, set<uint64_t> not_finished);
 
 		bool is_next_evict_candidate(uint64_t lba);
 

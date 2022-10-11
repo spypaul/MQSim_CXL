@@ -5,6 +5,10 @@
 //ofstream ofi{ "cache_wait_time.txt" };
 //ofstream ofi2{ "Flash_read_time.txt" };
 //ofstream ofi3{ "Serviced_Request_Amount.txt" };
+
+ofstream oflate{ "latency_result.txt" };
+//ofstream offree{ "DRAM_FREE_TIME.txt" };
+
 uint64_t totalcount{ 0 };
 
 namespace SSD_Components {
@@ -42,6 +46,9 @@ namespace SSD_Components {
 
 
 	void CXL_DRAM_Model::Execute_simulator_event(MQSimEngine::Sim_Event* ev) {
+
+
+
 		CXL_DRAM_EVENTS eventype{(CXL_DRAM_EVENTS) ev->Type};
 
 		bool falsehit{ 0 };
@@ -70,6 +77,7 @@ namespace SSD_Components {
 			cache_hit_count++;
 			if (!falsehit) {
 				outputf.of << "Finished_time " << Simulator->Time() << " Starting_time " << current_access->initiate_time << " Cache_hit_at " << current_access->lba << std::endl;
+				oflate << Simulator->Time() - current_access->initiate_time << endl;
 				//hi->Notify_CXL_Host_request_complete();
 				totalcount++;
 			}
@@ -85,6 +93,7 @@ namespace SSD_Components {
 			cache_hum_count++;
 			if (!falsehit) {
 				outputf.of << "Finished_time " << Simulator->Time() << " Starting_time " << current_access->initiate_time << " Cache_hit_under_miss_at " << current_access->lba << std::endl;
+				oflate << Simulator->Time() - current_access->initiate_time << endl;
 				//hi->Notify_CXL_Host_request_complete();
 				totalcount++;
 			}
@@ -101,6 +110,7 @@ namespace SSD_Components {
 			//ofi2 << current_access->initiate_time << " " << Simulator->Time() << endl;
 			//hi->Update_CXL_DRAM_state_when_miss_data_ready(current_access->rw, current_access->lba);
 			outputf.of << "Finished_time " << Simulator->Time()  << " Starting_time " << current_access->initiate_time << " Cache_miss_at " << current_access->lba << std::endl;
+			oflate << Simulator->Time() - current_access->initiate_time << endl;
 			//hi->Notify_CXL_Host_request_complete();
 			totalcount++;
 			delete current_access;
@@ -119,6 +129,7 @@ namespace SSD_Components {
 			//ofi2 << current_access->initiate_time << " " << Simulator->Time() << endl;
 			//hi->Update_CXL_DRAM_state_when_miss_data_ready(current_access->rw, current_access->lba);
 			outputf.of << "Finished_time " << Simulator->Time() << " Starting_time " << current_access->initiate_time << " Slow_prefetch_at " << current_access->lba << std::endl;
+			oflate << Simulator->Time() - current_access->initiate_time << endl;
 			//hi->Notify_CXL_Host_request_complete();
 			totalcount++;
 			delete current_access;
@@ -156,6 +167,8 @@ namespace SSD_Components {
 
 			if (waiting_request_queue->size() < max_wait_queue_size) {
 				hi->Notify_DRAM_is_free();
+				//offree << Simulator->Time() << endl;
+
 			}
 		}
 

@@ -5,5 +5,5 @@ Cache_policy Random
 Prefetch_cache_policy Random
 LRFU_p_lambda 2 0.5
 Set_associativity 2
-Prefetcher Best-offset
+Prefetcher No
 Total_number_of_requests 11270380

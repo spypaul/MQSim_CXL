@@ -49,9 +49,9 @@
 		<Flash_Parameter_Set>
 				 <Flash_Technology>TLC</Flash_Technology>
 				 <CMD_Suspension_Support>ERASE</CMD_Suspension_Support>
-				 <Page_Read_Latency_LSB>45000</Page_Read_Latency_LSB> 
-				 <Page_Read_Latency_CSB>45000</Page_Read_Latency_CSB> 
-				 <Page_Read_Latency_MSB>45000</Page_Read_Latency_MSB>
+				 <Page_Read_Latency_LSB>40000</Page_Read_Latency_LSB> 
+				 <Page_Read_Latency_CSB>40000</Page_Read_Latency_CSB> 
+				 <Page_Read_Latency_MSB>40000</Page_Read_Latency_MSB>
 				 <Page_Program_Latency_LSB>700000</Page_Program_Latency_LSB> 
 				 <Page_Program_Latency_CSB>700000</Page_Program_Latency_CSB> 
 				 <Page_Program_Latency_MSB>700000</Page_Program_Latency_MSB> 

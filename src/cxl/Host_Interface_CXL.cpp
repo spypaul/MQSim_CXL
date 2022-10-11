@@ -338,7 +338,11 @@ namespace SSD_Components
 			return;
 		}
 
-		if (((Host_Interface_CXL*)hi)->cxl_dram->getDRAMAvailability()) {
+		if (((Host_Interface_CXL*)hi)->cxl_dram->getDRAMAvailability() && serviced_before_lba.size() == 0) {
+
+			if (serviced_before_lba.size() > 0) {
+				cout << Simulator->Time() << endl;
+			}
 
 			bool rw{ true };
 
@@ -812,6 +816,9 @@ namespace SSD_Components
 	void Host_Interface_CXL::Execute_simulator_event(MQSimEngine::Sim_Event* event) {
 		//this->request_fetch_unit->Process_pcie_read_message(0, NULL, 4096); //initiate when there is a write request
 		
+		//if (Simulator->Time() == 210411353) {
+		//	cout << " Check" << endl;
+		//}
 		while (cxl_dram->getDRAMAvailability() > 0) {
 			if (cxl_man->serviced_before_lba.size() > 0) {
 				uint64_t lba{ *(cxl_man->serviced_before_lba.begin()) };
@@ -923,8 +930,10 @@ namespace SSD_Components
 			}
 		}
 		
+		cout << "Prefetch Coverage: " << static_cast<float>(cxl_man->prefetch_hit_count) / static_cast<float>(cxl_man->cache_hit_count) << endl;
 		cout << "Prefetch Accuracy: " << static_cast<float>(accurate_prefetch) / static_cast<float>(PREFETCH_INFO_MAP.size()) << endl;
 		cout << "Prefetch Lateness: " << static_cast<float>(late_prefetch) / static_cast<float>(accurate_prefetch) << endl;
+		
 	
 	}
 
@@ -993,7 +1002,7 @@ namespace SSD_Components
 			else rw = 1;
 
 			list<uint64_t>* flush_lba{ new list<uint64_t> };
-			this->cxl_man->dram->process_miss_data_ready_new(rw, lba, flush_lba, Simulator->Time(), this->cxl_man->prefetched_lba);
+			this->cxl_man->dram->process_miss_data_ready_new(rw, lba, flush_lba, Simulator->Time(), this->cxl_man->prefetched_lba, cxl_man->serviced_before_lba);
 			if (cxl_man->flash_back_end_access_count >= cxl_man->flash_back_end_queue_size) {
 				Notify_CXL_Host_flash_not_full();
 			}
