@@ -46,18 +46,31 @@ namespace SSD_Components {
 
 		bool is_next_evict_candidate(uint64_t lba);
 
+		uint64_t get_cache_index(uint64_t lba);
+
 
 	private:
 		cxl_config cpara;
 		map<uint64_t, uint64_t>* dram_mapping{ NULL }; // LBA, cache line index
+
+
 		list<uint64_t>* freeCL{ NULL }; // aligned by ssd block size
+
+		vector<list<uint64_t>*>* all_freeCL{ NULL };
 		
 		set<uint64_t>* cachedlba{ NULL };//for random 
-		lrfuHeap* lrfucachedlba{NULL}; //for lrfu
-		lruTwoListClass* lru2cachedlba{NULL};
+		vector<set<uint64_t>*>* all_cachedlba{ NULL };
 
+		lrfuHeap* lrfucachedlba{NULL}; //for lrfu
+		vector<lrfuHeap*>* all_lrfucachedlba{ NULL };
+
+		lruTwoListClass* lru2cachedlba{NULL};
+		vector<lruTwoListClass*>* all_lru2cachedlba{ NULL };
 
 		map < uint64_t, uint64_t>* dirtyCL{ NULL }; //cache line index, write count
+		vector<map < uint64_t, uint64_t>*>* all_dirtyCL{ NULL };
+
+		//For mix seoeration mode
 
 		map<uint64_t, uint64_t>* pref_dram_mapping{ NULL };
 		list<uint64_t>* pref_freeCL{ NULL };

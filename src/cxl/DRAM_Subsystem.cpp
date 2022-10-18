@@ -82,64 +82,154 @@ namespace SSD_Components {
 
 	dram_subsystem::~dram_subsystem() {
 
-		if (freeCL) {
-			freeCL->clear();
-			delete freeCL;
-		}
 		if (dram_mapping) {
 			dram_mapping->clear();
 			delete dram_mapping;
 		}
-		if (dirtyCL) {
-			dirtyCL->clear();
-			delete dirtyCL;
-		}
-
-		if (pref_freeCL) {
-			pref_freeCL->clear();
-			delete pref_freeCL;
-		}
-		if (pref_dram_mapping) {
-			pref_dram_mapping->clear();
-			delete pref_dram_mapping;
-		}
-		if (pref_dirtyCL) {
-			pref_dirtyCL->clear();
-			delete pref_dirtyCL;
-		}
 
 
-		if (cachedlba) {
-			cachedlba->clear();
-			delete cachedlba;
+		for (auto i : *all_freeCL) {
+			i->clear();
+			delete i;
 		}
-		if (lrfucachedlba) {
-			delete lrfucachedlba;
+		delete all_freeCL;
+
+		for (auto i : *all_dirtyCL) {
+			i->clear();
+			delete i;
 		}
-		if (lru2cachedlba) {
-			delete lru2cachedlba;
+		delete all_dirtyCL;
+
+
+		if (all_cachedlba) {
+			for (auto i : *all_cachedlba) {
+				i->clear();
+				delete i;
+			}
+			delete all_cachedlba;
 		}
 
-		if (pref_cachedlba) {
-			pref_cachedlba->clear();
-			delete pref_cachedlba;
-		}
-		if (pref_lrfucachedlba) {
-			delete pref_lrfucachedlba;
-		}
-		if (pref_lru2cachedlba) {
-			delete pref_lru2cachedlba;
+		if (all_lrfucachedlba) {
+
+			for (auto i : *all_lrfucachedlba) {
+				delete i;
+			}
+			delete all_lrfucachedlba;
+
 		}
 
-		delete next_eviction_candidate;
-		delete pref_next_eviction_candidate;
+		if (all_lru2cachedlba) {
+
+			for (auto i : *all_lru2cachedlba) {
+				delete i;
+			}
+			delete all_lru2cachedlba;
+
+		}
+
+
+
+		//if (freeCL) {
+		//	freeCL->clear();
+		//	delete freeCL;
+		//}
+
+		//if (dirtyCL) {
+		//	dirtyCL->clear();
+		//	delete dirtyCL;
+		//}
+
+		//if (pref_freeCL) {
+		//	pref_freeCL->clear();
+		//	delete pref_freeCL;
+		//}
+		//if (pref_dram_mapping) {
+		//	pref_dram_mapping->clear();
+		//	delete pref_dram_mapping;
+		//}
+		//if (pref_dirtyCL) {
+		//	pref_dirtyCL->clear();
+		//	delete pref_dirtyCL;
+		//}
+
+
+		//if (cachedlba) {
+		//	cachedlba->clear();
+		//	delete cachedlba;
+		//}
+		//if (lrfucachedlba) {
+		//	delete lrfucachedlba;
+		//}
+		//if (lru2cachedlba) {
+		//	delete lru2cachedlba;
+		//}
+
+		//if (pref_cachedlba) {
+		//	pref_cachedlba->clear();
+		//	delete pref_cachedlba;
+		//}
+		//if (pref_lrfucachedlba) {
+		//	delete pref_lrfucachedlba;
+		//}
+		//if (pref_lru2cachedlba) {
+		//	delete pref_lru2cachedlba;
+		//}
+
+		//delete next_eviction_candidate;
+		//delete pref_next_eviction_candidate;
 
 
 	}
 
 	void dram_subsystem::initDRAM() {
 		dram_mapping = new map<uint64_t, uint64_t>;
-		freeCL = new list<uint64_t>;
+
+		uint64_t cache_page_number{ 0 };
+		all_freeCL = new vector<list<uint64_t>*>;
+		all_dirtyCL = new vector < map < uint64_t, uint64_t>*>;
+
+		if (cpara.cpolicy == cachepolicy::random) {
+			all_cachedlba = new vector<set<uint64_t>*>;
+		}
+		else if (cpara.cpolicy == cachepolicy::lrfu) {
+			all_lrfucachedlba = new vector<lrfuHeap*>;
+		}
+		else if (cpara.cpolicy == cachepolicy::lru2) {
+			all_lru2cachedlba = new vector<lruTwoListClass*>;
+		}
+
+		for (uint64_t i = 0; i < cpara.cache_portion_size / cpara.ssd_page_size / cpara.set_associativity; i++) {
+			list<uint64_t>* l{ new list<uint64_t> };
+			for (auto j = 0; j < cpara.set_associativity; j++) {
+				l->push_back(cache_page_number);
+				cache_page_number++;
+			}
+			all_freeCL->push_back(l);
+			
+			map < uint64_t, uint64_t>* m1{ new map < uint64_t, uint64_t> };
+			all_dirtyCL->push_back(m1);
+
+			if (cpara.cpolicy == cachepolicy::random) {
+				set<uint64_t>* s{ new set<uint64_t> };
+				all_cachedlba->push_back(s);
+			}
+			else if (cpara.cpolicy == cachepolicy::lrfu) {
+				lrfuHeap* lh{ new lrfuHeap };
+				lh->init(cpara.lrfu_p, cpara.lrfu_lambda);
+				all_lrfucachedlba->push_back(lh);
+			}
+			else if (cpara.cpolicy == cachepolicy::lru2) {
+				lruTwoListClass* lt{ new lruTwoListClass };
+				lt->init(cpara.set_associativity);
+				all_lru2cachedlba->push_back(lt);
+
+			}
+
+		}
+		
+
+
+		/*freeCL = new list<uint64_t>;
 		dirtyCL = new map<uint64_t, uint64_t>;
 		
 		if (cpara.prefetch_policy != prefetchertype::no && !cpara.mix_mode) {
@@ -187,7 +277,7 @@ namespace SSD_Components {
 				pref_lru2cachedlba->init(freeCL->size());
 			}
 
-		}
+		}*/
 		
 
 	}
@@ -234,33 +324,44 @@ namespace SSD_Components {
 		}
 
 
-		uint64_t cache_index{ 0 };
+		uint64_t cache_page_addr{ 0 };
 
 		if (!cpara.mix_mode) {
 			if (pref_dram_mapping->count(lba)) {
-				cache_index = (*pref_dram_mapping)[lba];
+				cache_page_addr = (*pref_dram_mapping)[lba];
 			}
 			else {
-				cache_index = (*dram_mapping)[lba];
+				cache_page_addr = (*dram_mapping)[lba];
 			}
 
 		}
 		else {
-			cache_index = (*dram_mapping)[lba];
+			cache_page_addr = (*dram_mapping)[lba];
 		}
 
 
 
-		
+		uint64_t cache_index{ get_cache_index(lba) };
 
-		if (cache_index < cpara.cache_portion_size / cpara.ssd_page_size) { // check if the cache hit is at cache portion or prefetch portion
+		if (cache_page_addr < cpara.cache_portion_size / cpara.ssd_page_size) { // check if the cache hit is at cache portion or prefetch portion
 			if (cpara.cpolicy == cachepolicy::lru2) {
-				lru2cachedlba->updateWhenHit(lba, falsehit);
+				
+				(*all_lru2cachedlba)[cache_index]->updateWhenHit(lba, falsehit);
+				//lru2cachedlba->updateWhenHit(lba, falsehit);
+
+
 				//*next_eviction_candidate = lru2cachedlba->getCandidate();
 			}
 			else if (cpara.cpolicy == cachepolicy::lrfu) {
-				lrfucachedlba->updateWhenHit(lba, falsehit);
-				lrfucachedlba->advanceTime();
+
+				(*all_lrfucachedlba)[cache_index]->updateWhenHit(lba, falsehit);
+				(*all_lrfucachedlba)[cache_index]->advanceTime();
+
+				//lrfucachedlba->updateWhenHit(lba, falsehit);
+				//lrfucachedlba->advanceTime();
+
+
+
 				/*uint64_t oec{ *next_eviction_candidate };
 				*next_eviction_candidate = lrfucachedlba->getCandidate();
 				if (*next_eviction_candidate != oec) {
@@ -272,12 +373,21 @@ namespace SSD_Components {
 			}
 
 			if (!rw && cpara.cpolicy != cachepolicy::cpu) {
-				if (dirtyCL->count(cache_index) > 0) {
-					(*dirtyCL)[cache_index] ++;
+
+				if ((*all_dirtyCL)[cache_index]->count(cache_page_addr) > 0) {
+					(*(*all_dirtyCL)[cache_index])[cache_page_addr] ++;
 				}
 				else {
-					dirtyCL->emplace(cache_index, 1);
+					(*all_dirtyCL)[cache_index]->emplace(cache_page_addr, 1);
 				}
+
+
+				//if (dirtyCL->count(cache_page_addr) > 0) {
+				//	(*dirtyCL)[cache_page_addr] ++;
+				//}
+				//else {
+				//	dirtyCL->emplace(cache_page_addr, 1);
+				//}
 			}
 		}
 		else {
@@ -295,11 +405,11 @@ namespace SSD_Components {
 			}
 
 			if (!rw && cpara.pref_cpolicy != cachepolicy::cpu) {
-				if (pref_dirtyCL->count(cache_index) > 0) {
-					(*pref_dirtyCL)[cache_index] ++;
+				if (pref_dirtyCL->count(cache_page_addr) > 0) {
+					(*pref_dirtyCL)[cache_page_addr] ++;
 				}
 				else {
-					pref_dirtyCL->emplace(cache_index, 1);
+					pref_dirtyCL->emplace(cache_page_addr, 1);
 				}
 			}
 
@@ -392,16 +502,35 @@ namespace SSD_Components {
 		cachepolicy cp{ cachepolicy::random };
 		uint64_t* next_cand{ NULL };
 
+		uint64_t cache_index{ get_cache_index(lba) };
 
 		if (cpara.mix_mode) {
-			temp_freeCL = freeCL;
+
 			temp_dram_mapping = dram_mapping;
-			temp_dirtyCL = dirtyCL;
 			cp = cpara.cpolicy;
-			temp_cachedlba = cachedlba;
-			temp_lru2cachedlba = lru2cachedlba;
-			temp_lrfucachedlba = lrfucachedlba;
 			next_cand = next_eviction_candidate;
+
+			temp_freeCL = (* all_freeCL)[cache_index];
+			temp_dirtyCL = (*all_dirtyCL)[cache_index];
+
+			if (cpara.cpolicy == cachepolicy::random) {
+				temp_cachedlba = (*all_cachedlba)[cache_index];
+			}
+			else if (cpara.cpolicy == cachepolicy::lrfu) {
+				temp_lrfucachedlba = (*all_lrfucachedlba)[cache_index];
+			}
+			else if (cpara.cpolicy == cachepolicy::lru2) {
+				temp_lru2cachedlba = (*all_lru2cachedlba)[cache_index];
+			}
+
+
+
+			//temp_freeCL = freeCL;
+			//temp_dirtyCL = dirtyCL;
+			//temp_cachedlba = cachedlba;
+			//temp_lru2cachedlba = lru2cachedlba;
+			//temp_lrfucachedlba = lrfucachedlba;
+
 		}
 		else {
 			if (prefetched_lba->count(lba)) {
@@ -425,6 +554,13 @@ namespace SSD_Components {
 				next_cand = next_eviction_candidate;
 			}
 		}
+
+		if (temp_dram_mapping->count(lba) > 0) {
+			bool falsehit{ 0 };
+			process_cache_hit(rw, lba, falsehit);
+			return;
+		}
+
 
 
 		if (temp_freeCL->empty()) {
@@ -534,6 +670,13 @@ namespace SSD_Components {
 		}
 
 	}
+
+
+	uint64_t dram_subsystem::get_cache_index(uint64_t lba) {
+		return lba % (cpara.cache_portion_size / cpara.ssd_page_size / cpara.set_associativity);
+	}
+
+
 }
 
 

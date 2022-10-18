@@ -242,6 +242,27 @@ namespace SSD_Components
 			}
 		}
 		else {
+
+			if (!cxl_config_para.has_mshr) {
+				no_mshr_record_node n;
+				n.time = Simulator->Time();
+				n.rw = (sqe->Opcode == NVME_READ_OPCODE) ? true : false;
+
+				if (no_mshr_requests_record.count(lba)) {
+					no_mshr_requests_record[lba].push_back(n);
+				}
+				else {
+					list<no_mshr_record_node> l;
+					l.push_back(n);
+					no_mshr_requests_record.emplace(lba, l);
+				}
+
+				cache_miss = 1;
+				return cache_miss;
+			}
+
+			
+
 			if (mshr->isInProgress(lba)) {
 				cache_miss = 0;
 
@@ -253,6 +274,10 @@ namespace SSD_Components
 				}
 			}
 			else {
+				//if (sqe->Opcode == NVME_WRITE_OPCODE) {
+				//
+				//	cout << "Check" << endl;
+				//}
 				Submission_Queue_Entry* nsqe{ new Submission_Queue_Entry{*sqe} };
 				mshr->insertRequest(lba, Simulator->Time(), nsqe);
 				if (mshr->isFull()) {
@@ -335,6 +360,61 @@ namespace SSD_Components
 			//flush_count++;
 			//ofFlush << request->STAT_InitiationTime << " " << Simulator->Time() << endl;
 			outputf.of << "Finshed_time " << Simulator->Time()  << " Starting_time " << request->STAT_InitiationTime << " Flush_done_at " << lba <<  std::endl;
+			return;
+		}
+
+		if (!cxl_config_para.has_mshr) {
+			if (((Host_Interface_CXL*)hi)->cxl_dram->getDRAMAvailability() && no_mshr_not_yet_serviced_lba.empty()) {
+				no_mshr_record_node n{ no_mshr_requests_record[lba].front() };
+				no_mshr_requests_record[lba].pop_front();
+
+				CXL_DRAM_ACCESS* dram_request{ new CXL_DRAM_ACCESS{static_cast<unsigned int>(64), lba, n.rw, CXL_DRAM_EVENTS::CACHE_MISS, n.time} };
+				((Host_Interface_CXL*)hi)->Send_request_to_CXL_DRAM(dram_request);
+
+				list<uint64_t>* flush_lba{ new list<uint64_t> };
+				dram->process_miss_data_ready_new(n.rw, lba, flush_lba, Simulator->Time(), prefetched_lba, serviced_before_lba);
+				if (flash_back_end_access_count >= flash_back_end_queue_size) {
+					hi->Notify_CXL_Host_flash_not_full();
+				}
+				flash_back_end_access_count--;
+
+				if (no_mshr_requests_record[lba].empty()) {
+					no_mshr_requests_record.erase(no_mshr_requests_record.find(lba));
+				}
+
+
+				while (!flush_lba->empty()) {
+
+
+					//ofFlush << static_cast<float>(cxl_man->total_number_of_accesses) / static_cast<float>(cxl_man->cxl_config_para.total_number_of_requets) * 100 << endl;
+					flush_count++;
+					uint64_t lba{ flush_lba->front() };
+					uint64_t lsa{ lba * 8 };
+
+					flush_lba->pop_front();
+					Submission_Queue_Entry* sqe{ new Submission_Queue_Entry };
+					sqe->Command_Identifier = 0;
+					sqe->Opcode = NVME_WRITE_OPCODE;
+
+					sqe->Command_specific[0] = (uint32_t)lsa;
+					sqe->Command_specific[1] = (uint32_t)(lsa >> 32);
+					sqe->Command_specific[2] = ((uint32_t)((uint16_t)8)) & (uint32_t)(0x0000ffff);
+
+					sqe->PRP_entry_1 = (DATA_MEMORY_REGION);//Dummy addresses, just to emulate data read/write access
+					sqe->PRP_entry_2 = (DATA_MEMORY_REGION + 0x1000);//Dummy addresses
+
+					((Request_Fetch_Unit_CXL*)(((Host_Interface_CXL*)hi)->request_fetch_unit))->Fetch_next_request(0);
+
+					((Request_Fetch_Unit_CXL*)(((Host_Interface_CXL*)hi)->request_fetch_unit))->Process_pcie_read_message(0, sqe, sizeof(Submission_Queue_Entry));
+
+				}
+
+				delete flush_lba;
+			}
+			else {
+				no_mshr_not_yet_serviced_lba.push_back(lba);
+			}
+			
 			return;
 		}
 
@@ -819,6 +899,72 @@ namespace SSD_Components
 		//if (Simulator->Time() == 210411353) {
 		//	cout << " Check" << endl;
 		//}
+
+		if (!cxl_man->cxl_config_para.has_mshr) {
+			while(cxl_dram->getDRAMAvailability()>0) {
+				if (cxl_man->no_mshr_not_yet_serviced_lba.empty()) break;
+
+
+				uint64_t lba{ cxl_man->no_mshr_not_yet_serviced_lba.front() };
+				cxl_man->no_mshr_not_yet_serviced_lba.pop_front();
+
+				no_mshr_record_node n{ cxl_man->no_mshr_requests_record[lba].front() };
+				cxl_man->no_mshr_requests_record[lba].pop_front();
+
+				CXL_DRAM_ACCESS* dram_request{ new CXL_DRAM_ACCESS{static_cast<unsigned int>(64), lba, n.rw, CXL_DRAM_EVENTS::CACHE_MISS, n.time} };
+				Send_request_to_CXL_DRAM(dram_request);
+
+				list<uint64_t>* flush_lba{ new list<uint64_t> };
+				cxl_man->dram->process_miss_data_ready_new(n.rw, lba, flush_lba, Simulator->Time(), cxl_man->prefetched_lba, cxl_man->serviced_before_lba);
+				if (cxl_man->flash_back_end_access_count >= cxl_man->flash_back_end_queue_size) {
+					Notify_CXL_Host_flash_not_full();
+				}
+				cxl_man->flash_back_end_access_count--;
+
+				if (cxl_man->no_mshr_requests_record[lba].empty()) {
+					cxl_man->no_mshr_requests_record.erase(cxl_man->no_mshr_requests_record.find(lba));
+				}
+
+
+				while (!flush_lba->empty()) {
+
+
+					//ofFlush << static_cast<float>(cxl_man->total_number_of_accesses) / static_cast<float>(cxl_man->cxl_config_para.total_number_of_requets) * 100 << endl;
+					cxl_man->flush_count++;
+					uint64_t lba{ flush_lba->front() };
+					uint64_t lsa{ lba * 8 };
+
+					flush_lba->pop_front();
+					Submission_Queue_Entry* sqe{ new Submission_Queue_Entry };
+					sqe->Command_Identifier = 0;
+					sqe->Opcode = NVME_WRITE_OPCODE;
+
+					sqe->Command_specific[0] = (uint32_t)lsa;
+					sqe->Command_specific[1] = (uint32_t)(lsa >> 32);
+					sqe->Command_specific[2] = ((uint32_t)((uint16_t)8)) & (uint32_t)(0x0000ffff);
+
+					sqe->PRP_entry_1 = (DATA_MEMORY_REGION);//Dummy addresses, just to emulate data read/write access
+					sqe->PRP_entry_2 = (DATA_MEMORY_REGION + 0x1000);//Dummy addresses
+
+					((Request_Fetch_Unit_CXL*)(this->request_fetch_unit))->Fetch_next_request(0);
+
+					((Request_Fetch_Unit_CXL*)(this->request_fetch_unit))->Process_pcie_read_message(0, sqe, sizeof(Submission_Queue_Entry));
+
+				}
+
+				delete flush_lba;
+			}
+
+			if (cxl_dram->getDRAMAvailability() > 0) {
+				Notify_host_DRAM_is_free();
+			}
+
+			return;
+		}
+
+
+
+
 		while (cxl_dram->getDRAMAvailability() > 0) {
 			if (cxl_man->serviced_before_lba.size() > 0) {
 				uint64_t lba{ *(cxl_man->serviced_before_lba.begin()) };

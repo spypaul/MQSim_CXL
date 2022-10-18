@@ -31,6 +31,11 @@ void cxl_config::readConfigFile() {
 			cache_portion_size = dram_size * value / 100;
 			prefetch_portion_size = dram_size - cache_portion_size;
 		}
+		else if (info == "Has_mshr") {
+			uint64_t value;
+			configfile >> dec >> value;
+			has_mshr = static_cast<bool>(value);
+		}
 		else if (info == "SSD_page_size") {
 			uint64_t value;
 			configfile >> dec >> value;
@@ -74,8 +79,8 @@ void cxl_config::readConfigFile() {
 			lrfu_p = p;
 			lrfu_lambda = lambda;
 		}
-		else if (info == "Set_associativity") {
-			uint16_t sa;
+		else if (info == "Cache_placement") {
+			uint64_t sa;
 			configfile >> sa;
 			set_associativity = sa;
 		}

@@ -20,6 +20,12 @@
 using namespace std;
 
 
+class no_mshr_record_node {
+public:
+	uint64_t time{0};
+	bool rw{ 1 };
+};
+
 namespace SSD_Components
 {
 
@@ -69,6 +75,11 @@ namespace SSD_Components
 
 		uint64_t flash_back_end_queue_size{ 128 };
 		uint64_t flash_back_end_access_count{ 0 };
+
+
+		//no mshr
+		map<uint64_t, list<no_mshr_record_node>> no_mshr_requests_record;
+		list<uint64_t> no_mshr_not_yet_serviced_lba;
 
 		
 	private:

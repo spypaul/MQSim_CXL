@@ -1,7 +1,7 @@
 #include "OutputLog.h"
 
 outlog outputf{ "output.txt" };
-outlog evictf{ "evictionlog.txt" };
+//outlog evictf{ "evictionlog.txt" };
 
 
 outlog::outlog(string filename) {
