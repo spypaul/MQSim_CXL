@@ -71,7 +71,9 @@ namespace SSD_Components
 		set<uint64_t> not_yet_serviced_lba;
 
 		cxl_config cxl_config_para;
-		uint64_t cache_miss_count{ 0 }, cache_hit_count{ 0 }, total_number_of_accesses{ 0 }, prefetch_hit_count{ 0 }, flush_count{ 0 }, flash_read_count{ 0 };
+		uint64_t cache_miss_count{ 0 }, cache_hit_count{ 0 }, total_number_of_accesses{ 0 }, prefetch_hit_count{ 0 }, flush_count{ 0 }, flash_read_count{ 0 }, no_cache_flash_write_count{ 0 }, no_cache_flash_read_count{0};
+		set<uint64_t> unique_lba;
+
 
 		uint64_t flash_back_end_queue_size{ 128 };
 		uint64_t flash_back_end_access_count{ 0 };
@@ -80,6 +82,7 @@ namespace SSD_Components
 		//no mshr
 		map<uint64_t, list<no_mshr_record_node>> no_mshr_requests_record;
 		list<uint64_t> no_mshr_not_yet_serviced_lba;
+		uint64_t repeated_flash_access_count{ 0 };
 
 		
 	private:
@@ -189,7 +192,7 @@ namespace SSD_Components
 			}
 			else {
 
-				((Submission_Queue_Entry*)message->Payload)->Opcode = NVME_READ_OPCODE;
+				if(cxl_man->cxl_config_para.has_cache)((Submission_Queue_Entry*)message->Payload)->Opcode = NVME_READ_OPCODE;
 				request_fetch_unit->Fetch_next_request(0);
 			}
 

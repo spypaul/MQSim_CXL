@@ -198,6 +198,7 @@ namespace SSD_Components {
 				std::cout << "=";
 			}
 			std::cout << "] " << 100 << "%    Cache Hit Count: " << cache_hit_count << "   Prefetch amount: " << prefetch_amount << std::endl;
+			std::cout << "Hit under miss count: " << cache_hum_count << endl;
 			std::cout << "Flash Read Count: " << flash_read_count << endl;
 			std::cout << "Flush count: " << hi->Get_flush_count() << endl;
 			std::cout << "Request ends at timestamp: " << static_cast<float>(Simulator->Time()) / 1000000000 << " s" << endl;

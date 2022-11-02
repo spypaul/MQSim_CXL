@@ -20,6 +20,11 @@ void cxl_config::readConfigFile() {
 			configfile >> dec >> value;
 			dram_size = value;
 		}
+		else if (info == "Has_cache") {
+			uint64_t value;
+			configfile >> dec >> value;
+			has_cache = value;
+		}
 		else if (info == "Mix_mode") {
 			uint64_t value;
 			configfile >> dec >> value;

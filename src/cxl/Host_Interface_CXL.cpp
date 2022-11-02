@@ -10,6 +10,8 @@
 //ofstream ofrequest{ "Request_recieved.txt" };
 
 ofstream oflatep{ "late_prefetch_lateness.txt" };
+ofstream oflat_no_cache{ "latency_results_no_cache.txt" };
+
 class prefetch_info_node {
 public:
 	uint64_t hit_count{ 0 };
@@ -219,6 +221,10 @@ namespace SSD_Components
 		sqe->Command_specific[0] = (uint32_t)lsa;
 		sqe->Command_specific[1] = (uint32_t)(lsa >> 32);
 
+		if (!cxl_config_para.has_cache) {
+			return 1;
+		}
+
 
 		if (dram->isCacheHit(lba)) {// && !dram->is_next_evict_candidate(lba)
 
@@ -250,6 +256,7 @@ namespace SSD_Components
 
 				if (no_mshr_requests_record.count(lba)) {
 					no_mshr_requests_record[lba].push_back(n);
+					repeated_flash_access_count++;
 				}
 				else {
 					list<no_mshr_record_node> l;
@@ -258,6 +265,7 @@ namespace SSD_Components
 				}
 
 				cache_miss = 1;
+				
 				return cache_miss;
 			}
 
@@ -350,6 +358,53 @@ namespace SSD_Components
 		Submission_Queue_Entry* sqe = (Submission_Queue_Entry*)request->IO_command_info;
 
 		LHA_type lba{ (((LHA_type)sqe->Command_specific[1]) << 31 | (LHA_type)sqe->Command_specific[0]) / sqe->Command_specific[2] };
+
+
+		if (!cxl_config_para.has_cache) {
+			unique_lba.insert(lba);
+
+			if (flash_back_end_access_count >= flash_back_end_queue_size) {
+				hi->Notify_CXL_Host_flash_not_full();
+			}
+			flash_back_end_access_count--;
+
+			oflat_no_cache << Simulator->Time() - request->STAT_InitiationTime << endl;
+
+
+			total_number_of_accesses++;
+
+			if (sqe->Opcode == NVME_WRITE_OPCODE) no_cache_flash_write_count++;
+			else no_cache_flash_read_count++;
+
+			float current_progress{ static_cast<float>(total_number_of_accesses) / static_cast<float>(cxl_config_para.total_number_of_requets) };
+			if (current_progress * 100 - perc > 1) {
+				perc += 1;
+				uint8_t number_of_bars{ static_cast<uint8_t> (perc / 4) };
+				std::cout << "Simulation progress: [";
+				for (auto i = 0; i < number_of_bars; i++) {
+					std::cout << "=";
+				}
+				for (auto i = 0; i < 25 - number_of_bars - 1; i++) {
+					std::cout << " ";
+				}
+				std::cout << "] " << perc << "%" << "\r";
+			}
+
+			if (total_number_of_accesses == cxl_config_para.total_number_of_requets) {
+				std::cout << "Simulation progress: [";
+				for (auto i = 0; i < 25; i++) {
+					std::cout << "=";
+				}
+				std::cout << "] " << 100 << "%" << std::endl;
+				std::cout << "Flash read count: " << no_cache_flash_read_count << endl;
+				std::cout << "Flash write count: " << no_cache_flash_write_count << endl;
+				std::cout << "Unique LBA ratio: " << static_cast<float>(unique_lba.size()) / static_cast<float>(cxl_config_para.total_number_of_requets) << endl;
+				std::cout << "Request ends at timestamp: " << static_cast<float>(Simulator->Time()) / 1000000000 << " s" << endl;
+			}
+			return;
+		}
+
+
 
 		if (sqe->Opcode == NVME_WRITE_OPCODE) {//flush done
 			if (flash_back_end_access_count >= flash_back_end_queue_size) {
@@ -1061,6 +1116,9 @@ namespace SSD_Components
 		xmlwriter.Write_close_tag();
 	}
 	void Host_Interface_CXL::print_prefetch_info() {
+
+
+		cout << "Repeated flash access count: " << cxl_man->repeated_flash_access_count << endl;
 
 		if (PREFETCH_INFO_MAP.size() == 0) return;
 

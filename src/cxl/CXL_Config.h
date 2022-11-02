@@ -37,6 +37,7 @@ public:
 	prefetchertype prefetch_policy;
 	uint64_t total_number_of_requets;
 	bool has_mshr;
+	bool has_cache;
 
 	cxl_config() {
 		dram_size = 0; 
@@ -50,6 +51,7 @@ public:
 		prefetch_policy = prefetchertype::tagged;
 		total_number_of_requets = 0;
 		has_mshr = 1;
+		has_cache = 1;
 	};
 
 	void readConfigFile();
