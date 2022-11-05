@@ -2,6 +2,7 @@
 
 void lruTwoListClass::init(uint64_t numCL) {
 	activeBound = numCL / 3;
+	activeBound = 0;
 }
 
 void lruTwoListClass::add(uint64_t lba) {
@@ -56,13 +57,14 @@ void lruTwoListClass::updateWhenHit(uint64_t lba, bool& falsehit) {
 	}
 
 	inactive.erase(initer);
+	if (activeBound == 0) inactive.push_back(lba);
 
-	if (active.size() == activeBound) {
+	if (activeBound!=0 && active.size() == activeBound) {
 		uint64_t movetarget{ active.front() };
 		active.pop_front();
 		inactive.push_back(movetarget);
 	}
-	active.push_back(lba);
+	if(activeBound!=0) active.push_back(lba);
 
 }
 
@@ -70,6 +72,116 @@ void lruTwoListClass::reset() {
 	active.clear();
 	inactive.clear();
 	activeBound = 0;
+}
+
+
+void lfuHeap::add(uint64_t addr) {
+	lfuNode n{ addr };
+	h.push_back(n);
+	m.emplace(addr, h.size() - 1);
+
+	uint64_t ci{ h.size() - 1 };
+
+	while (1) {
+		if (ci == 0) break;
+
+		uint64_t pi{ (ci - 1) / 2 };
+
+		if (h[pi].count > h[ci].count) {
+			uint64_t p_addr{ h[pi].addr };
+			swap(h[pi], h[ci]);
+			m[p_addr] = ci;
+			m[addr] = pi;
+
+			ci = pi;
+		}
+		else {
+			break;
+		}
+	}
+	
+}
+uint64_t lfuHeap::top() {
+	return h[0].addr;
+}
+void lfuHeap::pop() {
+	uint64_t remove_addr{ h[0].addr };
+	m[h[h.size() - 1].addr] = 0;
+	m.erase(m.find(remove_addr));
+	swap(h[0], h[h.size() - 1]);
+	h.pop_back();
+
+	if (h.empty()) return;
+
+	uint64_t ci{ 0 };
+	uint64_t curr_addr{ h[ci].addr };
+
+	while (1) {
+		uint64_t lci{ 2 * ci + 1 }, rci{2*ci+2};
+
+		if (lci > h.size() - 1) break;
+
+		uint64_t child_i{ 0 };
+
+		if (rci <= h.size() - 1) {
+			child_i = (h[lci].count <= h[rci].count) ? lci : rci;
+		}
+		else {
+			child_i = lci;
+		}
+
+
+		if (h[ci].count >= h[child_i].count) {
+			uint64_t ch_addr{ h[child_i].addr };
+			swap(h[child_i], h[ci]);
+			m[ch_addr] = ci;
+			m[curr_addr] = child_i;
+			ci = child_i;
+
+		}
+		else {
+			break;
+		}
+
+	}
+
+
+}
+void lfuHeap::update(uint64_t addr) {
+	uint64_t ci{ m[addr] };
+	h[ci].count++;
+
+	uint64_t curr_addr{ addr };
+
+	while (1) {
+		uint64_t lci{ 2 * ci + 1 }, rci{ 2 * ci + 2 };
+
+		if (lci > h.size() - 1) break;
+
+		uint64_t child_i{ 0 };
+
+		if (rci <= h.size() - 1) {
+			child_i = (h[lci].count <= h[rci].count) ? lci : rci;
+		}
+		else {
+			child_i = lci;
+		}
+
+
+		if (h[ci].count >= h[child_i].count) {
+			uint64_t ch_addr{ h[child_i].addr };
+			swap(h[child_i], h[ci]);
+			m[ch_addr] = ci;
+			m[curr_addr] = child_i;
+			ci = child_i;
+
+		}
+		else {
+			break;
+		}
+
+	}
+
 }
 
 
@@ -127,7 +239,19 @@ namespace SSD_Components {
 
 		}
 
+		if (all_fifocachedlba) {
+			for (auto i : *all_fifocachedlba) {
+				i->clear();
+				delete i;
+			}
+			delete all_fifocachedlba;
+		}
 
+		if (all_lfucachedlba) {
+			for (auto i : *all_lfucachedlba) {
+				delete i;
+			}delete all_lfucachedlba;
+		}
 
 		//if (freeCL) {
 		//	freeCL->clear();
@@ -189,13 +313,20 @@ namespace SSD_Components {
 		all_dirtyCL = new vector < map < uint64_t, uint64_t>*>;
 
 		if (cpara.cpolicy == cachepolicy::random) {
-			all_cachedlba = new vector<set<uint64_t>*>;
+			//all_cachedlba = new vector<set<uint64_t>*>;
+			all_cachedlba = new vector<vector<uint64_t>*>;
 		}
 		else if (cpara.cpolicy == cachepolicy::lrfu) {
 			all_lrfucachedlba = new vector<lrfuHeap*>;
 		}
 		else if (cpara.cpolicy == cachepolicy::lru2) {
 			all_lru2cachedlba = new vector<lruTwoListClass*>;
+		}
+		else if (cpara.cpolicy == cachepolicy::fifo) {
+			all_fifocachedlba = new vector<list<uint64_t>*>;
+		}
+		else if (cpara.cpolicy == cachepolicy::lfu) {
+			all_lfucachedlba = new vector<lfuHeap*>;
 		}
 
 		for (uint64_t i = 0; i < cpara.cache_portion_size / cpara.ssd_page_size / cpara.set_associativity; i++) {
@@ -210,7 +341,8 @@ namespace SSD_Components {
 			all_dirtyCL->push_back(m1);
 
 			if (cpara.cpolicy == cachepolicy::random) {
-				set<uint64_t>* s{ new set<uint64_t> };
+				//set<uint64_t>* s{ new set<uint64_t> };
+				vector<uint64_t>* s{ new vector<uint64_t> };
 				all_cachedlba->push_back(s);
 			}
 			else if (cpara.cpolicy == cachepolicy::lrfu) {
@@ -223,6 +355,14 @@ namespace SSD_Components {
 				lt->init(cpara.set_associativity);
 				all_lru2cachedlba->push_back(lt);
 
+			}
+			else if (cpara.cpolicy == cachepolicy::fifo) {
+				list<uint64_t>* ff{ new list<uint64_t> };
+				all_fifocachedlba->push_back(ff);
+			}
+			else if (cpara.cpolicy == cachepolicy::lfu) {
+				lfuHeap* lf{ new lfuHeap };
+				all_lfucachedlba->push_back(lf);
 			}
 
 		}
@@ -351,6 +491,9 @@ namespace SSD_Components {
 
 
 				//*next_eviction_candidate = lru2cachedlba->getCandidate();
+			}
+			else if (cpara.cpolicy == cachepolicy::lfu) {
+				(*all_lfucachedlba)[cache_index]->update(lba);
 			}
 			else if (cpara.cpolicy == cachepolicy::lrfu) {
 
@@ -496,8 +639,11 @@ namespace SSD_Components {
 		list<uint64_t>* temp_freeCL{NULL};
 		map<uint64_t, uint64_t>* temp_dram_mapping{ NULL };
 		map<uint64_t, uint64_t>* temp_dirtyCL{ NULL };
-		set<uint64_t>* temp_cachedlba{ NULL };
+		//set<uint64_t>* temp_cachedlba{ NULL };
+		vector<uint64_t>* temp_cachedlba{ NULL };
 		lruTwoListClass* temp_lru2cachedlba{ NULL };
+		list<uint64_t>* temp_fifocachedlba{ NULL };
+		lfuHeap* temp_lfucachedlba{ NULL };
 		lrfuHeap* temp_lrfucachedlba{NULL};
 		cachepolicy cp{ cachepolicy::random };
 		uint64_t* next_cand{ NULL };
@@ -522,6 +668,12 @@ namespace SSD_Components {
 			else if (cpara.cpolicy == cachepolicy::lru2) {
 				temp_lru2cachedlba = (*all_lru2cachedlba)[cache_index];
 			}
+			else if (cpara.cpolicy == cachepolicy::fifo) {
+				temp_fifocachedlba = (*all_fifocachedlba)[cache_index];
+			}
+			else if (cpara.cpolicy == cachepolicy::lfu) {
+				temp_lfucachedlba = (*all_lfucachedlba)[cache_index];
+			}
 
 
 
@@ -538,7 +690,7 @@ namespace SSD_Components {
 				temp_dram_mapping = pref_dram_mapping;
 				temp_dirtyCL = pref_dirtyCL;
 				cp = cpara.pref_cpolicy;
-				temp_cachedlba = pref_cachedlba;
+				//temp_cachedlba = pref_cachedlba;
 				temp_lru2cachedlba = pref_lru2cachedlba;
 				temp_lrfucachedlba = pref_lrfucachedlba;
 				next_cand = pref_next_eviction_candidate;
@@ -548,7 +700,7 @@ namespace SSD_Components {
 				temp_dram_mapping = dram_mapping;
 				temp_dirtyCL = dirtyCL;
 				cp = cpara.cpolicy;
-				temp_cachedlba = cachedlba;
+				//temp_cachedlba = cachedlba;
 				temp_lru2cachedlba = lru2cachedlba;
 				temp_lrfucachedlba = lrfucachedlba;
 				next_cand = next_eviction_candidate;
@@ -569,12 +721,23 @@ namespace SSD_Components {
 			uint64_t evict_lba_base_addr{ 0 };
 			if (cp == cachepolicy::random) {
 				//eviction policy random
-				srand(static_cast<unsigned int>(lba));
-				uint64_t evict_position{ rand() % temp_cachedlba->size() };
-				auto it{ temp_cachedlba->begin() };
-				for (auto i = 0; i < evict_position; i++)it++;
-				evict_lba_base_addr = *it;
-				temp_cachedlba->erase(temp_cachedlba->find(*it));
+				//srand(static_cast<unsigned int>(lba));
+				uint64_t evict_position{ 0 };
+				if(temp_cachedlba->size() <= RAND_MAX+1){
+					evict_position = rand() % temp_cachedlba->size();
+				}
+				else {
+					uint64_t rand_off{ temp_cachedlba->size() / RAND_MAX };
+					evict_position = ((rand()%rand_off)*(RAND_MAX+1) + rand()) % temp_cachedlba->size();
+				}
+				evict_lba_base_addr = *(temp_cachedlba->begin() + evict_position);
+				temp_cachedlba->erase(temp_cachedlba->begin() + evict_position);
+
+				//auto it{ temp_cachedlba->begin() };
+				//for (auto i = 0; i < evict_position; i++)it++;
+				//evict_lba_base_addr = *it;
+				//temp_cachedlba->erase(temp_cachedlba->find(*it));
+
 
 				//evict_lba_base_addr = *next_cand;
 				//temp_cachedlba->erase(temp_cachedlba->find(*next_cand));
@@ -586,6 +749,14 @@ namespace SSD_Components {
 
 				//evict_lba_base_addr = *next_cand;
 
+			}
+			else if (cp == cachepolicy::fifo) {
+				evict_lba_base_addr = temp_fifocachedlba->front();
+				temp_fifocachedlba->pop_front();
+			}
+			else if (cp == cachepolicy::lfu) {
+				evict_lba_base_addr = temp_lfucachedlba->top();
+				temp_lfucachedlba->pop();
 			}
 			else if (cp == cachepolicy::lrfu) {
 				//TODO
@@ -616,6 +787,10 @@ namespace SSD_Components {
 				flush_lba->push_back(evict_lba_base_addr);
 				//evictf.of << evict_lba_base_addr << endl;
 				temp_dirtyCL->erase(cl);
+				flush_count++;
+			}
+			else {
+				eviction_count++;
 			}
 
 		}
@@ -625,7 +800,8 @@ namespace SSD_Components {
 		temp_freeCL->pop_front();
 
 		if (cp == cachepolicy::random) {
-			temp_cachedlba->emplace(lba);//random
+			temp_cachedlba->push_back(lba);
+			//temp_cachedlba->emplace(lba);//random
 
 			//if (temp_freeCL->empty()) {
 			//	srand(static_cast<unsigned int>(lba));
@@ -646,6 +822,12 @@ namespace SSD_Components {
 			temp_lru2cachedlba->add(lba);
 			
 			
+		}
+		else if (cp == cachepolicy::fifo) {
+			temp_fifocachedlba->push_back(lba);
+		}
+		else if (cp == cachepolicy::lfu) {
+			temp_lfucachedlba->add(lba);
 		}
 		else if (cp == cachepolicy::lrfu) {
 			//if (temp_freeCL->empty()) {

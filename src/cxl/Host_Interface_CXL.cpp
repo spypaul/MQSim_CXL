@@ -1116,7 +1116,9 @@ namespace SSD_Components
 		xmlwriter.Write_close_tag();
 	}
 	void Host_Interface_CXL::print_prefetch_info() {
-
+		std::cout << "Flush count: " << cxl_man->flush_count << endl;
+		std::cout << "Eviction count: " << cxl_man->dram->eviction_count << endl;
+		std::cout << "Request ends at timestamp: " << static_cast<float>(Simulator->Time()) / 1000000000 << " s" << endl;
 
 		cout << "Repeated flash access count: " << cxl_man->repeated_flash_access_count << endl;
 

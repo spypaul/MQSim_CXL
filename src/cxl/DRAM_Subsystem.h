@@ -26,6 +26,27 @@ public:
 	void reset();
 };
 
+class lfuNode {
+public:
+	uint64_t addr;
+	uint64_t count;
+
+	lfuNode(uint64_t a) { addr = a; count = 0; }
+};
+
+class lfuHeap {
+public:
+
+	void add(uint64_t addr);
+	uint64_t top();
+	void pop();
+	void update(uint64_t addr);
+
+private:
+	vector<lfuNode> h;
+	map<uint64_t, uint64_t> m;
+};
+
 
 using namespace std;
 namespace SSD_Components {
@@ -48,6 +69,7 @@ namespace SSD_Components {
 
 		uint64_t get_cache_index(uint64_t lba);
 
+		uint64_t eviction_count{ 0 }, flush_count{0};
 
 	private:
 		cxl_config cpara;
@@ -59,7 +81,11 @@ namespace SSD_Components {
 		vector<list<uint64_t>*>* all_freeCL{ NULL };
 		
 		set<uint64_t>* cachedlba{ NULL };//for random 
-		vector<set<uint64_t>*>* all_cachedlba{ NULL };
+		//vector<set<uint64_t>*>* all_cachedlba{ NULL };
+		vector<vector<uint64_t>*>* all_cachedlba{ NULL };
+
+		vector<list<uint64_t>*>* all_fifocachedlba{ NULL };
+		vector<lfuHeap*>* all_lfucachedlba;
 
 		lrfuHeap* lrfucachedlba{NULL}; //for lrfu
 		vector<lrfuHeap*>* all_lrfucachedlba{ NULL };

@@ -7,8 +7,10 @@ using namespace std;
 typedef enum class cachepolicy {
 	random,
 	lru2,
-	lrfu,
-	cpu
+	fifo,
+	lfu,
+	lrfu,//not working
+	cpu//no need of it
 }cachepolicy;
 
 typedef enum class prefetchertype {

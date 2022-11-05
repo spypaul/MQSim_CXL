@@ -55,6 +55,12 @@ void cxl_config::readConfigFile() {
 			else if (policy == "LRU2") {
 				cpolicy = cachepolicy::lru2;
 			}
+			else if (policy == "FIFO") {
+				cpolicy = cachepolicy::fifo;
+			}
+			else if (policy == "LFU") {
+				cpolicy = cachepolicy::lfu;
+			}
 			else if (policy == "LRFU") {
 				cpolicy = cachepolicy::lrfu;
 			}
