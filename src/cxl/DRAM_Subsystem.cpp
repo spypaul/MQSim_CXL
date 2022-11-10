@@ -633,7 +633,7 @@ namespace SSD_Components {
 
 
 
-	void dram_subsystem::process_miss_data_ready_new(bool rw, uint64_t lba, list<uint64_t>* flush_lba, uint64_t simtime, set<uint64_t>* prefetched_lba, set<uint64_t> not_finished) {
+	void dram_subsystem::process_miss_data_ready_new(bool rw, uint64_t lba, list<uint64_t>* flush_lba, uint64_t simtime, set<uint64_t>* prefetched_lba, set<uint64_t>&taggedAddr, set<uint64_t>& prefetch_pollution_tracker,  set<uint64_t> not_finished) {
 
 
 		list<uint64_t>* temp_freeCL{NULL};
@@ -778,8 +778,14 @@ namespace SSD_Components {
 			outputf.of << "Finished_time " << simtime << " Starting_time " << 0 << " Eviction/Flush_at " << evict_lba_base_addr << std::endl;
 			if (prefetched_lba->count(evict_lba_base_addr)) {
 				prefetched_lba->erase(prefetched_lba->find(evict_lba_base_addr));
+				if (taggedAddr.count(evict_lba_base_addr)) {
+					taggedAddr.erase(taggedAddr.find(evict_lba_base_addr));
+				}
 			}
-
+			
+			if (prefetched_lba->count(lba)) {
+				prefetch_pollution_tracker.insert(evict_lba_base_addr);
+			}
 
 			temp_freeCL->push_back(cl);
 

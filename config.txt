@@ -3,9 +3,9 @@ DRAM_size 268435456
 Mix_mode 1
 Cache_portion_percentage 100
 Has_mshr 1
-Cache_placement 65536
-Cache_policy LFU
-Prefetch_cache_policy LFU
+Cache_placement 1
+Cache_policy Random
+Prefetch_cache_policy Random
 LRFU_p_lambda 2 1
-Prefetcher No
+Prefetcher Tagged
 Total_number_of_requests 20000000

@@ -54,11 +54,14 @@ namespace SSD_Components
 
 		set<uint64_t>* prefetched_lba;
 		map<uint64_t, uint64_t>* in_progress_prefetch_lba;
-		uint64_t prefetch_queue_size{ 64 };
+		uint64_t prefetch_queue_size{ 128 };
 
 		//tagged prefetcher
+		uint64_t previous_unused_lba{0};
+
 		set<uint64_t> tagAssertedLBA;
-		uint16_t prefetchK{ 10 };
+		uint16_t prefetchK{ 1 };
+		uint16_t prefetch_timing_offset{50};
 
 		//Best-offset prefetcher
 		boClass boPrefetcher;
@@ -72,6 +75,9 @@ namespace SSD_Components
 
 		cxl_config cxl_config_para;
 		uint64_t cache_miss_count{ 0 }, cache_hit_count{ 0 }, total_number_of_accesses{ 0 }, prefetch_hit_count{ 0 }, flush_count{ 0 }, flash_read_count{ 0 }, no_cache_flash_write_count{ 0 }, no_cache_flash_read_count{0};
+		uint64_t prefetch_pollution_count{ 0 };
+		set<uint64_t> prefetch_pollution_tracker;
+
 		set<uint64_t> unique_lba;
 
 

@@ -106,7 +106,7 @@ namespace SSD_Components {
 		case CXL_DRAM_EVENTS::CACHE_MISS:
 			number_of_accesses++;
 			flash_read_count++;
-			cache_miss_count++;
+			//cache_miss_count++;
 			//ofi2 << current_access->initiate_time << " " << Simulator->Time() << endl;
 			//hi->Update_CXL_DRAM_state_when_miss_data_ready(current_access->rw, current_access->lba);
 			outputf.of << "Finished_time " << Simulator->Time()  << " Starting_time " << current_access->initiate_time << " Cache_miss_at " << current_access->lba << std::endl;
@@ -116,15 +116,15 @@ namespace SSD_Components {
 			delete current_access;
 			break;
 		case CXL_DRAM_EVENTS::PREFETCH_READY:
-			flash_read_count++;
+			//flash_read_count++;
 			outputf.of << "Finished_time " << Simulator->Time() << " Starting_time " << current_access->initiate_time << " Prefetch_ready_at " << current_access->lba << std::endl;
 			prefetch_amount++;
 			delete current_access;
 			break;
 		case CXL_DRAM_EVENTS::SLOW_PREFETCH:
 			number_of_accesses++;
-			flash_read_count++;
-			cache_miss_count++;
+			//flash_read_count++;
+			//cache_miss_count++;
 			prefetch_amount++;
 			//ofi2 << current_access->initiate_time << " " << Simulator->Time() << endl;
 			//hi->Update_CXL_DRAM_state_when_miss_data_ready(current_access->rw, current_access->lba);
@@ -200,6 +200,10 @@ namespace SSD_Components {
 			std::cout << "] " << 100 << "%    Cache Hit Count: " << cache_hit_count << "   Prefetch amount: " << prefetch_amount << std::endl;
 			std::cout << "Hit under miss count: " << cache_hum_count << endl;
 			std::cout << "Flash Read Count: " << flash_read_count << endl;
+			if (prefetch_amount > 0) {
+				std::cout << "Prefetch Flash Read Count: " << prefetch_amount << endl;
+				std::cout << "Total Flash Read Count: " << flash_read_count + prefetch_amount << endl;
+			}
 			//std::cout << "Flush count: " << hi->Get_flush_count() << endl;
 			//std::cout << "Request ends at timestamp: " << static_cast<float>(Simulator->Time()) / 1000000000 << " s" << endl;
 			hi->print_prefetch_info();

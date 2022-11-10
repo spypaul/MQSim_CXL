@@ -11,6 +11,7 @@
 
 ofstream oflatep{ "late_prefetch_lateness.txt" };
 ofstream oflat_no_cache{ "latency_results_no_cache.txt" };
+ofstream ofprefetch_chance{ "prefetch_potential.txt" };
 
 class prefetch_info_node {
 public:
@@ -54,8 +55,9 @@ namespace SSD_Components
 		/*if (mshr->getSize() < 5 || flash_back_end_queue_size - flash_back_end_access_count - 1 < 9) {
 			return;
 		}*/
-
-		if (in_progress_prefetch_lba->size() == prefetch_queue_size || flash_back_end_queue_size - flash_back_end_access_count - 1 < 9) {
+		
+		if (in_progress_prefetch_lba->size() == prefetch_queue_size || flash_back_end_queue_size - flash_back_end_access_count < 1 + 1 + 0 ) {
+			previous_unused_lba = lba;
 			return;
 		}
 		
@@ -63,22 +65,25 @@ namespace SSD_Components
 			return;
 		}
 		else if (cxl_config_para.prefetch_policy == prefetchertype::tagged) {
-			if (!isMiss && tagAssertedLBA.count(lba) == 0) {
+			if (!isMiss && tagAssertedLBA.count(lba) > 0) {
 				return;
+			}
+			else if (!isMiss && tagAssertedLBA.count(lba) == 0) {
+				tagAssertedLBA.insert(lba);
 			}
 
 			for (uint64_t i = 1; i <= prefetchK; i++) {
-				uint64_t plba{ lba + i };
+				uint64_t plba{ lba + i + prefetch_timing_offset };
 				if (!dram->isCacheHit(plba) && !mshr->isInProgress(plba) && (in_progress_prefetch_lba->count(plba) == 0) &&
 					plba*8 <= ((Input_Stream_CXL*)(((Host_Interface_CXL*)hi)->input_stream_manager->input_streams[0]))->End_logical_sector_address) {
 					prefetchlba.push_back(plba);
 					//prefetched_lba->insert(plba);
-					tagAssertedLBA.insert(plba);
+					//tagAssertedLBA.insert(plba);
 				}
 			}
-			if (tagAssertedLBA.count(lba)) {
-				tagAssertedLBA.erase(tagAssertedLBA.find(lba));
-			}
+			//if (tagAssertedLBA.count(lba)) {
+			//	tagAssertedLBA.erase(tagAssertedLBA.find(lba));
+			//}
 
 
 		}
@@ -177,14 +182,14 @@ namespace SSD_Components
 		//	}
 		//}
 
-		if (prefetch_queue_size - in_progress_prefetch_lba->size() < flash_back_end_queue_size - flash_back_end_access_count - 8) {
+		if (prefetch_queue_size - in_progress_prefetch_lba->size() < flash_back_end_queue_size - flash_back_end_access_count - 1 -0 ) {
 			if (prefetchlba.size() > prefetch_queue_size - in_progress_prefetch_lba->size()) {
 				prefetchlba.resize(prefetch_queue_size - in_progress_prefetch_lba->size());
 			}
 		}
 		else {
-			if (prefetchlba.size() > flash_back_end_queue_size - flash_back_end_access_count - 1 - 8) {
-				prefetchlba.resize(flash_back_end_queue_size - flash_back_end_access_count - 1 - 8);
+			if (prefetchlba.size() > flash_back_end_queue_size - flash_back_end_access_count - 1 -0) {
+				prefetchlba.resize(flash_back_end_queue_size - flash_back_end_access_count - 1 -0);
 			}
 		}
 
@@ -226,6 +231,7 @@ namespace SSD_Components
 		}
 
 
+
 		if (dram->isCacheHit(lba)) {// && !dram->is_next_evict_candidate(lba)
 
 			cache_miss = 0;
@@ -245,9 +251,23 @@ namespace SSD_Components
 				prefetch_hit_count++;
 				PREFETCH_INFO_MAP[lba].hit_count++;
 				prefetch_decision_maker(lba, 0, prefetch_hit_count);
+
+				if (!is_pref_req) {
+					ofprefetch_chance << flash_back_end_queue_size - flash_back_end_access_count - 1 << " ph" << endl;
+				}
+			}
+			else {
+				//prefetch_decision_maker(previous_unused_lba, 0, prefetch_hit_count);
+				if (!is_pref_req) {
+					ofprefetch_chance << flash_back_end_queue_size - flash_back_end_access_count - 1 << " ch" << endl;
+				}
 			}
 		}
 		else {
+
+			if (!is_pref_req) {
+				ofprefetch_chance << flash_back_end_queue_size - flash_back_end_access_count - 1 << " cm" << endl;
+			}
 
 			if (!cxl_config_para.has_mshr) {
 				no_mshr_record_node n;
@@ -286,6 +306,14 @@ namespace SSD_Components
 				//
 				//	cout << "Check" << endl;
 				//}
+				if (!is_pref_req) {
+					if (prefetch_pollution_tracker.count(lba)) {
+						prefetch_pollution_count++;
+						prefetch_pollution_tracker.erase(prefetch_pollution_tracker.find(lba));
+					}
+				}
+
+
 				Submission_Queue_Entry* nsqe{ new Submission_Queue_Entry{*sqe} };
 				mshr->insertRequest(lba, Simulator->Time(), nsqe);
 				if (mshr->isFull()) {
@@ -364,6 +392,9 @@ namespace SSD_Components
 			unique_lba.insert(lba);
 
 			if (flash_back_end_access_count >= flash_back_end_queue_size) {
+				if (flash_back_end_access_count > flash_back_end_queue_size) {
+					std::cout << "Check" << endl;
+				}
 				hi->Notify_CXL_Host_flash_not_full();
 			}
 			flash_back_end_access_count--;
@@ -408,6 +439,9 @@ namespace SSD_Components
 
 		if (sqe->Opcode == NVME_WRITE_OPCODE) {//flush done
 			if (flash_back_end_access_count >= flash_back_end_queue_size) {
+				if (flash_back_end_access_count > flash_back_end_queue_size) {
+					std::cout << "Check" << endl;
+				}
 				hi->Notify_CXL_Host_flash_not_full();
 			}
 			flash_back_end_access_count--;
@@ -427,8 +461,11 @@ namespace SSD_Components
 				((Host_Interface_CXL*)hi)->Send_request_to_CXL_DRAM(dram_request);
 
 				list<uint64_t>* flush_lba{ new list<uint64_t> };
-				dram->process_miss_data_ready_new(n.rw, lba, flush_lba, Simulator->Time(), prefetched_lba, serviced_before_lba);
+				dram->process_miss_data_ready_new(n.rw, lba, flush_lba, Simulator->Time(), prefetched_lba, tagAssertedLBA,prefetch_pollution_tracker,serviced_before_lba);
 				if (flash_back_end_access_count >= flash_back_end_queue_size) {
+					if (flash_back_end_access_count > flash_back_end_queue_size) {
+						std::cout << "Check" << endl;
+					}
 					hi->Notify_CXL_Host_flash_not_full();
 				}
 				flash_back_end_access_count--;
@@ -476,7 +513,7 @@ namespace SSD_Components
 		if (((Host_Interface_CXL*)hi)->cxl_dram->getDRAMAvailability() && serviced_before_lba.size() == 0) {
 
 			if (serviced_before_lba.size() > 0) {
-				cout << Simulator->Time() << endl;
+				std::cout << Simulator->Time() << endl;
 			}
 
 			bool rw{ true };
@@ -970,7 +1007,7 @@ namespace SSD_Components
 				Send_request_to_CXL_DRAM(dram_request);
 
 				list<uint64_t>* flush_lba{ new list<uint64_t> };
-				cxl_man->dram->process_miss_data_ready_new(n.rw, lba, flush_lba, Simulator->Time(), cxl_man->prefetched_lba, cxl_man->serviced_before_lba);
+				cxl_man->dram->process_miss_data_ready_new(n.rw, lba, flush_lba, Simulator->Time(), cxl_man->prefetched_lba,cxl_man->tagAssertedLBA , cxl_man->prefetch_pollution_tracker,cxl_man->serviced_before_lba);
 				if (cxl_man->flash_back_end_access_count >= cxl_man->flash_back_end_queue_size) {
 					Notify_CXL_Host_flash_not_full();
 				}
@@ -1120,7 +1157,7 @@ namespace SSD_Components
 		std::cout << "Eviction count: " << cxl_man->dram->eviction_count << endl;
 		std::cout << "Request ends at timestamp: " << static_cast<float>(Simulator->Time()) / 1000000000 << " s" << endl;
 
-		cout << "Repeated flash access count: " << cxl_man->repeated_flash_access_count << endl;
+		std::cout << "Repeated flash access count: " << cxl_man->repeated_flash_access_count << endl;
 
 		if (PREFETCH_INFO_MAP.size() == 0) return;
 
@@ -1136,10 +1173,10 @@ namespace SSD_Components
 			}
 		}
 		
-		cout << "Prefetch Coverage: " << static_cast<float>(cxl_man->prefetch_hit_count) / static_cast<float>(cxl_man->cache_hit_count) << endl;
-		cout << "Prefetch Accuracy: " << static_cast<float>(accurate_prefetch) / static_cast<float>(PREFETCH_INFO_MAP.size()) << endl;
-		cout << "Prefetch Lateness: " << static_cast<float>(late_prefetch) / static_cast<float>(accurate_prefetch) << endl;
-		
+		std::cout << "Prefetch Coverage: " << static_cast<float>(cxl_man->prefetch_hit_count) / static_cast<float>(cxl_man->cache_hit_count) << endl;
+		std::cout << "Prefetch Accuracy: " << static_cast<float>(accurate_prefetch) / static_cast<float>(PREFETCH_INFO_MAP.size()) << endl;
+		std::cout << "Prefetch Lateness: " << static_cast<float>(late_prefetch) / static_cast<float>(accurate_prefetch) << endl;
+		std::cout << "Prefetch Pollution: " << static_cast<float>(cxl_man->prefetch_pollution_count) / static_cast<float>(cxl_man->cache_miss_count)<< endl;
 	
 	}
 
@@ -1189,6 +1226,10 @@ namespace SSD_Components
 						n.hit_count++;
 						PREFETCH_INFO_MAP.emplace(lba, n);
 					}
+					else {
+						PREFETCH_INFO_MAP[lba].late = 1;
+						PREFETCH_INFO_MAP[lba].hit_count++;
+					}
 				}
 			}
 
@@ -1208,7 +1249,7 @@ namespace SSD_Components
 			else rw = 1;
 
 			list<uint64_t>* flush_lba{ new list<uint64_t> };
-			this->cxl_man->dram->process_miss_data_ready_new(rw, lba, flush_lba, Simulator->Time(), this->cxl_man->prefetched_lba, cxl_man->serviced_before_lba);
+			this->cxl_man->dram->process_miss_data_ready_new(rw, lba, flush_lba, Simulator->Time(), this->cxl_man->prefetched_lba, this->cxl_man->tagAssertedLBA, this->cxl_man->prefetch_pollution_tracker,cxl_man->serviced_before_lba);
 			if (cxl_man->flash_back_end_access_count >= cxl_man->flash_back_end_queue_size) {
 				Notify_CXL_Host_flash_not_full();
 			}
