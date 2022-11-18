@@ -7,5 +7,5 @@ Cache_placement 1
 Cache_policy Random
 Prefetch_cache_policy Random
 LRFU_p_lambda 2 1
-Prefetcher Tagged
-Total_number_of_requests 20000000
+Prefetcher No
+Total_number_of_requests 14669605

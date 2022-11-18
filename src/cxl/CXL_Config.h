@@ -40,6 +40,7 @@ public:
 	uint64_t total_number_of_requets;
 	bool has_mshr;
 	bool has_cache;
+	uint64_t num_sec{ 8 };
 
 	cxl_config() {
 		dram_size = 0; 

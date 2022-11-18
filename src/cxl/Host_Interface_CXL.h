@@ -54,7 +54,7 @@ namespace SSD_Components
 
 		set<uint64_t>* prefetched_lba;
 		map<uint64_t, uint64_t>* in_progress_prefetch_lba;
-		uint64_t prefetch_queue_size{ 128 };
+		uint64_t prefetch_queue_size{ 256 };
 
 		//tagged prefetcher
 		uint64_t previous_unused_lba{0};
@@ -81,7 +81,7 @@ namespace SSD_Components
 		set<uint64_t> unique_lba;
 
 
-		uint64_t flash_back_end_queue_size{ 128 };
+		uint64_t flash_back_end_queue_size{ 256 };
 		uint64_t flash_back_end_access_count{ 0 };
 
 
@@ -231,31 +231,31 @@ namespace SSD_Components
 		void print_prefetch_info();
 
 
-		void Handle_CXL_false_hit(bool rw, uint64_t lba) {
+		//void Handle_CXL_false_hit(bool rw, uint64_t lba) {
 
-			Submission_Queue_Entry* sqe = new Submission_Queue_Entry;
-			sqe->Command_Identifier = 0;
-			sqe->Opcode = (rw) ? NVME_READ_OPCODE : NVME_WRITE_OPCODE;
-			sqe->Command_specific[0] = (uint32_t)lba*4096; //cxl_man->process_requests will do a translation
-			sqe->Command_specific[1] = (uint32_t)(lba*4096>>32); 
-			sqe->Command_specific[2] = ((uint32_t)((uint16_t)8)) & (uint32_t)(0x0000ffff); // magic number
-			sqe->PRP_entry_1 = (DATA_MEMORY_REGION);//Dummy addresses, just to emulate data read/write access
-			sqe->PRP_entry_2 = (DATA_MEMORY_REGION + 0x1000);//Dummy addresses
+		//	Submission_Queue_Entry* sqe = new Submission_Queue_Entry;
+		//	sqe->Command_Identifier = 0;
+		//	sqe->Opcode = (rw) ? NVME_READ_OPCODE : NVME_WRITE_OPCODE;
+		//	sqe->Command_specific[0] = (uint32_t)lba*4096; //cxl_man->process_requests will do a translation
+		//	sqe->Command_specific[1] = (uint32_t)(lba*4096>>32); 
+		//	sqe->Command_specific[2] = ((uint32_t)((uint16_t)8)) & (uint32_t)(0x0000ffff); // magic number
+		//	sqe->PRP_entry_1 = (DATA_MEMORY_REGION);//Dummy addresses, just to emulate data read/write access
+		//	sqe->PRP_entry_2 = (DATA_MEMORY_REGION + 0x1000);//Dummy addresses
 
-			if (!(cxl_man->process_requests(0, sqe, 0))) {
-				delete sqe;
-				return;
-			}
-			else {
+		//	if (!(cxl_man->process_requests(0, sqe, 0))) {
+		//		delete sqe;
+		//		return;
+		//	}
+		//	else {
 
-				sqe->Opcode = NVME_READ_OPCODE;
-				request_fetch_unit->Fetch_next_request(0);
-			}
+		//		sqe->Opcode = NVME_READ_OPCODE;
+		//		request_fetch_unit->Fetch_next_request(0);
+		//	}
 
-			request_fetch_unit->Process_pcie_read_message(0, sqe, sizeof(Submission_Queue_Entry));
+		//	request_fetch_unit->Process_pcie_read_message(0, sqe, sizeof(Submission_Queue_Entry));
 
-			//delete sqe; // this is disrubting the mshr
-		}
+		//	//delete sqe; // this is disrubting the mshr
+		//}
 
 	private:
 		uint16_t submission_queue_depth, completion_queue_depth;

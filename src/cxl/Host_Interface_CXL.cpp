@@ -207,13 +207,14 @@ namespace SSD_Components
 		bool cache_miss{ 1 };
 
 		Submission_Queue_Entry* sqe = (Submission_Queue_Entry*)payload;
+		sqe->Command_specific[2] = ((uint32_t)((uint16_t)cxl_config_para.num_sec)) & (uint32_t)(0x0000ffff);
 		LHA_type memory_addr{ (((LHA_type)sqe->Command_specific[1]) << 31 | (LHA_type)sqe->Command_specific[0]) };
 		
 		//No translate
 		//LHA_type lba{ memory_addr };
 		//translate 
 		// 4096 is the page size
-		LHA_type lba{ memory_addr / 4096 }; //stream alignment will be done when dealing with transaction segmentation
+		LHA_type lba{ memory_addr / (sqe->Command_specific[2]*512) }; //stream alignment will be done when dealing with transaction segmentation
 		LHA_type lsa{ lba * sqe->Command_specific[2]}; // lsa to be used for request
 
 		if (lsa < ((Input_Stream_CXL*)hi->input_stream_manager->input_streams[0])->Start_logical_sector_address || lsa >((Input_Stream_CXL*)hi->input_stream_manager->input_streams[0])->End_logical_sector_address) {
@@ -306,7 +307,7 @@ namespace SSD_Components
 				//
 				//	cout << "Check" << endl;
 				//}
-				if (!is_pref_req) {
+				if (!is_pref_req && !in_progress_prefetch_lba->count(lba)) {
 					if (prefetch_pollution_tracker.count(lba)) {
 						prefetch_pollution_count++;
 						prefetch_pollution_tracker.erase(prefetch_pollution_tracker.find(lba));
@@ -490,7 +491,7 @@ namespace SSD_Components
 
 					sqe->Command_specific[0] = (uint32_t)lsa;
 					sqe->Command_specific[1] = (uint32_t)(lsa >> 32);
-					sqe->Command_specific[2] = ((uint32_t)((uint16_t)8)) & (uint32_t)(0x0000ffff);
+					sqe->Command_specific[2] = ((uint32_t)((uint16_t)cxl_config_para.num_sec)) & (uint32_t)(0x0000ffff);
 
 					sqe->PRP_entry_1 = (DATA_MEMORY_REGION);//Dummy addresses, just to emulate data read/write access
 					sqe->PRP_entry_2 = (DATA_MEMORY_REGION + 0x1000);//Dummy addresses
@@ -1033,7 +1034,7 @@ namespace SSD_Components
 
 					sqe->Command_specific[0] = (uint32_t)lsa;
 					sqe->Command_specific[1] = (uint32_t)(lsa >> 32);
-					sqe->Command_specific[2] = ((uint32_t)((uint16_t)8)) & (uint32_t)(0x0000ffff);
+					sqe->Command_specific[2] = ((uint32_t)((uint16_t)cxl_man->cxl_config_para.num_sec)) & (uint32_t)(0x0000ffff);
 
 					sqe->PRP_entry_1 = (DATA_MEMORY_REGION);//Dummy addresses, just to emulate data read/write access
 					sqe->PRP_entry_2 = (DATA_MEMORY_REGION + 0x1000);//Dummy addresses
@@ -1275,7 +1276,7 @@ namespace SSD_Components
 
 				sqe->Command_specific[0] = (uint32_t)lsa;
 				sqe->Command_specific[1] = (uint32_t)(lsa >> 32);
-				sqe->Command_specific[2] = ((uint32_t)((uint16_t)8)) & (uint32_t)(0x0000ffff);
+				sqe->Command_specific[2] = ((uint32_t)((uint16_t)cxl_man->cxl_config_para.num_sec)) & (uint32_t)(0x0000ffff);
 
 				sqe->PRP_entry_1 = (DATA_MEMORY_REGION);//Dummy addresses, just to emulate data read/write access
 				sqe->PRP_entry_2 = (DATA_MEMORY_REGION + 0x1000);//Dummy addresses
@@ -1333,9 +1334,9 @@ namespace SSD_Components
 			sqe->Opcode = NVME_READ_OPCODE;
 			//sqe->Command_specific[0] = (uint32_t)lba * 4096; //cxl_man->process_requests will do a translation
 			//sqe->Command_specific[1] = (uint32_t)(lba * 4096 >> 32);
-			sqe->Command_specific[0] = (uint32_t)lba * 8; //cxl_man->process_requests will do a translation
-			sqe->Command_specific[1] = (uint32_t)(lba * 8 >> 32);
-			sqe->Command_specific[2] = ((uint32_t)((uint16_t)8)) & (uint32_t)(0x0000ffff); // magic number
+			sqe->Command_specific[0] = (uint32_t)lba * cxl_man->cxl_config_para.num_sec; //cxl_man->process_requests will do a translation
+			sqe->Command_specific[1] = (uint32_t)(lba * cxl_man->cxl_config_para.num_sec >> 32);
+			sqe->Command_specific[2] = ((uint32_t)((uint16_t)cxl_man->cxl_config_para.num_sec)) & (uint32_t)(0x0000ffff); // magic number
 			sqe->PRP_entry_1 = (DATA_MEMORY_REGION);//Dummy addresses, just to emulate data read/write access
 			sqe->PRP_entry_2 = (DATA_MEMORY_REGION + 0x1000);//Dummy addresses
 

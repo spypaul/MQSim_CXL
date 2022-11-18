@@ -782,10 +782,13 @@ namespace SSD_Components {
 					taggedAddr.erase(taggedAddr.find(evict_lba_base_addr));
 				}
 			}
-			
-			if (prefetched_lba->count(lba)) {
-				prefetch_pollution_tracker.insert(evict_lba_base_addr);
+			else {
+				if (prefetched_lba->count(lba)) {
+					prefetch_pollution_tracker.insert(evict_lba_base_addr);
+				}
 			}
+			
+
 
 			temp_freeCL->push_back(cl);
 
