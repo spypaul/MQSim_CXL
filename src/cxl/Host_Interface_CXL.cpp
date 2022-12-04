@@ -9,9 +9,9 @@
 //ofstream ofFlush{ "Flush_initiation_time.txt" };
 //ofstream ofrequest{ "Request_recieved.txt" };
 
-ofstream oflatep{ "late_prefetch_lateness.txt" };
+ofstream oflatep{ "./Results/late_prefetch_lateness.txt" };
 ofstream oflat_no_cache{ "latency_results_no_cache.txt" };
-ofstream ofprefetch_chance{ "prefetch_potential.txt" };
+ofstream ofprefetch_chance{ "./Results/prefetch_potential.txt" };
 
 class prefetch_info_node {
 public:
@@ -228,6 +228,7 @@ namespace SSD_Components
 		sqe->Command_specific[1] = (uint32_t)(lsa >> 32);
 
 		if (!cxl_config_para.has_cache) {
+			ofprefetch_chance << flash_back_end_queue_size - flash_back_end_access_count - 1 << " cm" << endl;
 			return 1;
 		}
 
@@ -1155,11 +1156,14 @@ namespace SSD_Components
 	}
 	void Host_Interface_CXL::print_prefetch_info() {
 		std::cout << "Flush count: " << cxl_man->flush_count << endl;
+		of_overall<< "Flush count: " << cxl_man->flush_count << endl;
 		std::cout << "Eviction count: " << cxl_man->dram->eviction_count << endl;
+		of_overall << "Eviction count: " << cxl_man->dram->eviction_count << endl;
+
 		std::cout << "Request ends at timestamp: " << static_cast<float>(Simulator->Time()) / 1000000000 << " s" << endl;
-
+		of_overall << "Request ends at timestamp: " << static_cast<float>(Simulator->Time()) / 1000000000 << " s" << endl;
 		std::cout << "Repeated flash access count: " << cxl_man->repeated_flash_access_count << endl;
-
+		of_overall << "Repeated flash access count: " << cxl_man->repeated_flash_access_count << endl;
 		if (PREFETCH_INFO_MAP.size() == 0) return;
 
 		uint64_t accurate_prefetch{ 0 };
@@ -1175,10 +1179,14 @@ namespace SSD_Components
 		}
 		
 		std::cout << "Prefetch Coverage: " << static_cast<float>(cxl_man->prefetch_hit_count) / static_cast<float>(cxl_man->cache_hit_count) << endl;
+		of_overall << "Prefetch Coverage: " << static_cast<float>(cxl_man->prefetch_hit_count) / static_cast<float>(cxl_man->cache_hit_count) << endl;
 		std::cout << "Prefetch Accuracy: " << static_cast<float>(accurate_prefetch) / static_cast<float>(PREFETCH_INFO_MAP.size()) << endl;
+		of_overall << "Prefetch Accuracy: " << static_cast<float>(accurate_prefetch) / static_cast<float>(PREFETCH_INFO_MAP.size()) << endl;
 		std::cout << "Prefetch Lateness: " << static_cast<float>(late_prefetch) / static_cast<float>(accurate_prefetch) << endl;
+		of_overall << "Prefetch Lateness: " << static_cast<float>(late_prefetch) / static_cast<float>(accurate_prefetch) << endl;
 		std::cout << "Prefetch Pollution: " << static_cast<float>(cxl_man->prefetch_pollution_count) / static_cast<float>(cxl_man->cache_miss_count)<< endl;
-	
+		of_overall << "Prefetch Pollution: " << static_cast<float>(cxl_man->prefetch_pollution_count) / static_cast<float>(cxl_man->cache_miss_count) << endl;
+
 	}
 
 	void Host_Interface_CXL::Update_CXL_DRAM_state_when_miss_data_ready(bool rw, uint64_t lba, bool serviced_before, bool& completed_removed_from_mshr) {
@@ -1334,8 +1342,8 @@ namespace SSD_Components
 			sqe->Opcode = NVME_READ_OPCODE;
 			//sqe->Command_specific[0] = (uint32_t)lba * 4096; //cxl_man->process_requests will do a translation
 			//sqe->Command_specific[1] = (uint32_t)(lba * 4096 >> 32);
-			sqe->Command_specific[0] = (uint32_t)lba * cxl_man->cxl_config_para.num_sec; //cxl_man->process_requests will do a translation
-			sqe->Command_specific[1] = (uint32_t)(lba * cxl_man->cxl_config_para.num_sec >> 32);
+			sqe->Command_specific[0] = (uint32_t)(lba * cxl_man->cxl_config_para.num_sec); //cxl_man->process_requests will do a translation
+			sqe->Command_specific[1] = (uint32_t)((lba * cxl_man->cxl_config_para.num_sec) >> 32);
 			sqe->Command_specific[2] = ((uint32_t)((uint16_t)cxl_man->cxl_config_para.num_sec)) & (uint32_t)(0x0000ffff); // magic number
 			sqe->PRP_entry_1 = (DATA_MEMORY_REGION);//Dummy addresses, just to emulate data read/write access
 			sqe->PRP_entry_2 = (DATA_MEMORY_REGION + 0x1000);//Dummy addresses

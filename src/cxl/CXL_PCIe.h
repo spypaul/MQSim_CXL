@@ -57,7 +57,7 @@ namespace Host_Components {
 		uint64_t skipped_trace_reading{ 0 };
 		
 	private:
-		PCIe_Switch* pcie_switch;
+		PCIe_Switch* pcie_switch{NULL};
 		uint64_t returned_request_count{ 0 };
 
 		uint64_t device_request_queue_max_size{ 32 };

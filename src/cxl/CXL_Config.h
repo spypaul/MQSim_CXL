@@ -48,6 +48,7 @@ public:
 		prefetch_portion_size = 0;
 		ssd_page_size = 4096;
 		cpolicy = cachepolicy::random;
+		pref_cpolicy = cachepolicy::random;
 		lrfu_p = 2;
 		lrfu_lambda = 1;
 		set_associativity = 4;

@@ -85,7 +85,7 @@ namespace SSD_Components {
 		vector<vector<uint64_t>*>* all_cachedlba{ NULL };
 
 		vector<list<uint64_t>*>* all_fifocachedlba{ NULL };
-		vector<lfuHeap*>* all_lfucachedlba;
+		vector<lfuHeap*>* all_lfucachedlba{NULL};
 
 		lrfuHeap* lrfucachedlba{NULL}; //for lrfu
 		vector<lrfuHeap*>* all_lrfucachedlba{ NULL };

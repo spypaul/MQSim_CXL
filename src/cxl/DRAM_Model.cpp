@@ -6,7 +6,7 @@
 //ofstream ofi2{ "Flash_read_time.txt" };
 //ofstream ofi3{ "Serviced_Request_Amount.txt" };
 
-ofstream oflate{ "latency_result.txt" };
+ofstream oflate{ "./Results/latency_result.txt" };
 //ofstream offree{ "DRAM_FREE_TIME.txt" };
 
 uint64_t totalcount{ 0 };
@@ -198,11 +198,16 @@ namespace SSD_Components {
 				std::cout << "=";
 			}
 			std::cout << "] " << 100 << "%    Cache Hit Count: " << cache_hit_count << "   Prefetch amount: " << prefetch_amount << std::endl;
+			of_overall<< "Cache Hit Count: " << cache_hit_count << "   Prefetch amount: " << prefetch_amount << std::endl;
 			std::cout << "Hit under miss count: " << cache_hum_count << endl;
+			of_overall << "Hit under miss count: " << cache_hum_count << endl;
 			std::cout << "Flash Read Count: " << flash_read_count << endl;
+			of_overall << "Flash Read Count: " << flash_read_count << endl;
 			if (prefetch_amount > 0) {
 				std::cout << "Prefetch Flash Read Count: " << prefetch_amount << endl;
+				of_overall << "Prefetch Flash Read Count: " << prefetch_amount << endl;
 				std::cout << "Total Flash Read Count: " << flash_read_count + prefetch_amount << endl;
+				of_overall << "Total Flash Read Count: " << flash_read_count + prefetch_amount << endl;
 			}
 			//std::cout << "Flush count: " << hi->Get_flush_count() << endl;
 			//std::cout << "Request ends at timestamp: " << static_cast<float>(Simulator->Time()) / 1000000000 << " s" << endl;

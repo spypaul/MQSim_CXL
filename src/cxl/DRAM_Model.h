@@ -10,6 +10,7 @@
 #include "../ssd/Host_Interface_Base.h"
 #include "OutputLog.h"
 
+
 namespace SSD_Components {
 
 	enum class CXL_DRAM_EVENTS {
