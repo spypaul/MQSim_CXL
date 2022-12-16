@@ -12,6 +12,7 @@
 ofstream oflatep{ "./Results/late_prefetch_lateness.txt" };
 ofstream oflat_no_cache{ "latency_results_no_cache.txt" };
 ofstream ofprefetch_chance{ "./Results/prefetch_potential.txt" };
+ofstream ofrepeated_access{ "repeated_access.txt" };
 
 class prefetch_info_node {
 public:
@@ -279,11 +280,14 @@ namespace SSD_Components
 				if (no_mshr_requests_record.count(lba)) {
 					no_mshr_requests_record[lba].push_back(n);
 					repeated_flash_access_count++;
+					ofrepeated_access << lba << " " << 1 << endl;
 				}
 				else {
 					list<no_mshr_record_node> l;
 					l.push_back(n);
 					no_mshr_requests_record.emplace(lba, l);
+					ofrepeated_access << lba << " " << 0 << endl;
+
 				}
 
 				cache_miss = 1;

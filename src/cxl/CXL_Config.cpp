@@ -64,6 +64,12 @@ void cxl_config::readConfigFile() {
 			else if (policy == "LRFU") {
 				cpolicy = cachepolicy::lrfu;
 			}
+			else if (policy == "LRU") {
+				cpolicy = cachepolicy::lru;
+			}
+			else if (policy == "CFLRU") {
+				cpolicy = cachepolicy::cflru;
+			}
 			else if (policy == "CPU") {
 				cpolicy = cachepolicy::cpu;
 			}

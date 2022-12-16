@@ -1,11 +1,11 @@
 Has_cache 1
-DRAM_size 8589934592
+DRAM_size 1073741824
 Mix_mode 1
 Cache_portion_percentage 100
-Has_mshr 0
-Cache_placement 2097152
-Cache_policy FIFO
-Prefetch_cache_policy FIFO
+Has_mshr 1
+Cache_placement 262144
+Cache_policy CFLRU
+Prefetch_cache_policy LRU
 LRFU_p_lambda 2 1
-Prefetcher No
+Prefetcher Tagged
 Total_number_of_requests 20000000
