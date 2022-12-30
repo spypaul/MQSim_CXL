@@ -41,10 +41,10 @@
 			 <Preferred_suspend_erase_time_for_read>100000</Preferred_suspend_erase_time_for_read>
 			 <Preferred_suspend_erase_time_for_write>10000</Preferred_suspend_erase_time_for_write>
 			 <Preferred_suspend_write_time_for_read>20000</Preferred_suspend_write_time_for_read>
-			 <Flash_Channel_Count>32</Flash_Channel_Count>
+			 <Flash_Channel_Count>8</Flash_Channel_Count>
 			 <Flash_Channel_Width>1</Flash_Channel_Width>
 			 <Channel_Transfer_Rate>1200</Channel_Transfer_Rate>
-			 <Chip_No_Per_Channel>32</Chip_No_Per_Channel>
+			 <Chip_No_Per_Channel>8</Chip_No_Per_Channel>
 			 <Flash_Comm_Protocol>NVDDR2</Flash_Comm_Protocol>
 		<Flash_Parameter_Set>
 				 <Flash_Technology>SLC</Flash_Technology>
@@ -61,7 +61,7 @@
 				 <Suspend_Program_Time>20000</Suspend_Program_Time>
 				 <Die_No_Per_Chip>1</Die_No_Per_Chip>
 				 <Plane_No_Per_Die>4</Plane_No_Per_Die>
-				 <Block_No_Per_Plane>32</Block_No_Per_Plane>
+				 <Block_No_Per_Plane>512</Block_No_Per_Plane>
 				 <Page_No_Per_Block>512</Page_No_Per_Block> 
 				 <Page_Capacity>16384</Page_Capacity>
 				 <Page_Metadat_Capacity>448</Page_Metadat_Capacity>

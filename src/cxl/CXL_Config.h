@@ -21,7 +21,8 @@ typedef enum class prefetchertype {
 	bo,
 	stms,
 	leap,
-	readahead
+	readahead,
+	feedback_direct
 }prefetchertype;
 
 

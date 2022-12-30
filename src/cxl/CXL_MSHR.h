@@ -47,7 +47,7 @@ public:
 private:
 	map<uint64_t, list<mshr_request*>*>* mshr;
 
-	uint64_t max_row_size{ 16384 };
+	uint64_t max_row_size{ 1024 };
 	uint64_t max_col_size{ 65 };
 
 	uint64_t row_count{ 0 };

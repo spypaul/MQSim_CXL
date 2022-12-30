@@ -2,7 +2,7 @@
 #include <iostream>
 #include <fstream>
 
-ofstream of1{ "Read_suspended_cause_write.txt" };
+//ofstream of1{ "Read_suspended_cause_write.txt" };
 //ofstream of2{ "Flash_read_channel.txt" };
 //ofstream of3{ "Flash_write_channel.txt" };
 
@@ -248,7 +248,7 @@ namespace SSD_Components
 			}
 		}
 
-		of1 << READ_COUNT << " " << READ_SUS_COUNT << endl;
+		//of1 << READ_COUNT << " " << READ_SUS_COUNT << endl;
 	}
 	
 	bool TSU_OutOfOrder::service_read_transaction(NVM::FlashMemory::Flash_Chip* chip)

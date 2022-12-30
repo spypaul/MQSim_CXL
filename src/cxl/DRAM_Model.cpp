@@ -76,13 +76,13 @@ namespace SSD_Components {
 			//hi->Update_CXL_DRAM_state(current_access->rw, current_access->lba, falsehit);
 			cache_hit_count++;
 			if (!falsehit) {
-				outputf.of << "Finished_time " << Simulator->Time() << " Starting_time " << current_access->initiate_time << " Cache_hit_at " << current_access->lba << std::endl;
+				//outputf.of << "Finished_time " << Simulator->Time() << " Starting_time " << current_access->initiate_time << " Cache_hit_at " << current_access->lba << std::endl;
 				oflate << Simulator->Time() - current_access->initiate_time << endl;
 				//hi->Notify_CXL_Host_request_complete();
 				totalcount++;
 			}
 			else {
-				outputf.of << "Finished_time " << Simulator->Time() << " Starting_time " << current_access->initiate_time << " False_hit_at " << current_access->lba << std::endl;
+				//outputf.of << "Finished_time " << Simulator->Time() << " Starting_time " << current_access->initiate_time << " False_hit_at " << current_access->lba << std::endl;
 				//hi->Handle_CXL_false_hit(current_access->rw, current_access->lba);
 			}
 			delete current_access;
@@ -92,13 +92,13 @@ namespace SSD_Components {
 			//hi->Update_CXL_DRAM_state(current_access->rw, current_access->lba, falsehit);
 			cache_hum_count++;
 			if (!falsehit) {
-				outputf.of << "Finished_time " << Simulator->Time() << " Starting_time " << current_access->initiate_time << " Cache_hit_under_miss_at " << current_access->lba << std::endl;
+				//outputf.of << "Finished_time " << Simulator->Time() << " Starting_time " << current_access->initiate_time << " Cache_hit_under_miss_at " << current_access->lba << std::endl;
 				oflate << Simulator->Time() - current_access->initiate_time << endl;
 				//hi->Notify_CXL_Host_request_complete();
 				totalcount++;
 			}
 			else {
-				outputf.of << "Finished_time " << Simulator->Time() << " Starting_time " << current_access->initiate_time << " False_hit_at " << current_access->lba << std::endl;
+				//outputf.of << "Finished_time " << Simulator->Time() << " Starting_time " << current_access->initiate_time << " False_hit_at " << current_access->lba << std::endl;
 				//hi->Handle_CXL_false_hit(current_access->rw, current_access->lba);
 			}
 			delete current_access;
@@ -109,7 +109,7 @@ namespace SSD_Components {
 			//cache_miss_count++;
 			//ofi2 << current_access->initiate_time << " " << Simulator->Time() << endl;
 			//hi->Update_CXL_DRAM_state_when_miss_data_ready(current_access->rw, current_access->lba);
-			outputf.of << "Finished_time " << Simulator->Time()  << " Starting_time " << current_access->initiate_time << " Cache_miss_at " << current_access->lba << std::endl;
+			//outputf.of << "Finished_time " << Simulator->Time()  << " Starting_time " << current_access->initiate_time << " Cache_miss_at " << current_access->lba << std::endl;
 			oflate << Simulator->Time() - current_access->initiate_time << endl;
 			//hi->Notify_CXL_Host_request_complete();
 			totalcount++;
@@ -117,7 +117,7 @@ namespace SSD_Components {
 			break;
 		case CXL_DRAM_EVENTS::PREFETCH_READY:
 			//flash_read_count++;
-			outputf.of << "Finished_time " << Simulator->Time() << " Starting_time " << current_access->initiate_time << " Prefetch_ready_at " << current_access->lba << std::endl;
+			//outputf.of << "Finished_time " << Simulator->Time() << " Starting_time " << current_access->initiate_time << " Prefetch_ready_at " << current_access->lba << std::endl;
 			prefetch_amount++;
 			delete current_access;
 			break;
@@ -128,7 +128,7 @@ namespace SSD_Components {
 			prefetch_amount++;
 			//ofi2 << current_access->initiate_time << " " << Simulator->Time() << endl;
 			//hi->Update_CXL_DRAM_state_when_miss_data_ready(current_access->rw, current_access->lba);
-			outputf.of << "Finished_time " << Simulator->Time() << " Starting_time " << current_access->initiate_time << " Slow_prefetch_at " << current_access->lba << std::endl;
+			//outputf.of << "Finished_time " << Simulator->Time() << " Starting_time " << current_access->initiate_time << " Slow_prefetch_at " << current_access->lba << std::endl;
 			oflate << Simulator->Time() - current_access->initiate_time << endl;
 			//hi->Notify_CXL_Host_request_complete();
 			totalcount++;

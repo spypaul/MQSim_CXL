@@ -21,7 +21,8 @@ public:
 };
 
 map<uint64_t, prefetch_info_node> PREFETCH_INFO_MAP;
-
+set<uint64_t> PREFETCH_ACCURACY_INFO;
+set<uint64_t> PREFETCH_LATE_INFO;
 namespace SSD_Components
 {
 
@@ -49,7 +50,50 @@ namespace SSD_Components
 			delete prefetched_lba;
 		}
 	}
+	int CXL_Manager::prefetch_feedback() {
+		double paccuracy{ static_cast<double>(PREFETCH_ACCURACY_INFO.size()) / static_cast<double>(PREFETCH_INFO_MAP.size()) };
+		double plateness{ static_cast<double>(PREFETCH_LATE_INFO.size()) / static_cast<double>(PREFETCH_INFO_MAP.size()) };
+		double pollution{ static_cast<double>(prefetch_pollution_count) / static_cast<double>(cache_miss_count) };
 
+		if (paccuracy >= accuracy_high && plateness >= late_thresh && pollution < pollution_thresh) {
+			return 1;
+		}
+		else if (paccuracy >= accuracy_high && plateness >= late_thresh && pollution >= pollution_thresh) {
+			return 1;
+		}
+		else if (paccuracy >= accuracy_high && plateness < late_thresh && pollution < pollution_thresh) {
+			return 0;
+		}
+		else if (paccuracy >= accuracy_high && plateness < late_thresh && pollution >= pollution_thresh) {
+			return -1;
+		}
+		else if (paccuracy < accuracy_high && paccuracy >= accuracy_low && plateness >= late_thresh && pollution < pollution_thresh) {
+			return 1;
+		}
+		else if (paccuracy < accuracy_high && paccuracy >= accuracy_low && plateness >= late_thresh && pollution >= pollution_thresh) {
+			return -1;
+		}
+		else if (paccuracy < accuracy_high && paccuracy >= accuracy_low && plateness < late_thresh && pollution < pollution_thresh) {
+			return 0;
+		}
+		else if (paccuracy < accuracy_high && paccuracy >= accuracy_low && plateness < late_thresh && pollution >= pollution_thresh) {
+			return -1;
+		}
+		else if (paccuracy < accuracy_low && plateness >= late_thresh && pollution < pollution_thresh) {
+			return -1;
+		}
+		else if (paccuracy < accuracy_low && plateness >= late_thresh && pollution >= pollution_thresh) {
+			return -1;
+		}
+		else if (paccuracy < accuracy_low && plateness < late_thresh && pollution < pollution_thresh) {
+			return 0;
+		}
+		else if (paccuracy < accuracy_low && plateness < late_thresh && pollution >= pollution_thresh) {
+			return -1;
+		}
+
+		return 0;
+	}
 	void CXL_Manager::prefetch_decision_maker(uint64_t lba, bool isMiss, uint64_t prefetch_hit_count) {
 		list<uint64_t> prefetchlba;
 
@@ -65,7 +109,20 @@ namespace SSD_Components
 		if (cxl_config_para.prefetch_policy == prefetchertype::no) {
 			return;
 		}
-		else if (cxl_config_para.prefetch_policy == prefetchertype::tagged) {
+		else if (cxl_config_para.prefetch_policy == prefetchertype::tagged || cxl_config_para.prefetch_policy == prefetchertype::feedback_direct) {
+			if (cxl_config_para.prefetch_policy == prefetchertype::feedback_direct) {
+			
+				int action{ prefetch_feedback() };
+
+				prefetch_level += action;
+				if (prefetch_level > 4) prefetch_level = 4;
+				if (prefetch_level < 0) prefetch_level = 0;
+				vector<uint64_t> temp{ prefetch_aggre[prefetch_level] };
+				prefetchK = temp[0];
+				prefetch_timing_offset = temp[1];
+
+			}
+			
 			if (!isMiss && tagAssertedLBA.count(lba) > 0) {
 				return;
 			}
@@ -253,6 +310,7 @@ namespace SSD_Components
 			if (!is_pref_req && prefetched_lba->count(lba)) {
 				prefetch_hit_count++;
 				PREFETCH_INFO_MAP[lba].hit_count++;
+				PREFETCH_ACCURACY_INFO.emplace(lba);
 				prefetch_decision_maker(lba, 0, prefetch_hit_count);
 
 				if (!is_pref_req) {
@@ -454,7 +512,7 @@ namespace SSD_Components
 
 			//flush_count++;
 			//ofFlush << request->STAT_InitiationTime << " " << Simulator->Time() << endl;
-			outputf.of << "Finshed_time " << Simulator->Time()  << " Starting_time " << request->STAT_InitiationTime << " Flush_done_at " << lba <<  std::endl;
+			//outputf.of << "Finshed_time " << Simulator->Time()  << " Starting_time " << request->STAT_InitiationTime << " Flush_done_at " << lba <<  std::endl;
 			return;
 		}
 
@@ -1238,10 +1296,14 @@ namespace SSD_Components
 						n.late = 1;
 						n.hit_count++;
 						PREFETCH_INFO_MAP.emplace(lba, n);
+						PREFETCH_ACCURACY_INFO.emplace(lba);
+						PREFETCH_LATE_INFO.emplace(lba);
 					}
 					else {
 						PREFETCH_INFO_MAP[lba].late = 1;
 						PREFETCH_INFO_MAP[lba].hit_count++;
+						PREFETCH_ACCURACY_INFO.emplace(lba);
+						PREFETCH_LATE_INFO.emplace(lba);
 					}
 				}
 			}
@@ -1314,6 +1376,7 @@ namespace SSD_Components
 
 			if (cxl_man->prefetched_lba->count(lba)) {
 				PREFETCH_INFO_MAP[lba].hit_count++;
+				PREFETCH_ACCURACY_INFO.emplace(lba);
 			}
 		}
 
@@ -1327,6 +1390,7 @@ namespace SSD_Components
 
 			if (cxl_man->prefetched_lba->count(lba)) {
 				PREFETCH_INFO_MAP[lba].hit_count++;
+				PREFETCH_ACCURACY_INFO.emplace(lba);
 			}
 		}
 		completed_removed_from_mshr = completely_removed;

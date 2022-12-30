@@ -51,17 +51,21 @@ namespace SSD_Components
 		//prefetchers
 
 		void prefetch_decision_maker(uint64_t lba, bool isMiss, uint64_t prefetch_hit_count);
+		int prefetch_feedback();
+		double accuracy_high{ 0.75 }, accuracy_low{ 0.4 }, late_thresh{ 0.01 }, pollution_thresh{ 0.25 };
 
 		set<uint64_t>* prefetched_lba;
 		map<uint64_t, uint64_t>* in_progress_prefetch_lba;
-		uint64_t prefetch_queue_size{ 16384 };
+		uint64_t prefetch_queue_size{ 1024 };
 
 		//tagged prefetcher
 		uint64_t previous_unused_lba{0};
 
 		set<uint64_t> tagAssertedLBA;
 		uint16_t prefetchK{ 4 };
-		uint16_t prefetch_timing_offset{64};
+		uint16_t prefetch_timing_offset{16};
+		int prefetch_level{ 4 };
+		vector<vector<uint64_t>> prefetch_aggre{ {1,4}, {1,8},{2,16},{4,32},{4,64} };
 
 		//Best-offset prefetcher
 		boClass boPrefetcher;
@@ -81,7 +85,7 @@ namespace SSD_Components
 		set<uint64_t> unique_lba;
 
 
-		uint64_t flash_back_end_queue_size{ 16384 };
+		uint64_t flash_back_end_queue_size{ 1024 };
 		uint64_t flash_back_end_access_count{ 0 };
 
 

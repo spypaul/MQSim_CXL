@@ -803,7 +803,7 @@ namespace SSD_Components {
 			}
 			cl = (temp_dram_mapping->find(evict_lba_base_addr))->second;
 			temp_dram_mapping->erase(temp_dram_mapping->find(evict_lba_base_addr));
-			outputf.of << "Finished_time " << simtime << " Starting_time " << 0 << " Eviction/Flush_at " << evict_lba_base_addr << std::endl;
+			//outputf.of << "Finished_time " << simtime << " Starting_time " << 0 << " Eviction/Flush_at " << evict_lba_base_addr << std::endl;
 			if (prefetched_lba->count(evict_lba_base_addr)) {
 				prefetched_lba->erase(prefetched_lba->find(evict_lba_base_addr));
 				if (taggedAddr.count(evict_lba_base_addr)) {

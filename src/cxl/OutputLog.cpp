@@ -1,6 +1,6 @@
 #include "OutputLog.h"
 
-outlog outputf{ "output.txt" };
+//outlog outputf{ "output.txt" };
 //outlog evictf{ "evictionlog.txt" };
 ofstream of_overall{ "./Results/overall.txt" };
 

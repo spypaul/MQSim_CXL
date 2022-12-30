@@ -1,8 +1,8 @@
 #include "CFLRU.h"
 
 CFLRU::CFLRU(uint64_t cache_size) {
-	if (cache_size >= 16384) {
-		window = 16384;
+	if (cache_size >= 4096) {
+		window = 4096;
 	}
 	else {
 		window = cache_size / 2;

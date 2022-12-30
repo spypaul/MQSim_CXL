@@ -123,6 +123,11 @@ void cxl_config::readConfigFile() {
 				prefetch_policy = prefetchertype::readahead;
 
 			}
+			else if (ptype == "Feedback_direct") {
+				prefetch_policy = prefetchertype::feedback_direct;
+
+			}
+
 		}
 		else if (info == "Total_number_of_requests") {
 			uint64_t value{ 0 };

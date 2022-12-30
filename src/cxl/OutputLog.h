@@ -10,6 +10,6 @@ public:
 	~outlog();
 };
 
-extern outlog outputf;
+//extern outlog outputf;
 extern outlog evictf;
 extern ofstream of_overall;

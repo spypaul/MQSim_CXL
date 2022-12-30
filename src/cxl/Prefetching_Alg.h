@@ -11,12 +11,12 @@ using namespace std;
 class boClass {
 private:
 	list<uint64_t> rrtable;
-	uint64_t maxtablesize{ 1280 };
+	uint64_t maxtablesize{ 1024 };
 	uint64_t maxoffset{ 128 };
 	vector <uint64_t> offsetscore;
-	uint64_t badscore{ 4 };
+	uint64_t badscore{ 3 };
 	uint64_t maxround{ 8 };
-	uint64_t boprefetchK{ 20 };
+	uint64_t boprefetchK{ 16 };
 public:
 	bool prefetch_on{ 0 };
 	uint64_t offset{ 0 };
@@ -45,7 +45,7 @@ private:
 	uint64_t maxbuffersize{ 39 };
 	//uint64_t windowsize{ maxbuffersize };
 	uint64_t splitvalue{ 8 };
-	const uint64_t maxprefetchamount{ 32 };
+	const uint64_t maxprefetchamount{ 16 };
 	uint64_t lastprefetchamount{ 0 };
 	uint64_t lastprefetchhit{ 0 };
 

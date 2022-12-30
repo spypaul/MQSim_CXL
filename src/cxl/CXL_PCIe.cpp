@@ -3,6 +3,8 @@
 
 ofstream ofsus_mshr { "./Results/device_stall_time_mshr.txt" };
 ofstream ofsus_flash{ "./Results/device_stall_time_flash.txt" };
+//ofstream ofsus_dram{ "./Results/device_stall_time_dram.txt" };
+
 //ofstream ofsus_dram{ "device_suspend_time_dram.txt" };
 
 uint64_t SUS_START_TIME_MSHR{ 0 }, SUS_START_TIME_FLASH{ 0 }, SUS_START_TIME_DRAM{ 0 };
