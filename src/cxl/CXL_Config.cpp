@@ -20,6 +20,11 @@ void cxl_config::readConfigFile() {
 			configfile >> dec >> value;
 			dram_size = value;
 		}
+		else if (info == "DRAM_mode") {
+			uint64_t value;
+			configfile >> dec >> value;
+			dram_mode = (bool)value;
+		}
 		else if (info == "Has_cache") {
 			uint64_t value;
 			configfile >> dec >> value;
@@ -136,6 +141,7 @@ void cxl_config::readConfigFile() {
 
 			total_number_of_requets = value;
 		}
+
 	}
 	configfile.close();
 }

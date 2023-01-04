@@ -1,9 +1,10 @@
-Has_cache 1
-DRAM_size 536870912
+DRAM_mode 0
+Has_cache 0
+DRAM_size 134217728
 Mix_mode 1
 Cache_portion_percentage 100
-Has_mshr 1
+Has_mshr 0
 Cache_placement 16
 Cache_policy CFLRU
-Prefetcher Tagged
-Total_number_of_requests 102764128
+Prefetcher Best-offset
+Total_number_of_requests 100084097

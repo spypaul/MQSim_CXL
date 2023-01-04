@@ -292,7 +292,7 @@ namespace SSD_Components
 
 
 
-		if (dram->isCacheHit(lba)) {// && !dram->is_next_evict_candidate(lba)
+		if (cxl_config_para.dram_mode || dram->isCacheHit(lba)) {// && !dram->is_next_evict_candidate(lba)
 
 			cache_miss = 0;
 			bool rw{ (sqe->Opcode == NVME_READ_OPCODE) ? true : false };
@@ -300,7 +300,7 @@ namespace SSD_Components
 			((Host_Interface_CXL*)hi)->Send_request_to_CXL_DRAM(dram_request);
 
 			bool falsehit{ 0 };
-			((Host_Interface_CXL*)hi)->Update_CXL_DRAM_state(rw, lba, falsehit);
+			if(!cxl_config_para.dram_mode)((Host_Interface_CXL*)hi)->Update_CXL_DRAM_state(rw, lba, falsehit);
 			if (falsehit) falsehitcount++;
 
 			//dram->process_cache_hit(rw, lba);
