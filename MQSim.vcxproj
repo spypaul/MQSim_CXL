@@ -19,6 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\cxl\CFLRU.cpp" />
     <ClCompile Include="src\cxl\CXL_Config.cpp" />
     <ClCompile Include="src\cxl\CXL_MSHR.cpp" />
     <ClCompile Include="src\cxl\CXL_PCIe.cpp" />
@@ -90,6 +91,7 @@
     <ClCompile Include="src\utils\XMLWriter.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\cxl\CFLRU.h" />
     <ClInclude Include="src\cxl\CXL_Config.h" />
     <ClInclude Include="src\cxl\CXL_MSHR.h" />
     <ClInclude Include="src\cxl\CXL_PCIe.h" />

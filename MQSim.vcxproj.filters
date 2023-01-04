@@ -238,6 +238,9 @@
     <ClCompile Include="src\cxl\Prefetching_Alg.cpp">
       <Filter>cxl</Filter>
     </ClCompile>
+    <ClCompile Include="src\cxl\CFLRU.cpp">
+      <Filter>cxl</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\exec\Device_Parameter_Set.h">
@@ -523,6 +526,9 @@
       <Filter>cxl</Filter>
     </ClInclude>
     <ClInclude Include="src\cxl\Prefetching_Alg.h">
+      <Filter>cxl</Filter>
+    </ClInclude>
+    <ClInclude Include="src\cxl\CFLRU.h">
       <Filter>cxl</Filter>
     </ClInclude>
   </ItemGroup>
