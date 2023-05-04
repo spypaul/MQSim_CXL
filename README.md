@@ -1,25 +1,17 @@
-# MQSim: A Simulator for Modern NVMe and SATA SSDs
-
-
-## Usage in Linux
-Run following commands:
-	
-```
-$ make
-$ ./MQSim -i <SSD Configuration File> -w <Workload Definition File>
-```
+# MQSim CXL: A Simulator for CXL-flash
 
 ## Usage in Windows
 
-1. Open the MQSim.sln solution file in MS Visual Studio 2017 or later.
+1. Open the MQSim.sln solution file in MS Visual Studio 2022 or later.
 2. Set the Solution Configuration to Release (it is set to Debug by default).
 3. Compile the solution.
-4. Run the generated executable file (e.g., MQSim.exe) either in command line mode or by clicking the MS Visual Studio run button. Please specify the paths to the files containing the 1) SSD configurations, and 2) workload definitions.
+4. Run the generated executable file (e.g., MQSim.exe) either in command line mode or by clicking the MS Visual Studio run button. To run with the run button, 
+1) Right click on the empty space in solution explorer 2) Select Properties 3) Under Configuration Properties, select Debugging 4) In Command Arguments, enter "-i ssdconfig.xml -w workload.xml" 5) Click Apply
 
-Example command line execution:
+Command line execution:
 
 ```
-$ MQSim.exe -i <SSD Configuration File> -w <Workload Definition File> 
+$ MQSim.exe -i ssdconfig.xml -w workload.xml 
 ```
 
 ## MQSim Execution Configurations 
