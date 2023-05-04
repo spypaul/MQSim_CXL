@@ -49,13 +49,13 @@
 		<Flash_Parameter_Set>
 				 <Flash_Technology>SLC</Flash_Technology>
 				 <CMD_Suspension_Support>ERASE</CMD_Suspension_Support>
-				 <Page_Read_Latency_LSB>25000</Page_Read_Latency_LSB> 
-				 <Page_Read_Latency_CSB>25000</Page_Read_Latency_CSB> 
-				 <Page_Read_Latency_MSB>25000</Page_Read_Latency_MSB>
-				 <Page_Program_Latency_LSB>200000</Page_Program_Latency_LSB> 
-				 <Page_Program_Latency_CSB>200000</Page_Program_Latency_CSB> 
-				 <Page_Program_Latency_MSB>200000</Page_Program_Latency_MSB> 
-				 <Block_Erase_Latency>1500000</Block_Erase_Latency>
+				 <Page_Read_Latency_LSB>3000</Page_Read_Latency_LSB> 
+				 <Page_Read_Latency_CSB>3000</Page_Read_Latency_CSB> 
+				 <Page_Read_Latency_MSB>3000</Page_Read_Latency_MSB>
+				 <Page_Program_Latency_LSB>100000</Page_Program_Latency_LSB> 
+				 <Page_Program_Latency_CSB>100000</Page_Program_Latency_CSB> 
+				 <Page_Program_Latency_MSB>100000</Page_Program_Latency_MSB> 
+				 <Block_Erase_Latency>1000000</Block_Erase_Latency>
 				 <Block_PE_Cycles_Limit>10000</Block_PE_Cycles_Limit>
 				 <Suspend_Erase_Time>100000</Suspend_Erase_Time>
 				 <Suspend_Program_Time>20000</Suspend_Program_Time>

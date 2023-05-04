@@ -11,8 +11,9 @@
 
 ofstream oflatep{ "./Results/late_prefetch_lateness.txt" };
 ofstream oflat_no_cache{ "latency_results_no_cache.txt" };
-ofstream ofprefetch_chance{ "./Results/prefetch_potential.txt" };
+//ofstream ofprefetch_chance{ "./Results/prefetch_potential.txt" };
 ofstream ofrepeated_access{ "repeated_access.txt" };
+ofstream of_delta{ "Prediction_delta.txt" };
 
 class prefetch_info_node {
 public:
@@ -21,6 +22,10 @@ public:
 };
 
 map<uint64_t, prefetch_info_node> PREFETCH_INFO_MAP;
+map<uint64_t, prefetch_info_node> PREFETCH_INFO_MAP_SAMPLE;
+uint64_t LAST_CACHE_MISS{ 0 }, LAST_POLLUTION{ 0 }, LAST_PREFETCH{0};
+
+
 set<uint64_t> PREFETCH_ACCURACY_INFO;
 set<uint64_t> PREFETCH_LATE_INFO;
 namespace SSD_Components
@@ -177,6 +182,7 @@ namespace SSD_Components
 					if (!dram->isCacheHit(plba) && !mshr->isInProgress(plba) && (in_progress_prefetch_lba->count(plba)==0)  &&
 						plba * 8 <= ((Input_Stream_CXL*)(((Host_Interface_CXL*)hi)->input_stream_manager->input_streams[0]))->End_logical_sector_address) {
 						prefetchlba.push_back(plba);
+						//of_delta << i << endl;
 						//prefetched_lba->insert(plba);
 					}
 				}
@@ -286,7 +292,7 @@ namespace SSD_Components
 		sqe->Command_specific[1] = (uint32_t)(lsa >> 32);
 
 		if (!cxl_config_para.has_cache) {
-			ofprefetch_chance << flash_back_end_queue_size - flash_back_end_access_count - 1 << " cm" << endl;
+			//ofprefetch_chance << flash_back_end_queue_size - flash_back_end_access_count - 1 << " cm" << endl;
 			return 1;
 		}
 
@@ -310,24 +316,25 @@ namespace SSD_Components
 			if (!is_pref_req && prefetched_lba->count(lba)) {
 				prefetch_hit_count++;
 				PREFETCH_INFO_MAP[lba].hit_count++;
+				PREFETCH_INFO_MAP_SAMPLE[lba].hit_count++;
 				PREFETCH_ACCURACY_INFO.emplace(lba);
 				prefetch_decision_maker(lba, 0, prefetch_hit_count);
 
 				if (!is_pref_req) {
-					ofprefetch_chance << flash_back_end_queue_size - flash_back_end_access_count - 1 << " ph" << endl;
+					//ofprefetch_chance << flash_back_end_queue_size - flash_back_end_access_count - 1 << " ph" << endl;
 				}
 			}
 			else {
 				//prefetch_decision_maker(previous_unused_lba, 0, prefetch_hit_count);
 				if (!is_pref_req) {
-					ofprefetch_chance << flash_back_end_queue_size - flash_back_end_access_count - 1 << " ch" << endl;
+					//ofprefetch_chance << flash_back_end_queue_size - flash_back_end_access_count - 1 << " ch" << endl;
 				}
 			}
 		}
 		else {
 
 			if (!is_pref_req) {
-				ofprefetch_chance << flash_back_end_queue_size - flash_back_end_access_count - 1 << " cm" << endl;
+				//ofprefetch_chance << flash_back_end_queue_size - flash_back_end_access_count - 1 << " cm" << endl;
 			}
 
 			if (!cxl_config_para.has_mshr) {
@@ -1239,9 +1246,27 @@ namespace SSD_Components
 				}
 			}
 		}
-		
-		std::cout << "Prefetch Coverage: " << static_cast<float>(cxl_man->prefetch_hit_count) / static_cast<float>(cxl_man->cache_hit_count) << endl;
-		of_overall << "Prefetch Coverage: " << static_cast<float>(cxl_man->prefetch_hit_count) / static_cast<float>(cxl_man->cache_hit_count) << endl;
+		//uint64_t accurate_prefetch_sample{ 0 };
+		//uint64_t late_prefetch_sample{ 0 };
+		//for (auto& i : PREFETCH_INFO_MAP_SAMPLE) {
+		//	if (i.second.hit_count > 0) {
+		//		accurate_prefetch_sample++;
+		//		if (i.second.late) {
+		//			late_prefetch_sample++;
+		//		}
+		//	}
+		//}
+		/*of_overall << "Prefetch Coverage (sampled): " << static_cast<float>(cxl_man->prefetch_hit_count - LAST_PREFETCH) / static_cast<float>(43000000)<<endl;
+		of_overall << "Prefetch Accuracy (sampled): " << static_cast<float>(accurate_prefetch_sample) / static_cast<float>(PREFETCH_INFO_MAP_SAMPLE.size()+1) << endl;
+		of_overall << "Prefetch Lateness (sampled): " << static_cast<float>(late_prefetch_sample) / static_cast<float>(accurate_prefetch_sample+1) << endl;
+		of_overall << "Prefetch Pollution (sampled): " << static_cast<float>(cxl_man->prefetch_pollution_count - LAST_POLLUTION) / static_cast<float>(cxl_man->cache_miss_count - LAST_CACHE_MISS +1) << endl;
+		LAST_POLLUTION = cxl_man->prefetch_pollution_count;
+		LAST_CACHE_MISS = cxl_man->cache_miss_count;
+		LAST_PREFETCH = cxl_man->prefetch_hit_count; 
+		PREFETCH_INFO_MAP_SAMPLE.clear();*/
+
+		std::cout << "Prefetch Coverage: " << static_cast<float>(cxl_man->prefetch_hit_count) / static_cast<float>(cxl_man->cxl_config_para.total_number_of_requets) << endl;
+		of_overall << "Prefetch Coverage: " << static_cast<float>(cxl_man->prefetch_hit_count) / static_cast<float>(cxl_man->cxl_config_para.total_number_of_requets) << endl;
 		std::cout << "Prefetch Accuracy: " << static_cast<float>(accurate_prefetch) / static_cast<float>(PREFETCH_INFO_MAP.size()) << endl;
 		of_overall << "Prefetch Accuracy: " << static_cast<float>(accurate_prefetch) / static_cast<float>(PREFETCH_INFO_MAP.size()) << endl;
 		std::cout << "Prefetch Lateness: " << static_cast<float>(late_prefetch) / static_cast<float>(accurate_prefetch) << endl;
@@ -1286,6 +1311,11 @@ namespace SSD_Components
 					prefetch_info_node n;
 					PREFETCH_INFO_MAP.emplace(lba, n);
 				}
+				if (PREFETCH_INFO_MAP_SAMPLE.count(lba) == 0) {
+					prefetch_info_node n;
+					PREFETCH_INFO_MAP_SAMPLE.emplace(lba, n);
+				}
+
 			}
 			else {
 				if (this->cxl_man->in_progress_prefetch_lba->count(lba)) {
@@ -1304,6 +1334,16 @@ namespace SSD_Components
 						PREFETCH_INFO_MAP[lba].hit_count++;
 						PREFETCH_ACCURACY_INFO.emplace(lba);
 						PREFETCH_LATE_INFO.emplace(lba);
+					}
+					if (PREFETCH_INFO_MAP_SAMPLE.count(lba) == 0) {
+						prefetch_info_node n;
+						n.late = 1;
+						n.hit_count++;
+						PREFETCH_INFO_MAP_SAMPLE.emplace(lba, n);
+					}
+					else {
+						PREFETCH_INFO_MAP_SAMPLE[lba].late = 1;
+						PREFETCH_INFO_MAP_SAMPLE[lba].hit_count++;
 					}
 				}
 			}
@@ -1376,6 +1416,7 @@ namespace SSD_Components
 
 			if (cxl_man->prefetched_lba->count(lba)) {
 				PREFETCH_INFO_MAP[lba].hit_count++;
+				PREFETCH_INFO_MAP_SAMPLE[lba].hit_count++;
 				PREFETCH_ACCURACY_INFO.emplace(lba);
 			}
 		}
@@ -1390,6 +1431,7 @@ namespace SSD_Components
 
 			if (cxl_man->prefetched_lba->count(lba)) {
 				PREFETCH_INFO_MAP[lba].hit_count++;
+				PREFETCH_INFO_MAP_SAMPLE[lba].hit_count++;
 				PREFETCH_ACCURACY_INFO.emplace(lba);
 			}
 		}

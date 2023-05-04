@@ -10,6 +10,7 @@ ofstream oflate{ "./Results/latency_result.txt" };
 //ofstream offree{ "DRAM_FREE_TIME.txt" };
 
 uint64_t totalcount{ 0 };
+uint64_t LAST_CACHE_HIT{ 0 };
 
 namespace SSD_Components {
 
@@ -213,7 +214,17 @@ namespace SSD_Components {
 			//std::cout << "Request ends at timestamp: " << static_cast<float>(Simulator->Time()) / 1000000000 << " s" << endl;
 			hi->print_prefetch_info();
 		}
+		//if (number_of_accesses % 43000000 == 0) {
+		//	of_overall << "Sample: "<< number_of_accesses / 43000000 << endl;
+		//	of_overall << "Sample Cache Hit: " << cache_hit_count - LAST_CACHE_HIT << endl;
+		//	LAST_CACHE_HIT = cache_hit_count;
 
+		//	of_overall << "Cache Hit Count: " << cache_hit_count << endl;
+		//	of_overall << "Hit under miss count: " << cache_hum_count << endl;
+		//	hi->print_prefetch_info();
+		//	of_overall << endl;
+
+		//}
 		//ofi3 << number_of_accesses << endl;
 		
 	}
