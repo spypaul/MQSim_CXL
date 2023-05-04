@@ -5,14 +5,18 @@
 1. Open the MQSim.sln solution file in MS Visual Studio 2022 or later.
 2. Set the Solution Configuration to Release (it is set to Debug by default).
 3. Compile the solution.
-4. Run the generated executable file (e.g., MQSim.exe) either in command line mode or by clicking the MS Visual Studio run button. To run with the run button, 
-1) Right click on the empty space in solution explorer 2) Select Properties 3) Under Configuration Properties, select Debugging 4) In Command Arguments, enter "-i ssdconfig.xml -w workload.xml" 5) Click Apply
+4. Run the generated executable file (e.g., MQSim.exe) either in command line mode or by clicking the MS Visual Studio run button. To run with the run button, 1) Right click on the empty space in solution explorer 2) Select Properties 3) Under Configuration Properties, select Debugging 4) In Command Arguments, enter "-i ssdconfig.xml -w workload.xml" 5) Click Apply
 
 Command line execution:
 
 ```
 $ MQSim.exe -i ssdconfig.xml -w workload.xml 
 ```
+## MQSim CXL Specific Execution Configurations 
+
+This simulator is built on top of MQSim. However, not all the MQSim-native configurations apply to this simulator; hence, we suggest users to utilize the existing ssdconfig.xml and workload.xml files. We recommend only make modifications to parameters specified below and keep others fixed as they are.
+
+
 
 ## MQSim Execution Configurations 
 
