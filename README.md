@@ -16,7 +16,40 @@ $ MQSim.exe -i ssdconfig.xml -w workload.xml
 
 This simulator is built on top of MQSim. However, not all the MQSim-native configurations apply to this simulator; hence, we suggest users to utilize the existing ssdconfig.xml and workload.xml files. We recommend only make modifications to parameters specified below and keep others fixed as they are.
 
+### ssdconfig.xml
+1. **Flash_Channel_Count:** the number of flash channels in the SSD back end. Range = {all positive integer values}.
+2. **Chip_No_Per_Channel:** the number of flash chips attached to each channel in the SSD back end. Range = {all positive integer values}.
+3. **Flash_Technology:** Range = {SLC, MLC, TLC}.
+4. **Page_Read_Latency_LSB:** the latency of reading LSB bits of flash memory cells in nanoseconds. Range = {all positive integer values}.
+5. **Page_Read_Latency_CSB:** the latency of reading CSB bits of flash memory cells in nanoseconds. Range = {all positive integer values}.
+6. **Page_Read_Latency_MSB:** the latency of reading MSB bits of flash memory cells in nanoseconds. Range = {all positive integer values}.
+7. **Page_Program_Latency_LSB:** the latency of programming LSB bits of flash memory cells in nanoseconds. Range = {all positive integer values}.
+8. **Page_Program_Latency_CSB:** the latency of programming CSB bits of flash memory cells in nanoseconds. Range = {all positive integer values}.
+9. **Page_Program_Latency_MSB:** the latency of programming MSB bits of flash memory cells in nanoseconds. Range = {all positive integer values}.
+10. **Block_Erase_Latency:** the latency of erasing a flash block in nanoseconds. Range = {all positive integer values}.
+11. **Die_No_Per_Chip:** the number of dies in each flash chip. Range = {all positive integer values}.
+12. **Plane_No_Per_Die:** the number of planes in each die. Range = {all positive integer values}.
+13. **Block_No_Per_Plane:** the number of flash blocks in each plane. Range = {all positive integer values}.
+14. **Page_No_Per_Block:** the number of physical pages in each flash block. Range = {all positive integer values}.
+15. **Page_Capacity:** the size of each physical flash page in bytes. Range = {all positive integer values}.
 
+### workload.xml
+1. **Channel_IDs:** a comma-separated list of channel IDs that are allocated to this workload. This list is used for resource partitioning. If there are C channels in the SSD (defined in the SSD configuration file), then the channel ID list should include values in the range 0 to C-1. If no resource partitioning is required, then all workloads should have channel IDs 0 to C-1.
+2. **Chip_IDs:** a comma-separated list of chip IDs that are allocated to this workload. This list is used for resource partitioning. If there are W chips in each channel (defined in the SSD configuration file), then the chip ID list should include values in the range 0 to W-1. If no resource partitioning is required, then all workloads should have chip IDs 0 to W-1.
+3. **Die_IDs:** a comma-separated list of chip IDs that are allocated to this workload. This list is used for resource partitioning. If there are D dies in each flash chip (defined in the SSD configuration file), then the die ID list should include values in the range 0 to D-1. If no resource partitioning is required, then all workloads should have die IDs 0 to D-1.
+4. **Plane_IDs:** a comma-separated list of plane IDs that are allocated to this workload. This list is used for resource partitioning. If there are P planes in each die (defined in the SSD configuration file), then the plane ID list should include values in the range 0 to P-1. If no resource partitioning is required, then all workloads should have plane IDs 0 to P-1.
+5. **Initial_Occupancy_Percentage:** the percentage of the storage space (i.e., logical pages) that is filled during preconditioning. Range = {all integer values in the range 1 to 100}.
+6. **File_Path:** the relative/absolute path to the input trace file.
+7. **Percentage_To_Be_Executed:** the percentage of requests in the input trace file that should be executed. Range = {all integer values in the range 1 to 100}.
+
+## CXL-flash Architecture Configurations 
+
+config.txt file contains all architectural configurations for the CXL-flash device simulated. The following explains the usage for each parameter.
+
+1. **DRAM_mode:** 1 is for running the workload with DRAM only; 0 is for running with CXL-flash
+2. **Has_cache:** 1 is for including a DRAM device cahce; 0 is for running only with the flash back end
+
+# Original MQSim Related Information (only for your reference)
 
 ## MQSim Execution Configurations 
 
