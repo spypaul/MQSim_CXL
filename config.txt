@@ -7,4 +7,4 @@ Has_mshr 1
 Cache_placement 16
 Cache_policy CFLRU
 Prefetcher Best-offset
-Total_number_of_requests 41974131
+Total_number_of_requests 20000000
