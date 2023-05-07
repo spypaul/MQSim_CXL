@@ -10,7 +10,7 @@
 Command line execution:
 
 ```
-$ MQSim.exe -i ssdconfig.xml -w workload.xml 
+$ .\MQSim.exe -i ssdconfig.xml -w workload.xml 
 ```
 ## MQSim CXL Specific Execution Configurations 
 
