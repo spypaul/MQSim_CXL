@@ -61,7 +61,10 @@ config.txt file contains all architectural configurations for the CXL-flash devi
 
 The output of the simulator will be stored in the \Results folder. It contains the following files:
 
-  
+1. **overall.txt:** this file contains the information about cache hit count, prefetch amount, hit-under-misses count, flash read count, flsuh count (flash write count), prefetcher's performance metrics (coverage, accuracy, lateness, and pollution)
+2. **latency_result.txt:** this file provides the raw access latency data for each access in nano-second. You can utilize the data to plot latency related graphs
+3. **latency_results_no_cache.txt:** this file provides the raw access latency data for each access in nano-second specifically for DRAM only mode.
+4. **repeated_access.txt:** this file provides data about repeated accesses when Has_cache = 1 and Has_mshr = 0. Each line is in the form of (PFN, is_repeated), where is_repeated can be either 1 or 0 (1 for being a repeated access)
 
 
 # Original MQSim Related Information (only for your reference)
