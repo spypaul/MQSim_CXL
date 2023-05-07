@@ -48,6 +48,21 @@ config.txt file contains all architectural configurations for the CXL-flash devi
 
 1. **DRAM_mode:** 1 is for running the workload with DRAM only; 0 is for running with CXL-flash
 2. **Has_cache:** 1 is for including a DRAM device cahce; 0 is for running only with the flash back end
+3. **DRAM_size:** this is for setting the device cache size in bytes
+4. **Mix_mode:** 1 is for mixing demand miss and prefetch data in cache; 0 is for creating seperate cache/buffer for demand miss and prefetch data. Currenlty, only mix mode is functional, please keep it at 1 for now
+5. **Cache_portion_percentage:* this is for specifying the size of each cache/buffer portion. Please keep it at 100 for now
+6. **Has_mshr:** 1 is for including MSHR; 0 is for running without
+7. **Cache_placement:** this is for setting the set associativity for the cache. the value range from 1 to DRAM_size/4096 (4096 is the cache line size in byte)
+8. **Cache_policy:** this is for specifying the cache policy. The available options are: "Random", "FIFO", "LRU", "CFLRU"  
+9. **Prefetcher:** this is for specifying the prefetching policy. The available options are: "No" (no prefetcher), "Tagged" (for next-n-line prefetcher), "Best-offset", "Leap", "Feedback_direct"
+10. **Total_number_of_requests:** please specify the number of requests in the trace file
+
+## Simulator Output
+
+The output of the simulator will be stored in the \Results folder. It contains the following files:
+
+  
+
 
 # Original MQSim Related Information (only for your reference)
 
