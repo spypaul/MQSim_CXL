@@ -6,29 +6,36 @@ To learn more, please keep reading this documentation, and our research paper, O
 
 ## Getting Started
 
-### Installation
-1. To install the memory tracing tool, please follow the instructions specifcied in the [memory tracing tool repository](https://github.com/dgist-datalab/valgrind_cachetrace.git). The tracing tool runs on a linux machine. We recommend using a machine with Ubuntu 20.04.5 LTS with Linux Kernel 5.17.4 installed.
-2. To install the simulator, please download the full package in this repository. Our simulator is designed to be independent of the hardware setup. However, it is developed using Windows [Visual Studio 2022 IDE](https://visualstudio.microsoft.com/downloads/). Hence, the simulator needs to run on a Windows 11 machine. 
+### Prerequisites
+1. The tracing tool runs on a linux machine. We recommend using a machine with Ubuntu 20.04.5 LTS with Linux Kernel 5.17.4 installed.
+2. Our simulator is designed to be independent of the hardware setup. However, it is developed using Windows [Visual Studio 2022 IDE](https://visualstudio.microsoft.com/downloads/). Hence, the simulator needs to run on a Windows 11 machine. 
 
-*Note that currently, the simulator can only run on a Windows machine. Hence, to utilize the full tool set, the user need to have one Linux machine and one Windows machine. 
+*Note that currently, the simulator can only run on a Windows machine. Hence, to utilize the full toolset, the user need to have one Linux machine and one Windows machine ready. 
+
+Source code: 
+
+1. [Valgrind Cache Trace](https://github.com/dgist-datalab/valgrind_cachetrace.git): a memory tracing tool utilized in this work
+2. MQSIM CXL (included in this reposiotry): a trace-driven simulator utilized in this work
+
+### Installation
+1. To install the memory tracing tool, please follow the instructions specified in the [memory tracing tool repository](https://github.com/dgist-datalab/valgrind_cachetrace.git). 
+2. To install the simulator, please download the full package in this repository. 
 
 ### Workflow and Usage
 The following steps will guide the user to run the full simulation process:
 
 On the Linux machine:
-1. Utilize the tracing tool to generate a memory trace file (*.vout or *.pout file) for the workload that the user want to run on the simulator. Please follow the instructions in the [memory tracing tool repository](https://github.com/dgist-datalab/valgrind_cachetrace.git).
-2. The *.vout or *.pout trace files need to be translated into a simulator-compaitable format. Please utilize example [trace translation code](https://github.com/spypaul/trace_translation.git) to generate *.trace file from the *.vout or *.pout file
+1. Utilize the tracing tool to generate a memory trace file (*.vout or *.pout file) for a workload. Please follow the instructions in the [memory tracing tool repository](https://github.com/dgist-datalab/valgrind_cachetrace.git).
+2. The *.vout or *.pout trace files need to be translated into a simulator-compaitable format. Please utilize example [trace translation code](https://github.com/spypaul/trace_translation.git) to generate *.trace files from the *.vout or *.pout files
 
 On the Windows machine:
 
-3. To configure the simulator environment, please follow the instructions specified in section [MQSim CXL Specific Execution Configurations](#mqsim-cxl-specific-execution-configurations) and section [CXL-flash Architecture Configurations](#cxl-flash-architecture-configurations) of this document
-4. Place the generated *.trace file into the \traces folder in the root directory of the simulator package.  
-5. To run the simulator, please follow the instructions specified in section [Usage in Window](#usage-in-window) of this document. 
-6. The simulator output will be in the \Results folder in the root directory of the simulator package. For more details, please read the descriptions in section [Simulator Output](#simulator-output) of this document. 
+3. To configure the simulator environment, please follow the instructions specified in [MQSim CXL Specific Execution Configurations](#mqsim-cxl-specific-execution-configurations) and [CXL-flash Architecture Configurations](#cxl-flash-architecture-configurations) of this document
+4. Place the generated *.trace file into the \traces folder in the root directory of the simulator package for running the workload on the simulator.  
+5. To run the simulator, please follow the instructions specified in [Usage in Window](#usage-in-window) of this document. 
+6. The simulator output will be in the \Results folder in the root directory of the simulator package. For more details, please read the descriptions in [Simulator Output](#simulator-output) of this document. 
 
 ## Detailed Instructions for ATC'23 Evaluation
-
-
 
 
 # MQSim CXL: A Simulator for CXL-flash
