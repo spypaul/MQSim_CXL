@@ -1,6 +1,9 @@
 # CXL-flash Design Tools
 
-CXL-flash Design Tools contain two primary tools, a memory tracing tool and a trace-driven simulator, to assist designing a CXL-enabled flash memory device for main memory expansion. 
+CXL-flash Design Tools contain two primary tools, a [memory tracing tool](https://github.com/dgist-datalab/valgrind_cachetrace.git) and a trace-driven simulator (this repository), to assist designing a CXL-enabled flash memory device for main memory expansion. This is an active joint research project of [S4 group](https://web.ecs.syr.edu/~bkim01/proj/rackcxl.html) at Syracuse University, [DGIST DataLab](https://datalab.dgist.ac.kr/), [DATOS Lab](https://sites.google.com/view/datoslab) at Soongsil University, and [FADU](https://www.fadu.io/).
+
+To learn more, please keep reading this documentation, and our research paper, Overcoming the Memory Wall with CXL-Enabled SSDs, will appear in [USENIX ATC'23](https://www.usenix.org/conference/atc23) soon. 
+
 
 ## Getting Started
 
