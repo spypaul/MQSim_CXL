@@ -9,18 +9,7 @@ To learn more, please keep reading this documentation, and our research paper, O
 
 ## Detailed Instructions for ATC'23 Evaluation
 
-## References
 
-[1] Iulia Turc, Ming-Wei Chang, Kenton Lee, and Kristina Toutanova. Well-read students learn better: On the importance of pre-training compact models. arXiv preprint arXiv:1908.08962v2, 2019.
-
-[2] Scott Beamer, Krste Asanovi ́c, and David Patterson. The GAP benchmark suite, 2015.
-
-[3] Christos Sakalis, Carl Leonardsson, Stefanos Kaxiras, and Alberto Ros. Splash-3: A properly synchronized benchmark suite for contemporary research. In 2016 IEEE International Symposium on Performance Analysis of Systems and Software (ISPASS), pages 101–111, 2016.
-
-[4] Brian F. Cooper, Adam Silberstein, Erwin Tam, Raghu Ramakrishnan, and Russell Sears. Benchmarking cloud serving systems with YCSB. In Proceedings of
-the 1st ACM Symposium on Cloud Computing, SoCC’10, page 143–154. Association for Computing Machinery, 2010.
-
-[5] SPEC CPU 2017. https://www.spec.org/cpu2017/.
 
 
 # MQSim CXL: A Simulator for CXL-flash
@@ -92,7 +81,18 @@ The output of the simulator will be stored in the \Results folder. It contains t
 4. **repeated_access.txt:** this file provides data about repeated accesses when Has_cache = 1 and Has_mshr = 0. Each line is in the form of (PFN, is_repeated), where is_repeated can be either 1 or 0 (1 for being a repeated access)
 
 
+# References
 
+[1] Iulia Turc, Ming-Wei Chang, Kenton Lee, and Kristina Toutanova. Well-read students learn better: On the importance of pre-training compact models. arXiv preprint arXiv:1908.08962v2, 2019.
+
+[2] Scott Beamer, Krste Asanovi ́c, and David Patterson. The GAP benchmark suite, 2015.
+
+[3] Christos Sakalis, Carl Leonardsson, Stefanos Kaxiras, and Alberto Ros. Splash-3: A properly synchronized benchmark suite for contemporary research. In 2016 IEEE International Symposium on Performance Analysis of Systems and Software (ISPASS), pages 101–111, 2016.
+
+[4] Brian F. Cooper, Adam Silberstein, Erwin Tam, Raghu Ramakrishnan, and Russell Sears. Benchmarking cloud serving systems with YCSB. In Proceedings of
+the 1st ACM Symposium on Cloud Computing, SoCC’10, page 143–154. Association for Computing Machinery, 2010.
+
+[5] SPEC CPU 2017. https://www.spec.org/cpu2017/.
 <!---
 
 # Original MQSim Related Information (only for your own reference)
