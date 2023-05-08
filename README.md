@@ -48,7 +48,7 @@ On the Windows machine:
 3. Compile the solution.
 4. Run the generated executable file (e.g., MQSim.exe) either in command line mode or by clicking the MS Visual Studio run button. 
 
-To run with the run button, 1) under Debug of the top panel, 2) select MQSim Debug Properties, 3) Under Configuration Properties, 4) select Debugging, 5) in Command Arguments, enter "-i ssdconfig.xml -w workload.xml" 5) Click OK
+To run with the run button, 1) under Debug of the top panel, 2) select MQSim Debug Properties, 3) under Configuration Properties, 4) select Debugging, 5) in Command Arguments, enter "-i ssdconfig.xml -w workload.xml" 5) Click OK
 
 Command line execution:
 
