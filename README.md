@@ -14,9 +14,9 @@ To learn more, please keep reading this documentation, and our research paper, O
 
 Source code: 
 
-1. [Valgrind Cache Trace](https://github.com/dgist-datalab/valgrind_cachetrace.git): a memory tracing tool utilized in this work
-2. MQSIM CXL (included in this reposiotry): a trace-driven simulator utilized in this work
-
+1. [Valgrind Cache Trace](https://github.com/dgist-datalab/valgrind_cachetrace.git): a memory tracing tool utilized in this work.
+2. MQSIM CXL (included in this reposiotry): a trace-driven simulator utilized in this work.
+3. [Trace Translator](https://github.com/spypaul/trace_translation.git): an example code to translate *.vout or *.pout files to *.trace files.
 ### Installation
 1. To install the memory tracing tool, please follow the instructions specified in the [memory tracing tool repository](https://github.com/dgist-datalab/valgrind_cachetrace.git). 
 2. To install the simulator, please download the full package in this repository. 
