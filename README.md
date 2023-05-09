@@ -61,29 +61,16 @@ the real-world workload contains:
 * YCSB F[6]
 
 We include our synthetic workload source codes in test/Synthetic_Workloads of [Trace Generator](https://github.com/dgist-datalab/trace_generator.git).
-We did not make any modification to the proprietary source codes when collecting real-world workload traces. Users can find the source codes of the workloads from their original code bases. 
+Users can find the source codes of the real-world workloads from their original code bases. 
 
-Since tracing results can be different across machines and runs, we also publish the raw trace files (\*.pout and \*.vout) and the trace files (\*.trace) utilized for the research paper in [here](). 
-The following shows its directory tree:
+Since tracing results can be different across machines and runs, we also publish the trace files (\*.trace) utilized for the research paper in [here](). 
 
-```
-ATC_23_TRACE_FILES
-├───ATC_23_pout_vout
-│   ├───Real World Workloads
-│   │   ├───Physical
-│   │   └───Virtual
-│   └───Synthetic Workloads
-│       ├───Virtual
-│       └───Physical
-└───ATC_23_Traces
-    ├───Real World Workloads
-    │   ├───Hinted
-    │   ├───Physical
-    │   └───Virtual
-    └───Synthetic Workloads
-        ├───Physical
-        └───Virtual
-```
+Conetent of published trace files:
+* \*\_p.trace files are the traces with physical memory addresses
+* \*\_v.trace files are the traces with virtual memory addresses
+* \*\_hint.trace files are the traces with hints included
+* trace_synthetic_workloads.zip contains all \*.trace file
+
 
 ### Evaluation with Synthetic Workloads
 
@@ -107,8 +94,8 @@ Experiments setup guidelines:
 * To adjust the flash technology, please adjust **<Flash_Technology>**, **<Page_Read_Latency_*>**, **<Page_Program_Latency_*>**, and **<Block_Erase_Latency>**. For simplicity, we keep the latency for LSB, CSB, and MSB the same. 
 * To setup an ULL flash, please make **<Flash_Technology>** = "SLC", **<Page_Read_Latency_*>** = 3000, **<Page_Program_Latency_*>** = 100000, and **<Block_Erase_Latency>** = 1000000. 
 
-*Note that for Figure 6, we plot the generated output from "repeated_access.txt." However, we accidently divide the PFN by 4096 when plotting Figure 6. 
-We will re-plot the results in the final version of the paper. However, this does not affect the correctness of the results generated from the simulator.
+*Note that for Figure 6 in our paper, we plot the generated output from "repeated_access.txt." However, we accidently divide the PFN by 4096 when plotting Figure 6. 
+We will re-plot the results in the final version of the paper. This does not affect the correctness of the results generated from the simulator.
 
 ### Evaluation with Real-world Workloads
 	
