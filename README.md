@@ -38,9 +38,42 @@ On the Windows environment:
 7. The simulator output will be in the \Results folder in the root directory of the simulator package. For more details, please read the descriptions in [Simulator Output](#simulator-output) of this document. 
 
 ## Detailed Instructions for ATC'23 Evaluation
+In this section, we will provide detailed instructions on setting up experiments for reproducing evaluation results from our research paper, _Overcoming the Memory Wall with CXL-Enabled SSDs_. 
+
+### Workloads and Trace Files
+We evaluate CXL-flash device with two types of workloads: synthetic and real-world. 
+
+The synthetic workload contains:
+* Hash map
+* Matrix multiply (indirect delta)
+* Min heap 
+* Random
+* Stride
+
+and 
+
+the real-world workload contains:
+* BERT[1]
+* Page rank (GAPBS[2])
+* Radiosity (Splash-3[3])
+* XZ (Spec CPU[4])
+* YCSB F[5]
+
+We include our synthetic workload source code in \test\Synthetic_Workloads of [Trace Generator](https://github.com/dgist-datalab/trace_generator.git).
+We did not make any modification to the proprietary source code when collecting real-world workload traces. Users can find the source code from their code bases. 
+
+Since tracing results can be different, we also publish the trace files (\*.trace) utilized for the research paper in [here](). 
+For your reference, [here]() also contains the raw trace files (\*.pout and \*.vout).
+
+###Evaluation with Synthetic Workloads
+
+###Evaluation with Real-world Workloads
 
 
 # MQSim CXL: A Simulator for CXL-flash
+
+MQSim CXL is a trace-driven CXL-flash device simulator builts on top of MQSim-E[6], a version of MQSim[7]. 
+The following documentation provides detailed information about the useage of MQSim CXL. 
 
 ## Usage in Windows
 
@@ -119,10 +152,10 @@ The output of the simulator will be stored in the \Results folder. It contains t
 
 [3] Christos Sakalis, Carl Leonardsson, Stefanos Kaxiras, and Alberto Ros. Splash-3: A properly synchronized benchmark suite for contemporary research. In 2016 IEEE International Symposium on Performance Analysis of Systems and Software (ISPASS), pages 101–111, 2016.
 
-[4] Brian F. Cooper, Adam Silberstein, Erwin Tam, Raghu Ramakrishnan, and Russell Sears. Benchmarking cloud serving systems with YCSB. In Proceedings of
-the 1st ACM Symposium on Cloud Computing, SoCC’10, page 143–154. Association for Computing Machinery, 2010.
+[4] SPEC CPU 2017. https://www.spec.org/cpu2017/.
 
-[5] SPEC CPU 2017. https://www.spec.org/cpu2017/.
+[5] Brian F. Cooper, Adam Silberstein, Erwin Tam, Raghu Ramakrishnan, and Russell Sears. Benchmarking cloud serving systems with YCSB. In Proceedings of
+the 1st ACM Symposium on Cloud Computing, SoCC’10, page 143–154. Association for Computing Machinery, 2010.
 
 [6] Dusol Lee, Duwon Hong, Wonil Choi, and Jihong Kim. MQSim-E: An enterprise SSD simulator. IEEE Computer Architecture Letters, 21(1):13–16, 2022.
 
