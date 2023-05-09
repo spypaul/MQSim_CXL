@@ -1,0 +1,10 @@
+DRAM_mode 0
+Has_cache 1
+DRAM_size 8589934592
+Mix_mode 1
+Cache_portion_percentage 100
+Has_mshr 1
+Cache_placement 2097152
+Cache_policy FIFO
+Prefetcher No
+Total_number_of_requests 20000000
