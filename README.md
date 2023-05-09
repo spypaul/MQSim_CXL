@@ -11,6 +11,7 @@ To learn more, please keep reading this documentation. Our research paper, _Over
 2. Our simulator is designed to be independent of the hardware setup. However, it is developed using [Visual Studio 2022 IDE](https://visualstudio.microsoft.com/downloads/) on Windows, and it was only tested on a Windows 11 environment. 
 
 *Note that currently, the simulator can only run on a Windows machine. Hence, to utilize the full toolset, the user need to have one Linux environment and one Windows environment ready. 
+Also, the simulator can take up large amount of memory space, we recommend using machines with 32GB of DRAM or more for fast and stable simulation. 
 
 Source code: 
 
@@ -33,12 +34,12 @@ On the Windows environment:
 
 3. To configure the simulator environment, please follow the instructions specified in [MQSim CXL Specific Execution Configurations](#mqsim-cxl-specific-execution-configurations) and [CXL-flash Architecture Configurations](#cxl-flash-architecture-configurations) of this document
 4. Create a folder named "traces" in the root directory of the simulator package
-5. Place the generated \*.trace file into the \traces folder. Please specify the file path in workload.xml. Check [MQSim CXL Specific Execution Configurations](#mqsim-cxl-specific-execution-configurations) for more details.
+5. Place the generated \*.trace file into the /traces folder. Please specify the file path in workload.xml. Check [MQSim CXL Specific Execution Configurations](#mqsim-cxl-specific-execution-configurations) for more details.
 6. To run the simulator, please follow the instructions specified in [Usage in Windows](#usage-in-windows) of this document. 
-7. The simulator output will be in the \Results folder in the root directory of the simulator package. For more details, please read the descriptions in [Simulator Output](#simulator-output) of this document. 
+7. The simulator output will be in the /Results folder in the root directory of the simulator package. For more details, please read the descriptions in [Simulator Output](#simulator-output) of this document. 
 
 ## Detailed Instructions for ATC'23 Evaluation
-In this section, we will provide detailed instructions on setting up experiments for reproducing evaluation results from our research paper, _Overcoming the Memory Wall with CXL-Enabled SSDs_. 
+In this section, we provide detailed instructions on setting up experiments for reproducing evaluation results from our research paper, _Overcoming the Memory Wall with CXL-Enabled SSDs_. 
 
 ### Workloads and Trace Files
 We evaluate CXL-flash device with two types of workloads: synthetic and real-world. 
@@ -59,16 +60,51 @@ the real-world workload contains:
 * XZ (Spec CPU[4])
 * YCSB F[5]
 
-We include our synthetic workload source code in \test\Synthetic_Workloads of [Trace Generator](https://github.com/dgist-datalab/trace_generator.git).
-We did not make any modification to the proprietary source code when collecting real-world workload traces. Users can find the source code from their code bases. 
+We include our synthetic workload source codes in test/Synthetic_Workloads of [Trace Generator](https://github.com/dgist-datalab/trace_generator.git).
+We did not make any modification to the proprietary source codes when collecting real-world workload traces. Users can find the source codes of the workloads from their original code bases. 
 
 Since tracing results can be different, we also publish the trace files (\*.trace) utilized for the research paper in [here](). 
+
 For your reference, [here]() also contains the raw trace files (\*.pout and \*.vout).
 
-###Evaluation with Synthetic Workloads
+### Evaluation with Synthetic Workloads
+Simulation time for each experiment: 5 minutes - 2 hours
+Example configuration files: /examples/synthetic workloads/config.txt, /examples/synthetic workloads/ssdconfig.xml, /examples/synthetic workloads/workload.xml
 
-###Evaluation with Real-world Workloads
+Please replace config.txt, ssdconfig.xml, and workload.xml in the root directory with the example configuration files included in this repository. These files contain the default setup for reproducing results for the synthetic workload evaluations. Most of the parameters in the files can be left as they are. Only the ones specified in the guidelines need to be changed according to the paper. 
 
+Experiments setup guidelines:
+
+* To run without device DRAM cache, please set **<DRAM_mode>** = 0, **<Has_cache>** = 0, and **<Has_mshr>** = 0 in the config.txt file.
+* To run with device DRAM cache only (without MSHR), please set **<DRAM_mode>** = 0, **<Has_cache>** = 1, and **<Has_mshr>** = 0 in the config.txt file.
+* To run with device DRAM cache and MSHR, please set **<DRAM_mode>** = 0, **<Has_cache>** = 1, and **<Has_mshr>** = 1 in the config.txt file.
+* To vary DRAM cache size, please specify **<DRAM_size>** in the config.txt file.
+* For the evaluation with synthetic workloads, we configure the cache to be fully associative with FIFO as the policy. Please adjust the **Cache_placement** to **<DRAM_size>** / 4096 in the config.txt file to keep the cache fully associative.
+* To include a next-n-line prefetcher, please adjust **<Prefetcher>** to "Tagged" in config.txt.
+* To adjust the degree of next-n-line prefetcher, please modify line 65 of /src/cxl/Host_Interface_CXL.h by changing the initialization value of uint16_t prefetchK and recompile the code.
+* To adjust the offset of next-n-line prefetcher, please modify line 66 of /src/cxl/Host_Interface_CXL.h by changing the initialization value of uint16_t prefetch_timing_offset and recompile the code.
+* To adjust the parallelism (Channels x Chips) of the flash back-end, please modify **<Flash_Channel_Count>** and **<Chip_No_Per_Channel>** in ssdconfig.xml and make sure **Channel_IDs** and **<Chip_IDs>** in workload.xml are changed accordinly as well. 
+* To adjust the flash technology, please adjust **<Flash_Technology>**, **<Page_Read_Latency_*>**, **<Page_Program_Latency_*>**, and **<Block_Erase_Latency>**. For simplicity, we keep the latency for LSB, CSB, and MSB the same. 
+* To setup an ULL flash, please make **<Flash_Technology>** = "SLC", **<Page_Read_Latency_*>** = 3000, **<Page_Program_Latency_*>** = 100000, and **<Block_Erase_Latency>** = 1000000. 
+
+*Note that for Figure 6, we plot the generated output from "repeated_access.txt." However, we accidently divide the PFN by 4096 when plotting Figure 6. 
+We will re-plot the results in the final version of the paper. However, this does not affect the correctness of the results generated from the simulator.
+
+### Evaluation with Real-world Workloads
+Simulation time for each experiment: 30 minutes - 2 hours
+Example configuration files: /examples/real world workloads/config.txt, /examples/real world workloads/ssdconfig.xml, /examples/real world workloads/workload.xml
+
+Please replace config.txt, ssdconfig.xml, and workload.xml in the root directory with the example configuration files included in this repository. These files contain the default setup for reproducing results for the real-world workload evaluations. Most of the parameters in the files can be left as they are. Only the ones specified in the guidelines need to be changed according to the paper. 
+	
+Experiments setup guidelines:
+
+* Adjust **Cache_placement** if needed, but the default value for most of the experiment should be 16. 
+* Adjust **<Cache_policy>** to desired policy in config.txt if needed.
+* Adjust **<Prefetcher>** to desired algorithms in config.txt if needed.
+* For the evaluation on virtual vs physical traces, please utilize two version of *.trace files provided in [here]().
+* For the evaluation on BERT with Hints, please utilize the bert_hint.trace provided in [here]().
+
+*Note that the trace files and generated output files for real-world workloads can be large (10s of GB). Please be sure that the running environment has enough disk space for the files.
 
 # MQSim CXL: A Simulator for CXL-flash
 
@@ -136,7 +172,7 @@ config.txt file contains all architectural configurations for the CXL-flash devi
 
 ## Simulator Output
 
-The output of the simulator will be stored in the \Results folder. It contains the following files:
+The output of the simulator will be stored in the /Results folder. It contains the following files:
 
 1. **overall.txt:** this file contains the information about cache hit count, prefetch amount, hit-under-misses count, flash read count, flush count (flash write count), prefetcher's performance metrics (coverage, accuracy, lateness, and pollution).
 2. **latency_result.txt:** this file provides the raw access latency data for each access in nano-second. You can utilize the data to plot latency related graphs.
