@@ -63,7 +63,22 @@ the real-world workload contains:
 We include our synthetic workload source codes in test/Synthetic_Workloads of [Trace Generator](https://github.com/dgist-datalab/trace_generator.git).
 We did not make any modification to the proprietary source codes when collecting real-world workload traces. Users can find the source codes of the workloads from their original code bases. 
 
-Since tracing results can be different, we also publish the trace files (\*.trace) utilized for the research paper in [here](). 
+Since tracing results can be different across machines and runs, we also publish the trace files (\*.trace) utilized for the research paper in [here](). 
+The following shows its directory tree:
+
+ATC_23_TRACE_FILES
+├───ATC_23_pout_vout
+│   └───Real World Workloads
+│       ├───Physical
+│       └───Virtual
+└───ATC_23_Traces
+    ├───Real World Workloads
+    │   ├───Hinted
+    │   ├───Physical
+    │   └───Virtual
+    └───Synthetic Workloads
+        ├───Physical
+        └───Virtual
 
 For your reference, [here]() also contains the raw trace files (\*.pout and \*.vout).
 
