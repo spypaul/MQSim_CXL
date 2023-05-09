@@ -1,6 +1,6 @@
 # CXL-flash Design Tools
 
-CXL-flash Design Tools contain two primary tools, a [memory tracing tool](https://github.com/dgist-datalab/valgrind_cachetrace.git) and a trace-driven simulator (this repository), to assist designing a CXL-enabled flash memory device for main memory expansion. This is an active joint research project of [S4 group](https://web.ecs.syr.edu/~bkim01/proj/rackcxl.html) at Syracuse University, [DGIST DataLab](https://datalab.dgist.ac.kr/), [DATOS Lab](https://sites.google.com/view/datoslab) at Soongsil University, and [FADU](https://www.fadu.io/).
+CXL-flash Design Tools contain two primary tools, a [memory tracing tool](https://github.com/dgist-datalab/trace_generator.git) and a trace-driven simulator (this repository), to assist designing a CXL-enabled flash memory device for main memory expansion. This is an active joint research project of [S4 group](https://web.ecs.syr.edu/~bkim01/proj/rackcxl.html) at Syracuse University, [DGIST DataLab](https://datalab.dgist.ac.kr/), [DATOS Lab](https://sites.google.com/view/datoslab) at Soongsil University, and [FADU](https://www.fadu.io/).
 
 To learn more, please keep reading this documentation. Our research paper, _Overcoming the Memory Wall with CXL-Enabled SSDs_, is currently in the revision stage of [USENIX ATC'23](https://www.usenix.org/conference/atc23). 
 
@@ -14,19 +14,19 @@ To learn more, please keep reading this documentation. Our research paper, _Over
 
 Source code: 
 
-1. [Valgrind Cache Trace](https://github.com/dgist-datalab/valgrind_cachetrace.git): a memory tracing tool utilized in this work.
+1. [Trace Generator](https://github.com/dgist-datalab/trace_generator.git): a memory tracing tool utilized in this work.
 2. [MQSIM CXL](#mqsim-cxl-a-simulator-for-cxl-flash) (included in this repository): a trace-driven simulator utilized in this work. 
 3. [Trace Translator](https://github.com/spypaul/trace_translation.git): an example code to translate \*.vout or \*.pout files to \*.trace files.
 
 ### Installation
-1. To install Valgrind Cache Trace, please follow the instructions specified in the [memory tracing tool repository](https://github.com/dgist-datalab/valgrind_cachetrace.git). 
+1. To install Trace Generator, please follow the instructions specified in the [memory tracing tool repository](https://github.com/dgist-datalab/trace_generator.git). 
 2. To install MQSIM CXL, please download and extract or clone this repository to your preferred location. 
 
 ### Workflow and Usage
 This process consists of three main stages: produce \*.vout or \*.pout files --> convert the files into \*.trace files --> run simulation with the traces. 
 
 On the Linux environment:
-1. Generate a memory trace file (\*.vout or \*.pout file) for a workload utilizing the tracing tool. Please follow the instructions in the [memory tracing tool repository](https://github.com/dgist-datalab/valgrind_cachetrace.git).
+1. Generate a memory trace file (\*.vout or \*.pout file) for a workload utilizing the tracing tool. Please follow the instructions in the [memory tracing tool repository](https://github.com/dgist-datalab/trace_generator.git).
 2. The \*.vout or \*.pout trace files need to be translated into a simulator-compatible format. Please utilize example [trace translation code](https://github.com/spypaul/trace_translation.git) to generate \*.trace files from the \*.vout or \*.pout files
 
 On the Windows environment:
