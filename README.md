@@ -69,9 +69,12 @@ The following shows its directory tree:
 ```
 ATC_23_TRACE_FILES
 ├───ATC_23_pout_vout
-│   └───Real World Workloads
-│       ├───Physical
-│       └───Virtual
+│   ├───Real World Workloads
+│   │   ├───Physical
+│   │   └───Virtual
+│   └───Synthetic Workloads
+│       ├───Virtual
+│       └───Physical
 └───ATC_23_Traces
     ├───Real World Workloads
     │   ├───Hinted
