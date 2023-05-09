@@ -10,7 +10,7 @@ To learn more, please keep reading this documentation. Our research paper, _Over
 1. The tracing tool runs on a Linux machine. We recommend using a machine with Ubuntu 20.04.5 LTS with Linux Kernel 5.17.4 installed.
 2. Our simulator is designed to be independent of the hardware setup. However, it is developed using [Visual Studio 2022 IDE](https://visualstudio.microsoft.com/downloads/) on Windows, and it was only tested on a Windows 11 environment. 
 
-*Note that currently, the simulator can only run on a Windows machine. Hence, to utilize the full toolset, the user need to have one Linux environment and one Windows environment ready. 
+*Note that currently, the simulator can only run on a Windows environment. Hence, to utilize the full toolset, the user need to have one Linux environment and one Windows environment ready. 
 Also, the simulator can take up large amount of memory space, we recommend using machines with 32GB of DRAM or more for fast and stable simulation. 
 
 Source code: 
