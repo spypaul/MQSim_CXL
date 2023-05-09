@@ -66,6 +66,7 @@ We did not make any modification to the proprietary source codes when collecting
 Since tracing results can be different across machines and runs, we also publish the trace files (\*.trace) utilized for the research paper in [here](). 
 The following shows its directory tree:
 
+```
 ATC_23_TRACE_FILES
 ├───ATC_23_pout_vout
 │   └───Real World Workloads
@@ -79,7 +80,7 @@ ATC_23_TRACE_FILES
     └───Synthetic Workloads
         ├───Physical
         └───Virtual
-
+```
 For your reference, [here]() also contains the raw trace files (\*.pout and \*.vout).
 
 ### Evaluation with Synthetic Workloads
