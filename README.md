@@ -206,7 +206,7 @@ The output of the simulator will be stored in the /Results folder. It contains t
 
 [1] Iulia Turc, Ming-Wei Chang, Kenton Lee, and Kristina Toutanova. Well-read students learn better: On the importance of pre-training compact models. arXiv preprint arXiv:1908.08962v2, 2019.
 
-[2] Scott Beamer, Krste Asanovi ́c, and David Patterson. The GAP benchmark suite, 2015.
+[2] Scott Beamer, Krste Asanović, David Patterson. The GAP Benchmark Suite. arXiv:1508.03619 [cs.DC], 2015.
 
 [3] Christos Sakalis, Carl Leonardsson, Stefanos Kaxiras, and Alberto Ros. Splash-3: A properly synchronized benchmark suite for contemporary research. In 2016 IEEE International Symposium on Performance Analysis of Systems and Software (ISPASS), pages 101–111, 2016.
 
