@@ -63,7 +63,7 @@ the real-world workload contains:
 We include our synthetic workload source codes in test/Synthetic_Workloads of [Trace Generator](https://github.com/dgist-datalab/trace_generator.git).
 We did not make any modification to the proprietary source codes when collecting real-world workload traces. Users can find the source codes of the workloads from their original code bases. 
 
-Since tracing results can be different across machines and runs, we also publish the trace files (\*.trace) utilized for the research paper in [here](). 
+Since tracing results can be different across machines and runs, we also publish the raw trace files (\*.pout and \*.vout) and the trace files (\*.trace) utilized for the research paper in [here](). 
 The following shows its directory tree:
 
 ```
@@ -81,10 +81,11 @@ ATC_23_TRACE_FILES
         ├───Physical
         └───Virtual
 ```
-For your reference, [here]() also contains the raw trace files (\*.pout and \*.vout).
 
 ### Evaluation with Synthetic Workloads
+
 Simulation time for each experiment: 5 minutes - 2 hours
+
 Example configuration files: /examples/synthetic workloads/config.txt, /examples/synthetic workloads/ssdconfig.xml, /examples/synthetic workloads/workload.xml
 
 Please replace config.txt, ssdconfig.xml, and workload.xml in the root directory with the example configuration files included in this repository. These files contain the default setup for reproducing results for the synthetic workload evaluations. Most of the parameters in the files can be left as they are. Only the ones specified in the guidelines need to be changed according to the paper. 
@@ -107,7 +108,9 @@ Experiments setup guidelines:
 We will re-plot the results in the final version of the paper. However, this does not affect the correctness of the results generated from the simulator.
 
 ### Evaluation with Real-world Workloads
+	
 Simulation time for each experiment: 30 minutes - 2 hours
+	
 Example configuration files: /examples/real world workloads/config.txt, /examples/real world workloads/ssdconfig.xml, /examples/real world workloads/workload.xml
 
 Please replace config.txt, ssdconfig.xml, and workload.xml in the root directory with the example configuration files included in this repository. These files contain the default setup for reproducing results for the real-world workload evaluations. Most of the parameters in the files can be left as they are. Only the ones specified in the guidelines need to be changed according to the paper. 
