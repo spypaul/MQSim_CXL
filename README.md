@@ -2,39 +2,40 @@
 
 CXL-flash Design Tools contain two primary tools, a [memory tracing tool](https://github.com/dgist-datalab/valgrind_cachetrace.git) and a trace-driven simulator (this repository), to assist designing a CXL-enabled flash memory device for main memory expansion. This is an active joint research project of [S4 group](https://web.ecs.syr.edu/~bkim01/proj/rackcxl.html) at Syracuse University, [DGIST DataLab](https://datalab.dgist.ac.kr/), [DATOS Lab](https://sites.google.com/view/datoslab) at Soongsil University, and [FADU](https://www.fadu.io/).
 
-To learn more, please keep reading this documentation, and our research paper, Overcoming the Memory Wall with CXL-Enabled SSDs, will appear in [USENIX ATC'23](https://www.usenix.org/conference/atc23) soon. 
+To learn more, please keep reading this documentation. Our research paper, _Overcoming the Memory Wall with CXL-Enabled SSDs_, is currently in the revision stage of [USENIX ATC'23](https://www.usenix.org/conference/atc23). 
 
 ## Getting Started
 
 ### Prerequisites
-1. The tracing tool runs on a linux machine. We recommend using a machine with Ubuntu 20.04.5 LTS with Linux Kernel 5.17.4 installed.
-2. Our simulator is designed to be independent of the hardware setup. However, it is developed using Windows [Visual Studio 2022 IDE](https://visualstudio.microsoft.com/downloads/). Hence, the simulator needs to run on a Windows 11 machine. 
+1. The tracing tool runs on a Linux machine. We recommend using a machine with Ubuntu 20.04.5 LTS with Linux Kernel 5.17.4 installed.
+2. Our simulator is designed to be independent of the hardware setup. However, it is developed using [Visual Studio 2022 IDE](https://visualstudio.microsoft.com/downloads/) on Windows, and it was only tested on a Windows 11 environment. 
 
-*Note that currently, the simulator can only run on a Windows machine. Hence, to utilize the full toolset, the user need to have one Linux machine and one Windows machine ready. 
+*Note that currently, the simulator can only run on a Windows machine. Hence, to utilize the full toolset, the user need to have one Linux environment and one Windows environment ready. 
 
 Source code: 
 
 1. [Valgrind Cache Trace](https://github.com/dgist-datalab/valgrind_cachetrace.git): a memory tracing tool utilized in this work.
-2. MQSIM CXL (included in this reposiotry): a trace-driven simulator utilized in this work.
-3. [Trace Translator](https://github.com/spypaul/trace_translation.git): an example code to translate *.vout or *.pout files to *.trace files.
+2. [MQSIM CXL](#mqsim-cxl-a-simulator-for-cxl-flash) (included in this repository): a trace-driven simulator utilized in this work. 
+3. [Trace Translator](https://github.com/spypaul/trace_translation.git): an example code to translate \*.vout or \*.pout files to \*.trace files.
+
 ### Installation
-1. To install the memory tracing tool, please follow the instructions specified in the [memory tracing tool repository](https://github.com/dgist-datalab/valgrind_cachetrace.git). 
-2. To install the simulator, please download the full package in this repository. 
+1. To install Valgrind Cache Trace, please follow the instructions specified in the [memory tracing tool repository](https://github.com/dgist-datalab/valgrind_cachetrace.git). 
+2. To install MQSIM CXL, please download and extract or clone this repository to your preferred location. 
 
 ### Workflow and Usage
-The following steps will guide the user to run the full simulation process:
+This process consists of three main stages: produce \*.vout or \*.pout files --> convert the files into \*.trace files --> run simulation with the traces. 
 
-On the Linux machine:
-1. Utilize the tracing tool to generate a memory trace file (*.vout or *.pout file) for a workload. Please follow the instructions in the [memory tracing tool repository](https://github.com/dgist-datalab/valgrind_cachetrace.git).
-2. The *.vout or *.pout trace files need to be translated into a simulator-compaitable format. Please utilize example [trace translation code](https://github.com/spypaul/trace_translation.git) to generate *.trace files from the *.vout or *.pout files
+On the Linux environment:
+1. Generate a memory trace file (\*.vout or \*.pout file) for a workload utilizing the tracing tool. Please follow the instructions in the [memory tracing tool repository](https://github.com/dgist-datalab/valgrind_cachetrace.git).
+2. The \*.vout or \*.pout trace files need to be translated into a simulator-compatible format. Please utilize example [trace translation code](https://github.com/spypaul/trace_translation.git) to generate \*.trace files from the \*.vout or \*.pout files
 
-On the Windows machine:
+On the Windows environment:
 
 3. To configure the simulator environment, please follow the instructions specified in [MQSim CXL Specific Execution Configurations](#mqsim-cxl-specific-execution-configurations) and [CXL-flash Architecture Configurations](#cxl-flash-architecture-configurations) of this document
 4. Create a folder named "traces" in the root directory of the simulator package
-4. Place the generated *.trace file into the \traces folder. Please specify the file path in workload.xml. Check [MQSim CXL Specific Execution Configurations](#mqsim-cxl-specific-execution-configurations) for more details.
-5. To run the simulator, please follow the instructions specified in [Usage in Windows](#usage-in-windows) of this document. 
-6. The simulator output will be in the \Results folder in the root directory of the simulator package. For more details, please read the descriptions in [Simulator Output](#simulator-output) of this document. 
+5. Place the generated \*.trace file into the \traces folder. Please specify the file path in workload.xml. Check [MQSim CXL Specific Execution Configurations](#mqsim-cxl-specific-execution-configurations) for more details.
+6. To run the simulator, please follow the instructions specified in [Usage in Windows](#usage-in-windows) of this document. 
+7. The simulator output will be in the \Results folder in the root directory of the simulator package. For more details, please read the descriptions in [Simulator Output](#simulator-output) of this document. 
 
 ## Detailed Instructions for ATC'23 Evaluation
 
@@ -57,7 +58,7 @@ $ .\MQSim.exe -i ssdconfig.xml -w workload.xml
 ```
 ## MQSim CXL Specific Execution Configurations 
 
-This simulator is built on top of MQSim. However, not all the MQSim-native configurations apply to this simulator; hence, we suggest users to utilize the existing ssdconfig.xml and workload.xml files. We recommend only make modifications to parameters specified below and keep others fixed as they are.
+This simulator is built on top of MQSim-E. However, not all the MQSim-E-native configurations apply to this simulator; hence, we suggest users to utilize the ssdconfig.xml and workload.xml files included in this repository. We recommend only making modifications to parameters specified below and leave rest as they are.
 
 ### ssdconfig.xml
 1. **Flash_Channel_Count:** the number of flash channels in the SSD back end. Range = {all positive integer values}.
@@ -89,25 +90,25 @@ This simulator is built on top of MQSim. However, not all the MQSim-native confi
 
 config.txt file contains all architectural configurations for the CXL-flash device simulated. The following explains the usage for each parameter.
 
-1. **DRAM_mode:** 1 is for running the workload with DRAM only; 0 is for running with CXL-flash
-2. **Has_cache:** 1 is for including a DRAM device cahce; 0 is for running only with the flash back end
-3. **DRAM_size:** this is for setting the device cache size in bytes
-4. **Mix_mode:** 1 is for mixing demand miss and prefetch data in cache; 0 is for creating seperate cache/buffer for demand miss and prefetch data. Currenlty, only mix mode is functional, please keep it at 1 for now
-5. **Cache_portion_percentage:* this is for specifying the size of each cache/buffer portion. Please keep it at 100 for now
-6. **Has_mshr:** 1 is for including MSHR; 0 is for running without
-7. **Cache_placement:** this is for setting the set associativity for the cache. the value range from 1 to DRAM_size/4096 (4096 is the cache line size in byte)
-8. **Cache_policy:** this is for specifying the cache policy. The available options are: "Random", "FIFO", "LRU", "CFLRU"  
-9. **Prefetcher:** this is for specifying the prefetching policy. The available options are: "No" (no prefetcher), "Tagged" (for next-n-line prefetcher), "Best-offset", "Leap", "Feedback_direct"
-10. **Total_number_of_requests:** please specify the number of requests in the trace file
+1. **DRAM_mode:** 1 is for running the workload with DRAM only; 0 is for running with CXL-flash.
+2. **Has_cache:** 1 is for including a DRAM device cache; 0 is for running only with the flash back end.
+3. **DRAM_size:** this is for setting the device cache size in bytes.
+4. **Mix_mode:** 1 is for mixing demand miss and prefetch data in cache; 0 is for creating seperate cache/buffer for demand miss and prefetch data. Currenlty, only mix mode is functional, please keep it at 1 for now.
+5. **Cache_portion_percentage:** this is for specifying the size of each cache/buffer portion. Please keep it at 100 for now.
+6. **Has_mshr:** 1 is for including MSHR; 0 is for running without.
+7. **Cache_placement:** this is for setting the set associativity for the cache. the value range from 1 to DRAM_size/4096 (4096 is the cache line size in byte).
+8. **Cache_policy:** this is for specifying the cache policy. The available options are: "Random", "FIFO", "LRU", "CFLRU".  
+9. **Prefetcher:** this is for specifying the prefetching policy. The available options are: "No" (no prefetcher), "Tagged" (for next-n-line prefetcher), "Best-offset", "Leap", "Feedback_direct".
+10. **Total_number_of_requests:** please specify the number of requests in the trace file.
 
 ## Simulator Output
 
 The output of the simulator will be stored in the \Results folder. It contains the following files:
 
-1. **overall.txt:** this file contains the information about cache hit count, prefetch amount, hit-under-misses count, flash read count, flsuh count (flash write count), prefetcher's performance metrics (coverage, accuracy, lateness, and pollution)
-2. **latency_result.txt:** this file provides the raw access latency data for each access in nano-second. You can utilize the data to plot latency related graphs
+1. **overall.txt:** this file contains the information about cache hit count, prefetch amount, hit-under-misses count, flash read count, flush count (flash write count), prefetcher's performance metrics (coverage, accuracy, lateness, and pollution).
+2. **latency_result.txt:** this file provides the raw access latency data for each access in nano-second. You can utilize the data to plot latency related graphs.
 3. **latency_results_no_cache.txt:** this file provides the raw access latency data for each access in nano-second specifically for DRAM only mode.
-4. **repeated_access.txt:** this file provides data about repeated accesses when Has_cache = 1 and Has_mshr = 0. Each line is in the form of (PFN, is_repeated), where is_repeated can be either 1 or 0 (1 for being a repeated access)
+4. **repeated_access.txt:** this file provides data about repeated accesses when Has_cache = 1 and Has_mshr = 0. Each line is in the form of (PFN, is_repeated), where is_repeated can be either 1 or 0 (1 for being a repeated access).
 
 
 # References
@@ -122,8 +123,13 @@ The output of the simulator will be stored in the \Results folder. It contains t
 the 1st ACM Symposium on Cloud Computing, SoCC’10, page 143–154. Association for Computing Machinery, 2010.
 
 [5] SPEC CPU 2017. https://www.spec.org/cpu2017/.
-<!---
 
+[6] Dusol Lee, Duwon Hong, Wonil Choi, and Jihong Kim. MQSim-E: An enterprise SSD simulator. IEEE Computer Architecture Letters, 21(1):13–16, 2022.
+
+[7] Arash Tavakkol, Juan Gómez-Luna, Mohammad Sadrosadati, Saugata Ghose, and Onur Mutlu. MQsim: A framework for enabling realistic studies of modern multi-queue SSD devices. In Proceedings of the 16th USENIX Conference on File and Storage Technologies, page 49–65. USENIX Association, 2018.
+
+
+<!---
 # Original MQSim Related Information (only for your own reference)
 
 ## MQSim Execution Configurations 
