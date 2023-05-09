@@ -130,7 +130,7 @@ Experiments setup guidelines:
 
 # MQSim CXL: A Simulator for CXL-flash
 
-MQSim CXL is a trace-driven CXL-flash device simulator builts on top of MQSim-E[7], a version of MQSim[8]. 
+MQSim CXL is a trace-driven CXL-flash device simulator built on top of MQSim-E[7], a version of MQSim[8]. 
 The following documentation provides detailed information about the useage of MQSim CXL. 
 
 ## Usage in Windows
