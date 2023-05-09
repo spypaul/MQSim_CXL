@@ -57,8 +57,8 @@ the real-world workload contains:
 * BERT[1]
 * Page rank (GAPBS[2])
 * Radiosity (Splash-3[3])
-* XZ (Spec CPU[4])
-* YCSB F[5]
+* XZ (Spec CPU [4], [5])
+* YCSB F[6]
 
 We include our synthetic workload source codes in test/Synthetic_Workloads of [Trace Generator](https://github.com/dgist-datalab/trace_generator.git).
 We did not make any modification to the proprietary source codes when collecting real-world workload traces. Users can find the source codes of the workloads from their original code bases. 
@@ -130,7 +130,7 @@ Experiments setup guidelines:
 
 # MQSim CXL: A Simulator for CXL-flash
 
-MQSim CXL is a trace-driven CXL-flash device simulator builts on top of MQSim-E[6], a version of MQSim[7]. 
+MQSim CXL is a trace-driven CXL-flash device simulator builts on top of MQSim-E[7], a version of MQSim[8]. 
 The following documentation provides detailed information about the useage of MQSim CXL. 
 
 ## Usage in Windows
@@ -212,12 +212,14 @@ The output of the simulator will be stored in the /Results folder. It contains t
 
 [4] SPEC CPU 2017. https://www.spec.org/cpu2017/.
 
-[5] Brian F. Cooper, Adam Silberstein, Erwin Tam, Raghu Ramakrishnan, and Russell Sears. Benchmarking cloud serving systems with YCSB. In Proceedings of
+[5] SPEC Redistributable Sources Archive. https://www.spec.org/sources/.
+
+[6] Brian F. Cooper, Adam Silberstein, Erwin Tam, Raghu Ramakrishnan, and Russell Sears. Benchmarking cloud serving systems with YCSB. In Proceedings of
 the 1st ACM Symposium on Cloud Computing, SoCC’10, page 143–154. Association for Computing Machinery, 2010.
 
-[6] Dusol Lee, Duwon Hong, Wonil Choi, and Jihong Kim. MQSim-E: An enterprise SSD simulator. IEEE Computer Architecture Letters, 21(1):13–16, 2022.
+[7] Dusol Lee, Duwon Hong, Wonil Choi, and Jihong Kim. MQSim-E: An enterprise SSD simulator. IEEE Computer Architecture Letters, 21(1):13–16, 2022.
 
-[7] Arash Tavakkol, Juan Gómez-Luna, Mohammad Sadrosadati, Saugata Ghose, and Onur Mutlu. MQsim: A framework for enabling realistic studies of modern multi-queue SSD devices. In Proceedings of the 16th USENIX Conference on File and Storage Technologies, page 49–65. USENIX Association, 2018.
+[8] Arash Tavakkol, Juan Gómez-Luna, Mohammad Sadrosadati, Saugata Ghose, and Onur Mutlu. MQsim: A framework for enabling realistic studies of modern multi-queue SSD devices. In Proceedings of the 16th USENIX Conference on File and Storage Technologies, page 49–65. USENIX Association, 2018.
 
 
 <!---
