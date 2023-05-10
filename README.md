@@ -72,7 +72,7 @@ Conetent of published trace files:
 * \*\_p.trace files are the traces with physical memory addresses
 * \*\_v.trace files are the traces with virtual memory addresses
 * \*\_hint.trace files are the traces with hints included
-* trace_synthetic_workloads.zip contains all \*.trace file
+* trace_synthetic_workloads.zip contains all \*.trace files of synthetic workloads
 
 
 ### Evaluation with Synthetic Workloads
