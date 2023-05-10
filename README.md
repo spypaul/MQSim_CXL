@@ -112,9 +112,9 @@ Please replace config.txt, ssdconfig.xml, and workload.xml in the root directory
 	
 Experiments setup guidelines:
 
-* Adjust **Cache_placement** if needed, but the default value for most of the experiment should be 16. 
-* Adjust **<Cache_policy>** to desired policy in config.txt if needed.
-* Adjust **<Prefetcher>** to desired algorithms in config.txt if needed.
+* Adjust **<Cache_placement>** in config.txt if needed, but the default value for most of the experiment should be 16. 
+* Adjust **<Cache_policy>** to a desired policy in config.txt if needed.
+* Adjust **<Prefetcher>** to a desired algorithm in config.txt if needed.
 * For the evaluation on virtual vs physical traces, please utilize two version of *.trace files provided in [here](https://doi.org/10.5281/zenodo.7916219) on Zenodo.
 * For the evaluation on BERT with Hints, please utilize the bert_hint.trace provided in [here](https://doi.org/10.5281/zenodo.7916219) on Zenodo.
 
