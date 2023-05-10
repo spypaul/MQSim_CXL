@@ -21,7 +21,7 @@ Source code:
 
 Trace files:
 1. [Memory Traces for the CXL-flash Simulator](https://doi.org/10.5281/zenodo.7916219): memory trace files (\*.trace) used in our research paper.
-2. 
+
 ### Installation
 1. To install Trace Generator, please follow the instructions specified in the [memory tracing tool repository](https://github.com/dgist-datalab/trace_generator.git). 
 2. To install MQSIM CXL, please download and extract or clone this repository to your preferred location. 
