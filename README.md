@@ -16,7 +16,7 @@ Also, the simulator can take up large amount of memory space, we recommend using
 Source code: 
 
 1. [Trace Generator](https://github.com/dgist-datalab/trace_generator.git): a memory tracing tool utilized in this work.
-2. [MQSIM CXL](#mqsim-cxl-a-simulator-for-cxl-flash) (included in this repository): a trace-driven simulator utilized in this work. 
+2. [MQSim CXL](#mqsim-cxl-a-simulator-for-cxl-flash) (included in this repository): a trace-driven simulator utilized in this work. 
 3. [Trace Translator](https://github.com/spypaul/trace_translation.git): an example code to translate \*.vout or \*.pout files to \*.trace files.
 
 Trace files:
@@ -24,7 +24,7 @@ Trace files:
 
 ### Installation
 1. To install Trace Generator, please follow the instructions specified in the [memory tracing tool repository](https://github.com/dgist-datalab/trace_generator.git). 
-2. To install MQSIM CXL, please download and extract or clone this repository to a preferred location. 
+2. To install MQSim CXL, please download and extract or clone this repository to a preferred location. 
 
 ### Workflow and Usage
 This process consists of three main stages: produce \*.vout or \*.pout files --> convert the files into \*.trace files --> run simulation with the traces. 
