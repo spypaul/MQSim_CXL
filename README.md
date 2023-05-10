@@ -39,7 +39,7 @@ On the Windows environment:
 
 3. To configure the simulator environment, please follow the instructions specified in [MQSim CXL Specific Execution Configurations](#mqsim-cxl-specific-execution-configurations) and [CXL-flash Architecture Configurations](#cxl-flash-architecture-configurations) of this document
 4. Create a folder named "traces" in the root directory of the simulator package
-5. Place the generated \*.trace file into the /traces folder. Please specify the file path in workload.xml. Check [MQSim CXL Specific Execution Configurations](#mqsim-cxl-specific-execution-configurations) for more details.
+5. Place the generated \*.trace file into the /traces folder. Please specify the file path in workload.xml and the total number of memory accesses in config.txt. 
 6. To run the simulator, please follow the instructions specified in [Usage in Windows](#usage-in-windows) of this document. 
 7. The simulator output will be in the /Results folder in the root directory of the simulator package. For more details, please read the descriptions in [Simulator Output](#simulator-output) of this document. 
 
