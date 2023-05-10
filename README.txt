@@ -1,1 +1,1 @@
-MQSim-E: An Enterprise SSD Simulator
+MQSim CXL: An CXL-flash device simulator based on MQSim-E
