@@ -63,7 +63,7 @@ the real-world workload contains:
 We include our synthetic workload source codes in test/Synthetic_Workloads of [Trace Generator](https://github.com/dgist-datalab/trace_generator.git).
 Users can find the source codes of the real-world workloads from their original code bases. 
 
-Since tracing results can be different across machines and runs, we also publish the trace files (\*.trace) utilized for the research paper in [here](). 
+Since tracing results can be different across machines and runs, we also publish the trace files (\*.trace) utilized for the research paper in [here](https://doi.org/10.5281/zenodo.7916219) on Zenodo. 
 
 Conetent of published trace files:
 * \*\_p.trace files are the traces with physical memory addresses
@@ -110,8 +110,8 @@ Experiments setup guidelines:
 * Adjust **Cache_placement** if needed, but the default value for most of the experiment should be 16. 
 * Adjust **<Cache_policy>** to desired policy in config.txt if needed.
 * Adjust **<Prefetcher>** to desired algorithms in config.txt if needed.
-* For the evaluation on virtual vs physical traces, please utilize two version of *.trace files provided in [here]().
-* For the evaluation on BERT with Hints, please utilize the bert_hint.trace provided in [here]().
+* For the evaluation on virtual vs physical traces, please utilize two version of *.trace files provided in [here](https://doi.org/10.5281/zenodo.7916219) on Zenodo.
+* For the evaluation on BERT with Hints, please utilize the bert_hint.trace provided in [here](https://doi.org/10.5281/zenodo.7916219) on Zenodo.
 
 *Note that the trace files and generated output files for real-world workloads can be large (10s of GB). Please be sure that the running environment has enough disk space for the files.
 
