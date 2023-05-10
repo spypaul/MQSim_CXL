@@ -24,7 +24,7 @@ Trace files:
 
 ### Installation
 1. To install Trace Generator, please follow the instructions specified in the [memory tracing tool repository](https://github.com/dgist-datalab/trace_generator.git). 
-2. To install MQSIM CXL, please download and extract or clone this repository to your preferred location. 
+2. To install MQSIM CXL, please download and extract or clone this repository to a preferred location. 
 
 ### Workflow and Usage
 This process consists of three main stages: produce \*.vout or \*.pout files --> convert the files into \*.trace files --> run simulation with the traces. 
@@ -32,6 +32,8 @@ This process consists of three main stages: produce \*.vout or \*.pout files -->
 On the Linux environment:
 1. Generate a memory trace file (\*.vout or \*.pout file) for a workload utilizing the tracing tool. Please follow the instructions in the [memory tracing tool repository](https://github.com/dgist-datalab/trace_generator.git).
 2. The \*.vout or \*.pout trace files need to be translated into a simulator-compatible format. Please utilize example [trace translation code](https://github.com/spypaul/trace_translation.git) to generate \*.trace files from the \*.vout or \*.pout files
+
+\*Note that users can also can download a .trace file from [here](https://doi.org/10.5281/zenodo.7916219) on Zenodo, so that they can test the simulator separately without having to generate their own traces
 
 On the Windows environment:
 
@@ -187,7 +189,7 @@ config.txt file contains all architectural configurations for the CXL-flash devi
 The output of the simulator will be stored in the /Results folder. It contains the following files:
 
 1. **overall.txt:** this file contains the information about cache hit count, prefetch amount, hit-under-misses count, flash read count, flush count (flash write count), prefetcher's performance metrics (coverage, accuracy, lateness, and pollution).
-2. **latency_result.txt:** this file provides the raw access latency data for each access in nano-second. You can utilize the data to plot latency related graphs.
+2. **latency_result.txt:** this file provides the raw access latency data for each access in nano-second. Users can utilize the data to plot latency related graphs.
 3. **latency_results_no_cache.txt:** this file provides the raw access latency data for each access in nano-second specifically for DRAM only mode.
 4. **repeated_access.txt:** this file provides data about repeated accesses when Has_cache = 1 and Has_mshr = 0. Each line is in the form of (PFN, is_repeated), where is_repeated can be either 1 or 0 (1 for being a repeated access).
 
