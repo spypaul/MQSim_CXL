@@ -31,14 +31,14 @@ This process consists of three main stages: produce \*.vout or \*.pout files -->
 
 On the Linux environment:
 1. Generate a memory trace file (\*.vout or \*.pout file) for a workload utilizing the tracing tool. Please follow the instructions in the [memory tracing tool repository](https://github.com/dgist-datalab/trace_generator.git).
-2. The \*.vout or \*.pout trace files need to be translated into a simulator-compatible format. Please utilize example [trace translation code](https://github.com/spypaul/trace_translation.git) to generate \*.trace files from the \*.vout or \*.pout files
+2. The \*.vout or \*.pout trace files need to be translated into a simulator-compatible format. Please utilize example [trace translation code](https://github.com/spypaul/trace_translation.git) to generate \*.trace files from the \*.vout or \*.pout files.
 
 \*Note that users can also can download a .trace file from [here](https://doi.org/10.5281/zenodo.7916219) on Zenodo, so that they can test the simulator separately without having to generate their own traces
 
 On the Windows environment:
 
-3. To configure the simulator environment, please follow the instructions specified in [MQSim CXL Specific Execution Configurations](#mqsim-cxl-specific-execution-configurations) and [CXL-flash Architecture Configurations](#cxl-flash-architecture-configurations) of this document
-4. Create a folder named "traces" in the root directory of the simulator package
+3. To configure the simulator environment, please follow the instructions specified in [MQSim CXL Specific Execution Configurations](#mqsim-cxl-specific-execution-configurations) and [CXL-flash Architecture Configurations](#cxl-flash-architecture-configurations) of this document.
+4. Create a folder named "traces" and a folder named "Results" in the root directory of the simulator package.
 5. Place the generated \*.trace file into the /traces folder. Please specify the file path in workload.xml and the total number of memory accesses in config.txt. 
 6. To run the simulator, please follow the instructions specified in [Usage in Windows](#usage-in-windows) of this document. 
 7. The simulator output will be in the /Results folder in the root directory of the simulator package. For more details, please read the descriptions in [Simulator Output](#simulator-output) of this document. 
