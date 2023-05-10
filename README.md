@@ -213,6 +213,7 @@ the 1st ACM Symposium on Cloud Computing, SoCC’10, page 143–154. Association
 
 [8] Arash Tavakkol, Juan Gómez-Luna, Mohammad Sadrosadati, Saugata Ghose, and Onur Mutlu. MQsim: A framework for enabling realistic studies of modern multi-queue SSD devices. In Proceedings of the 16th USENIX Conference on File and Storage Technologies, page 49–65. USENIX Association, 2018.
 
+[9] Shao-Peng Yang, Minjae Kim, Sanghyun Nam, & Juhyung Park. (2023). Memory Traces for the CXL-flash Simulator [Data set]. Zenodo. https://doi.org/10.5281/zenodo.7916219
 
 <!---
 # Original MQSim Related Information (only for your own reference)
