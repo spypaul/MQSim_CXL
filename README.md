@@ -97,7 +97,7 @@ Experiments setup guidelines:
 * To include a next-n-line prefetcher, please adjust **<Prefetcher>** to "Tagged" in config.txt.
 * To adjust the degree of next-n-line prefetcher, please modify line 65 of /src/cxl/Host_Interface_CXL.h by changing the initialization value of uint16_t prefetchK and recompile the code.
 * To adjust the offset of next-n-line prefetcher, please modify line 66 of /src/cxl/Host_Interface_CXL.h by changing the initialization value of uint16_t prefetch_timing_offset and recompile the code.
-* To adjust the parallelism (Channels x Chips) of the flash back-end, please modify **<Flash_Channel_Count>** and **<Chip_No_Per_Channel>** in ssdconfig.xml and make sure **Channel_IDs** and **<Chip_IDs>** in workload.xml are changed accordinly as well. 
+* To adjust the parallelism (Channels x Chips) of the flash back-end, please modify **<Flash_Channel_Count>** and **<Chip_No_Per_Channel>** in ssdconfig.xml and make sure **Channel_IDs** and **<Chip_IDs>** in workload.xml are changed accordinly as well. Please also adjust **<Block_No_Per_Plane>** to keep the size of the simulated device at 1TiB.
 * To adjust the flash technology, please adjust **<Flash_Technology>**, **<Page_Read_Latency_*>**, **<Page_Program_Latency_*>**, and **<Block_Erase_Latency>** in ssdconfig.xml. For simplicity, we keep the latency for LSB, CSB, and MSB the same. 
 * To setup an ULL flash, please make **<Flash_Technology>** = "SLC", **<Page_Read_Latency_*>** = 3000, **<Page_Program_Latency_*>** = 100000, and **<Block_Erase_Latency>** = 1000000 in ssdconfig.xml. 
 
