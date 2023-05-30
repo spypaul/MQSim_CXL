@@ -104,6 +104,43 @@ Experiments setup guidelines:
 *Note that for Figure 6 in our paper, we plot the generated output from "repeated_access.txt." However, we accidently divide the PFN by 4096 when plotting Figure 6. 
 We will re-plot the results in the final version of the paper. This does not affect the correctness of the results generated from the simulator.
 
+	
+### Claims/results to be reproduced
+
+By following the above guidelines and the paper descriptions, the output of the experiments will validate the following claims:
+
+* Figure 5a: 
+	* Set up the experiments to run without device DRAM cache or run with device DRAM cache only.
+	* Adjust DRAM cache size to 0.5GiB, 2GiB, and 8GiB.
+	* "latency_results_no_cache.txt" and "latency_result.txt" provide latency information for each requests and can be used to calculate the average latency for each workload.
+* Figure 6: 
+	* Set up the experiments to run with device DRAM cache only (without MSHR).
+	* Set DRAM cache size to 8GiB, cache policy to FIFO, flash parallelism to 32x32, and flash technology to SLC utilizing the parameter values specified in Table 1 of the paper. 
+	* "repeated_access.txt" provides data about repeated accesses. Utilize the data to plot a histogram for each case.
+* Figure 7: 	
+	* Set up the experiments to run with device DRAM cache only (without MSHR) or run with device DRAM cache and MSHR.
+	* Set DRAM cache size to 8GiB, cache policy to FIFO, flash parallelism to 32x32, and flash technology to SLC utilizing the parameter values specified in Table 1 of the paper. 
+	* "latency_result.txt" provide latency information for each requests and can be used to plot the CDF for each case.
+* Figure 8: 
+	* Set up the experiments to run with device DRAM cache and MSHR.
+	* Set DRAM cache size to 8GiB, cache policy to FIFO, flash parallelism to 32x32, and flash technology to SLC utilizing the parameter values specified in Table 1 of the paper. 
+	* Follow above instructions to set up the prefetcher and adjust (degree, offset) to (1,16), (4, 16) (16,16), (4, 4), (4, 64).
+	* "latency_result.txt" provide latency information for each requests and can be used to find the sub-µs latency ratio for each case.
+* Figure 9:
+	* Set up the experiments to run without device DRAM cache or run with device DRAM cache and MSHR.
+	* Set cache policy to FIFO, flash parallelism to 32x32.
+	* Adjust DRAM cache size from 1GiB, 2GiB, 4GiB.
+	* Adjust flash technology utilizing the parameter values specified in Table 1 of the paper. 
+	* "latency_result.txt" provides latency information for each requests and can be used to calculate average latency for each case.
+	* "overall.txt" provides information about the flush count (flash write count) and the application end time (execution time). Utilize this value and endurance limit in Table 1 to estimate the device lifetime with the equation of (endurance limit) * 1TiB * (execution time) / (flash write count * 4096B). We use 2080 hours as the total working hours for a year to translate the lifetime from hours to years. 
+
+* Figure 10: 
+	* Set up the experiments to run with device DRAM cache and MSHR.
+	* Set cache policy to FIFO, flash technology to SLC utilizing the parameter values specified in Table 1 of the paper. 
+	* Adjust DRAM cache size to 1GiB, 2GiB, 4GiB,and 8GiB.
+	* Adjust flash parallelism to 32x32, 16x16, 8x8. 8x4.
+	* "latency_result.txt" provide latency information for each requests and can be used to find the sub-µs latency ratio for each case.
+
 ### Evaluation with Real-world Workloads
 	
 Simulation time for each experiment: 30 minutes - 2 hours
@@ -121,7 +158,7 @@ Experiments setup guidelines:
 * For the evaluation on BERT with Hints, please utilize the bert_hint.trace provided in [here](https://doi.org/10.5281/zenodo.7916219) on Zenodo.
 
 *Note that the trace files and generated output files for real-world workloads can be large (10s of GB). Please be sure that the running environment has enough disk space for the files.
-
+	
 # MQSim CXL: A Simulator for CXL-flash
 
 MQSim CXL is a trace-driven CXL-flash device simulator built on top of MQSim-E[7], a version of MQSim[8]. 
